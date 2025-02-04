@@ -1,5 +1,6 @@
 package com.yourapp.pos
 
+// this is a test comment from sidra
 
 class Product {
     String name

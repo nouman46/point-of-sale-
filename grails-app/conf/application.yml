@@ -3,72 +3,34 @@ info:
     name: '@info.app.name@'
     version: '@info.app.version@'
     grailsVersion: '@info.app.grailsVersion@'
-grails:
-  codegen:
-    defaultPackage: store
-  profile: web
-  mime:
-    disable:
-      accept:
-        header:
-          userAgents:
-          - Gecko
-          - WebKit
-          - Presto
-          - Trident
-    types:
-      all: '*/*'
-      atom: application/atom+xml
-      css: text/css
-      csv: text/csv
-      form: application/x-www-form-urlencoded
-      html:
-      - text/html
-      - application/xhtml+xml
-      js: text/javascript
-      json:
-      - application/json
-      - text/json
-      multipartForm: multipart/form-data
-      pdf: application/pdf
-      rss: application/rss+xml
-      text: text/plain
-      hal:
-      - application/hal+json
-      - application/hal+xml
-      xml:
-      - text/xml
-      - application/xml
-  views:
-    gsp:
-      encoding: UTF-8
-      htmlcodec: xml
-      codecs:
-        expression: html
-        scriptlet: html
-        taglib: none
-        staticparts: none
-    default:
-      codec: html
 dataSource:
-  driverClassName: org.h2.Driver
-  username: sa
-  password: ''
+  driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  username: user
+  password: '123'
   pooled: true
   jmxExport: true
+  url: jdbc:sqlserver:// 192.168.18.25:1433;databaseName=store;encrypt=true;trustServerCertificate=true
+
+cors:
+  enabled: true
+  allowedOrigins:
+    - https://simple-books-api.glitch.me/books
+  allowedMethods:
+    - GET
+    - POST
 environments:
   development:
     dataSource:
-      dbCreate: create-drop
-      url: jdbc:h2:mem:devDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+      dbCreate: update
+      url: jdbc:sqlserver:// 192.168.18.25:1433;databaseName=store;encrypt=true;trustServerCertificate=true
   test:
     dataSource:
       dbCreate: update
-      url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+      url: jdbc:sqlserver:// 192.168.18.25:1433;databaseName=store;encrypt=true;trustServerCertificate=true
   production:
     dataSource:
       dbCreate: none
-      url: jdbc:h2:./prodDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+      url: jdbc:sqlserver:// 192.168.18.25:1433;databaseName=store;encrypt=true;trustServerCertificate=true
       properties:
         jmxEnabled: true
         initialSize: 5
@@ -92,3 +54,50 @@ hibernate:
     queries: false
     use_second_level_cache: false
     use_query_cache: false
+grails:
+  codegen:
+    defaultPackage: com.example
+  profile: web
+  mime:
+    disable:
+      accept:
+        header:
+          userAgents:
+            - Gecko
+            - WebKit
+            - Presto
+            - Trident
+    types:
+      all: '*/*'
+      atom: application/atom+xml
+      css: text/css
+      csv: text/csv
+      form: application/x-www-form-urlencoded
+      html:
+        - text/html
+        - application/xhtml+xml
+      js: text/javascript
+      json:
+        - application/json
+        - text/json
+      multipartForm: multipart/form-data
+      pdf: application/pdf
+      rss: application/rss+xml
+      text: text/plain
+      hal:
+        - application/hal+json
+        - application/hal+xml
+      xml:
+        - text/xml
+        - application/xml
+  views:
+    gsp:
+      encoding: UTF-8
+      htmlcodec: xml
+      codecs:
+        expression: html
+        scriptlet: html
+        taglib: none
+        staticparts: none
+    default:
+      codec: html

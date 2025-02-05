@@ -16,7 +16,7 @@ class Product {
         productSKU blank: false, unique: true, maxSize: 50
         productBarcode blank: false, unique: true, maxSize: 50
         productPrice min: 0.01, scale: 2
-        productQuantity min: 0
+        productQuantity min: 1
     }
 }
 

@@ -2,18 +2,18 @@ package store
 
 class Customer {
     String customerName
-    String productName
-    String productDescription
-    String productBarcode
-    BigDecimal productPrice
-    BigDecimal totalPrice
-    Integer productQuantity
+    BigDecimal totalPrice = 0.0
+
+    static hasMany = [purchasedItems: PurchasedItem]
 
     static constraints = {
         customerName blank: false, maxSize: 255
-        productName blank: false, maxSize: 255
-        productDescription nullable: true, maxSize: 500
-        productBarcode blank: false, unique: true, maxSize: 50
-        productPrice min: 0.01, scale: 2
+        totalPrice min: 0.0, scale: 2
+    }
+
+    // Calculate total price from all purchased items
+    BigDecimal calculateTotalPrice() {
+        totalPrice = purchasedItems?.collect { it.totalItemPrice }?.sum() ?: 0.0
+        totalPrice
     }
 }

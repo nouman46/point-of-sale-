@@ -1,58 +1,54 @@
 package store
 
+import grails.converters.JSON
+
 class CustomerController {
 
+    def getProducts() {
+        try {
+            def products = Product.list().findAll { it != null }
 
-    def checkout() {
-        // Render the checkout form (GSP)
-        render view: 'checkout'
-    }
+            if (!products) {
+                render([error: "No products found"] as JSON)
+                return
+            }
 
-    def processCheckout() {
-        // Create a new Customer order using the posted customer name
-        def customer = new Customer(customerName: params.customerName)
-
-        // Assume the checkout form posts arrays for:
-        // - productId[]: the IDs of selected products
-        // - quantity[]: the quantity purchased for each product
-        def productIds = params.list('productId')
-        def quantities = params.list('quantity')
-
-        productIds.eachWithIndex { prodId, i ->
-            def product = Product.get(prodId)
-            if (product) {
-                // Create a PurchasedItem capturing the current product details
-                def item = new PurchasedItem(
+            // Manually mapping each field of the Product domain class
+            def productList = products.collect { product ->
+                [
+                        id: product.id,
                         productName: product.productName,
                         productDescription: product.productDescription,
                         productSKU: product.productSKU,
                         productBarcode: product.productBarcode,
-                        unitPrice: product.productPrice,
-                        quantity: quantities[i]?.toInteger() ?: 1
-                )
-                customer.addToPurchasedItems(item)
+                        productPrice: product.productPrice,
+
+                ]
             }
-        }
 
-        // Calculate the total order price
-        customer.calculateTotalPrice()
-        if (!customer.save(flush: true)) {
-            flash.message = "Error processing checkout."
-            render view: 'checkoutForm', model: [customer: customer]
-            return
+            render([success: true, products: productList] as JSON)
+        } catch (Exception e) {
+            render([success: false, message: "Error fetching products: ${e.message}"] as JSON)
         }
+    }
+    def getProductByBarcode() {
+        def barcode = params.barcode
+        def product = Product.findByProductBarcode(barcode)
 
-        // Update the Product table: subtract purchased quantities
-        customer.purchasedItems.each { item ->
-            // Locate the product using a unique identifier (SKU in this case)
-            def product = Product.findByProductSKU(item.productSKU)
-            if (product) {
-                product.productQuantity = product.productQuantity - item.quantity
-                product.save(flush: true)
-            }
+        if (product) {
+            render([success: true, product: [
+                    id: product.id,
+                    productName: product.productName,
+                    productDescription: product.productDescription,
+                    productSKU: product.productSKU,
+                    productPrice: product.productPrice,
+                    productQuantity: product.productQuantity
+            ]] as JSON)
+        } else {
+            render([success: false, message: "Product not found."] as JSON)
         }
-
-        // Render an order details view that includes JavaScript to pop up the details
-        render view: 'orderDetails', model: [customer: customer]
+    }
+    def checkout() {
+        render view: 'checkout'
     }
 }

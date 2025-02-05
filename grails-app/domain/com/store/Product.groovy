@@ -1,4 +1,4 @@
-package com.yourapp.pos
+package com.store
 
 class Product {
     String productName

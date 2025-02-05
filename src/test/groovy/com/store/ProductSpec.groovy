@@ -1,4 +1,4 @@
-package com.yourapp.pos
+package com.store
 
 import grails.testing.gorm.DomainUnitTest
 import spock.lang.Specification

@@ -3,7 +3,7 @@ package store
 import grails.testing.web.controllers.ControllerUnitTest
 import spock.lang.Specification
 
-class GreetingControllerSpec extends Specification implements ControllerUnitTest<GreetingController> {
+class StoreControllerSpec extends Specification implements ControllerUnitTest<StoreController> {
 
      void "test index action"() {
         when:

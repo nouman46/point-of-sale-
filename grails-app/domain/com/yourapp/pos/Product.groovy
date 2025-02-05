@@ -1,6 +1,7 @@
 package com.yourapp.pos
 
 // this is a test comment from sidra
+// this is a test comment from niuman
 
 class Product {
     String name

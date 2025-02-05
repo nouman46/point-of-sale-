@@ -1,10 +1,10 @@
 package store
 
-import grails.plugin.springsecurity.annotation.Secured
+import store.BookService
+
 import grails.validation.ValidationException
 import static org.springframework.http.HttpStatus.*
 
-@Secured(['ROLE_USER'])
 class BookController {
 
     BookService bookService

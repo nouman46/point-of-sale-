@@ -2,20 +2,17 @@ package com.yourapp.pos
 
 class Customer {
 
-        String cname
-        String pname
-        String pdescription
-        BigDecimal price
-        BigDecimal totalprice
-        Integer quantity
-        Date dateAdded = new Date()
+    String productName
+    String productDescription
+    String productBarcode
+    BigDecimal productPrice
+    Integer productQuantity
 
         static constraints = {
-            cname blank: false, unique: true
-            pname blank: false, unique: true
-            pdescription nullable: true, maxSize: 500
-            price min: 0.0, scale: 2
-            totalprice min: 0.0, scale: 2
-            quantity min: 0
+            productName blank: false, maxSize: 255
+            productDescription nullable: true, maxSize: 500
+            productSKU blank: false, unique: true, maxSize: 50
+            productBarcode blank: false, unique: true, maxSize: 50
+            productPrice min: 0.01, scale: 2
         }
     }

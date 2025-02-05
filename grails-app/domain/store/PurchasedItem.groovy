@@ -5,7 +5,7 @@ class PurchasedItem {
     String productDescription
     String productSKU
     String productBarcode
-    BigDecimal unitPrice
+    BigDecimal productPrice
     Integer quantity
 
     static belongsTo = [customer: Customer]
@@ -15,12 +15,12 @@ class PurchasedItem {
         productDescription nullable: true, maxSize: 500
         productSKU blank: false, maxSize: 50
         productBarcode blank: false, maxSize: 50
-        unitPrice min: 0.01, scale: 2
+        productPrice min: 0.01, scale: 2
         quantity min: 1
     }
 
     // Returns the total for this purchased item
     BigDecimal getTotalItemPrice() {
-        unitPrice * quantity
+        productPrice * quantity
     }
 }

@@ -1,14 +1,18 @@
 package store
 
-import grails.gorm.transactions.Transactional
-import grails.validation.Validateable
 import grails.converters.JSON
+import grails.gorm.transactions.Transactional
+
+//import grails.plugin.springsecurity.annotation.Secured
+
 import org.springframework.dao.DataIntegrityViolationException
 
+//@Secured(['ROLE_USER'])
 class StoreController {
 
     def index() {
         render "Hello, Congratulations for your first POS"
+
     }
 
     def inventory() {

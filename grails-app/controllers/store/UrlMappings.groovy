@@ -11,7 +11,7 @@ class UrlMappings {
             }
         }
 
-        "/"(view:"/index")
+        "/"(controller: 'User', view:"create")
         "500"(view:'/error')
         "404"(view:'/notFound')
 

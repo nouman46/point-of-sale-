@@ -1,7 +1,9 @@
 package store
 
 import grails.converters.JSON
+//import grails.plugin.springsecurity.annotation.Secured
 
+//@Secured(['ROLE_USER'])
 class CustomerController {
 
     def getProducts() {

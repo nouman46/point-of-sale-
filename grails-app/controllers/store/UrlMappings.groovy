@@ -4,6 +4,7 @@ class UrlMappings {
     static mappings = {
         "/store/showProduct/$id"(controller: "store", action: "showProduct")
         "/store/deleteProduct/$id"(controller: "store", action: "deleteProduct")
+        "/checkout/checkout"(controller: "checkout", action: "checkout")
         // Add other necessary routes here
         "/$controller/$action?/$id?(.$format)?"{
             constraints {

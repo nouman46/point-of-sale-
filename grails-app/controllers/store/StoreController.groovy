@@ -10,17 +10,14 @@ import org.springframework.dao.DataIntegrityViolationException
 //@Secured(['ROLE_USER'])
 class StoreController {
 
-    def index() {
-        render "Hello, Congratulations for your first POS"
 
-    }
 
     def inventory() {
         int maxResults = 8  // Show 8 products per page
         int currentPage = params.page ? params.page.toInteger() : 1
         int totalProducts = Product.count()  // Get total number of products
         int totalPages = Math.ceil(totalProducts / maxResults)  // Calculate total pages
-        int offset = (currentPage - 1) * maxResults  // Calculate offset for the query
+        int offset = (currentPage - 1) * maxResults  // Calculate offset for the querye
 
         // Fetch the products for the current page
         def productList = Product.list(max: maxResults, offset: offset)

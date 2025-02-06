@@ -1,18 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-    <meta name="layout" content="main"/>
-    <title>Product List</title>
+    <meta name="layout" content="main">
+    <title>Start Checkout</title>
 </head>
 <body>
-<div class="container">
-    <h1>Product List</h1>
-    <!-- Add your product listing here -->
-
-    <!-- Checkout Button -->
-    <g:link controller="Customer" action="checkout" class="btn btn-primary">
-        Go to Checkout
-    </g:link>
-</div>
+<h1>Start Checkout</h1>
+<g:form controller="checkout" action="startCheckout">
+    <label for="customerName">Customer Name:</label>
+    <g:textField name="customerName" />
+    <g:submitButton name="startCheckout" value="Start Checkout" />
+</g:form>
 </body>
 </html>

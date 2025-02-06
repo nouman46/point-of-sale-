@@ -62,6 +62,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation 'io.github.http-builder-ng:http-builder-ng-core:1.0.4'
 //    implementation 'org.grails.plugins:spring-security-core:6.1.2'
+
     compileOnly "io.micronaut:micronaut-inject-groovy"
     compileOnly "org.grails.plugins:fields:3.0.0.RC1"
     console "org.grails:grails-console"
@@ -78,6 +79,7 @@ dependencies {
     testImplementation "org.seleniumhq.selenium:selenium-remote-driver:4.19.1"
     testImplementation "org.seleniumhq.selenium:selenium-support:4.19.1"
     testImplementation "org.spockframework:spock-core"
+    runtimeOnly 'com.mysql:mysql-connector-j'
     testRuntimeOnly "org.seleniumhq.selenium:selenium-chrome-driver:4.19.1"
     testRuntimeOnly "org.seleniumhq.selenium:selenium-firefox-driver:4.19.1"
     testRuntimeOnly "org.seleniumhq.selenium:selenium-safari-driver:4.19.1"

@@ -7,37 +7,37 @@ import org.hibernate.SessionFactory
 
 @Integration
 @Rollback
-class BookServiceSpec extends Specification {
+class UserServiceSpec extends Specification {
 
-    BookService bookService
+    UserService userService
     SessionFactory sessionFactory
 
     private Long setupData() {
         // TODO: Populate valid domain instances and return a valid ID
-        //new Book(...).save(flush: true, failOnError: true)
-        //new Book(...).save(flush: true, failOnError: true)
-        //Book book = new Book(...).save(flush: true, failOnError: true)
-        //new Book(...).save(flush: true, failOnError: true)
-        //new Book(...).save(flush: true, failOnError: true)
+        //new User(...).save(flush: true, failOnError: true)
+        //new User(...).save(flush: true, failOnError: true)
+        //User user = new User(...).save(flush: true, failOnError: true)
+        //new User(...).save(flush: true, failOnError: true)
+        //new User(...).save(flush: true, failOnError: true)
         assert false, "TODO: Provide a setupData() implementation for this generated test suite"
-        //book.id
+        //user.id
     }
 
     void "test get"() {
         setupData()
 
         expect:
-        bookService.get(1) != null
+        userService.get(1) != null
     }
 
     void "test list"() {
         setupData()
 
         when:
-        List<Book> bookList = bookService.list(max: 2, offset: 2)
+        List<User> userList = userService.list(max: 2, offset: 2)
 
         then:
-        bookList.size() == 2
+        userList.size() == 2
         assert false, "TODO: Verify the correct instances are returned"
     }
 
@@ -45,30 +45,30 @@ class BookServiceSpec extends Specification {
         setupData()
 
         expect:
-        bookService.count() == 5
+        userService.count() == 5
     }
 
     void "test delete"() {
-        Long bookId = setupData()
+        Long userId = setupData()
 
         expect:
-        bookService.count() == 5
+        userService.count() == 5
 
         when:
-        bookService.delete(bookId)
+        userService.delete(userId)
         sessionFactory.currentSession.flush()
 
         then:
-        bookService.count() == 4
+        userService.count() == 4
     }
 
     void "test save"() {
         when:
         assert false, "TODO: Provide a valid instance to save"
-        Book book = new Book()
-        bookService.save(book)
+        User user = new User()
+        userService.save(user)
 
         then:
-        book.id != null
+        user.id != null
     }
 }

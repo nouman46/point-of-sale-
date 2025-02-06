@@ -1,0 +1,83 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+.order-details, .payment-section, .customer-section {
+    margin-bottom: 20px;
+}
+.order-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.order-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+.item-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+.item-details {
+    display: flex;
+    flex-direction: column;
+}
+.addons {
+    font-size: 12px;
+    color: #666;
+}
+.quantity {
+    display: flex;
+    align-items: center;
+}
+.quantity input {
+    width: 50px;
+    text-align: center;
+    margin-left: 5px;
+}
+.total {
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+.payment-section button {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.payment-section button:hover {
+    background-color: #218838;
+}
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}

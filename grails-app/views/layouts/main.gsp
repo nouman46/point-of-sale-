@@ -1,73 +1,40 @@
-<!doctype html>
-<html lang="en" class="no-js">
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<!DOCTYPE html>
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <title>
-        <g:layoutTitle default="Grails"/>
-    </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <asset:link rel="icon" href="favicon.ico" type="image/x-ico"/>
 
-    <asset:stylesheet src="application.css"/>
-
-    <g:layoutHead/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <asset:stylesheet src="main.css"/>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
-
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark navbar-static-top" role="navigation">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/#"><asset:image src="grails.svg" alt="Grails Logo"/></a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<div class="sidebar">
+    <!-- Profile Section -->
 
-        <div class="collapse navbar-collapse" aria-expanded="false" style="height: 0.8px;" id="navbarContent">
-            <ul class="nav navbar-nav ml-auto">
-                <g:pageProperty name="page.nav"/>
-            </ul>
-        </div>
-    </div>
-</nav>
 
-<g:layoutBody/>
-
-<div class="footer" role="contentinfo">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col">
-                <a href="https://guides.grails.org" target="_blank">
-                    <asset:image src="advancedgrails.svg" alt="Grails Guides" class="float-left"/>
-                </a>
-                <strong class="centered"><a href="https://guides.grails.org" target="_blank">Grails Guides</a></strong>
-                <p>Building your first Grails app? Looking to add security, or create a Single-Page-App? Check out the <a href="https://guides.grails.org" target="_blank">Grails Guides</a> for step-by-step tutorials.</p>
-
-            </div>
-            <div class="col">
-                <a href="https://docs.grails.org" target="_blank">
-                    <asset:image src="documentation.svg" alt="Grails Documentation" class="float-left"/>
-                </a>
-                <strong class="centered"><a href="https://docs.grails.org" target="_blank">Documentation</a></strong>
-                <p>Ready to dig in? You can find in-depth documentation for all the features of Grails in the <a href="https://docs.grails.org" target="_blank">User Guide</a>.</p>
-
-            </div>
-            <div class="col">
-                <a href="https://slack.grails.org" target="_blank">
-                    <asset:image src="slack.svg" alt="Grails Slack" class="float-left"/>
-                </a>
-                <strong class="centered"><a href="https://slack.grails.org" target="_blank">Join the Community</a></strong>
-                <p>Get feedback and share your experience with other Grails developers in the community <a href="https://slack.grails.org" target="_blank">Slack channel</a>.</p>
-            </div>
-        </div>
-    </div>
+    <!-- Navigation Links -->
+    <a href="${createLink(controller: 'dashboard', action: 'index')}">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+    <a href="${createLink(controller: 'store', action: 'inventory')}">
+        <i class="fas fa-box"></i> Inventory
+    </a>
+    <a href="${createLink(controller: 'sales', action: 'index')}">
+        <i class="fas fa-shopping-cart"></i> Sales
+    </a>
+    <a href="${createLink(controller: 'checkout', action: 'checkout')}">
+        <i class="fas fa-cash-register"></i> Checkout
+    </a>
+    <a href="${createLink(controller: 'settings', action: 'index')}">
+        <i class="fas fa-cog"></i> Settings
+    </a>
+    <a href="${createLink(controller: 'subscription', action: 'index')}">
+        <i class="fas fa-credit-card"></i> Subscription
+    </a>
 </div>
-
-<div id="spinner" class="spinner" style="display:none;">
-    <g:message code="spinner.alt" default="Loading&hellip;"/>
-</div>
-
-<asset:javascript src="application.js"/>
 
 </body>
 </html>

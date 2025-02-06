@@ -1,9 +1,9 @@
 package store
 
-import grails.testing.gorm.DomainUnitTest
+import grails.testing.web.controllers.ControllerUnitTest
 import spock.lang.Specification
 
-class PurchasedItemSpec extends Specification implements DomainUnitTest<PurchasedItem> {
+class CheckoutControllerSpec extends Specification implements ControllerUnitTest<CheckoutController> {
 
     def setup() {
     }

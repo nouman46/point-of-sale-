@@ -1,9 +1,9 @@
 package store
 
-import grails.testing.web.controllers.ControllerUnitTest
+import grails.testing.gorm.DomainUnitTest
 import spock.lang.Specification
 
-class CustomerControllerSpec extends Specification implements ControllerUnitTest<CustomerController> {
+class RoleSpec extends Specification implements DomainUnitTest<Role> {
 
     def setup() {
     }

@@ -42,6 +42,8 @@ configurations {
 
 dependencies {
     profile "org.grails.profiles:web"
+    implementation 'org.mindrot:jbcrypt:0.4'
+    implementation 'org.springframework.security:spring-security-crypto:5.8.3' // Use latest version
     implementation "org.grails:grails-core"
     implementation "org.grails:grails-logging"
     implementation "org.grails:grails-plugin-databinding"
@@ -58,10 +60,8 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-jetty"
-    implementation "org.springframework.boot:spring-boot-starter-logging"
-    implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation 'io.github.http-builder-ng:http-builder-ng-core:1.0.4'
-//    implementation 'org.grails.plugins:spring-security-core:6.1.2'
+
 
     compileOnly "io.micronaut:micronaut-inject-groovy"
     compileOnly "org.grails.plugins:fields:3.0.0.RC1"
@@ -83,6 +83,7 @@ dependencies {
     testRuntimeOnly "org.seleniumhq.selenium:selenium-chrome-driver:4.19.1"
     testRuntimeOnly "org.seleniumhq.selenium:selenium-firefox-driver:4.19.1"
     testRuntimeOnly "org.seleniumhq.selenium:selenium-safari-driver:4.19.1"
+
 }
 
 application {

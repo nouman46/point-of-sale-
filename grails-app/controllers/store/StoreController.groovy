@@ -7,9 +7,13 @@ import grails.gorm.transactions.Transactional
 
 import org.springframework.dao.DataIntegrityViolationException
 
-//@Secured(['ROLE_USER'])
+
 class StoreController {
 
+    def index() {
+        render "Hello, Congratulations for your first POS"
+
+    }
 
 
     def inventory() {
@@ -17,7 +21,7 @@ class StoreController {
         int currentPage = params.page ? params.page.toInteger() : 1
         int totalProducts = Product.count()  // Get total number of products
         int totalPages = Math.ceil(totalProducts / maxResults)  // Calculate total pages
-        int offset = (currentPage - 1) * maxResults  // Calculate offset for the querye
+        int offset = (currentPage - 1) * maxResults  // Calculate offset for the query
 
         // Fetch the products for the current page
         def productList = Product.list(max: maxResults, offset: offset)
@@ -92,4 +96,17 @@ class StoreController {
         }
     }
 
+
+    class DashboardController {
+
+        def index() {
+            if (!session.user) {
+                redirect(controller: "auth", action: "login")
+                return
+            }
+
+            def availablePages = session.allowedPages ?: []
+            render(view: "dashboard", model: [availablePages: availablePages])
+        }
+    }
 }

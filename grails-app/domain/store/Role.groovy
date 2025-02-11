@@ -1,23 +1,15 @@
 package store
 
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import grails.compiler.GrailsCompileStatic
+class Role {
+    String name
 
-@GrailsCompileStatic
-@EqualsAndHashCode(includes='authority')
-@ToString(includes='authority', includeNames=true, includePackage=false)
-class Role implements Serializable {
+    static constraints = {
+        name unique: true, nullable: false
+    }
 
-	private static final long serialVersionUID = 1
+    static mapping = {
+        table 'role'  // Ensure correct table mapping
+        version false // ✅ Ensure Grails does not use a version column
+    }
 
-	String authority
-
-	static constraints = {
-		authority nullable: false, blank: false, unique: true
-	}
-
-	static mapping = {
-		cache true
-	}
 }

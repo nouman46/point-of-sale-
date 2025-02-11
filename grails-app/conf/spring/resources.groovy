@@ -1,5 +1,10 @@
 import store.UserPasswordEncoderListener
-// Place your Spring DSL code here
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+
 beans = {
-    userPasswordEncoderListener(UserPasswordEncoderListener)
+    passwordEncoder(BCryptPasswordEncoder)  // Now Spring can find this class
+
+    userPasswordEncoderListener(UserPasswordEncoderListener) {
+        passwordEncoder = ref('passwordEncoder')
+    }
 }

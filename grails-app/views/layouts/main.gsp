@@ -70,7 +70,7 @@
         <a href="${createLink(controller: 'dashboard', action: 'index')}"><i class="fas fa-home"></i> Dashboard</a>
         <a href="${createLink(controller: 'store', action: 'inventory')}" onclick="return checkAccess('inventory');"><i class="fas fa-box"></i> Inventory</a>
         <a href="${createLink(controller: 'sales', action: 'sales')}" onclick="return checkAccess('sales');"><i class="fas fa-shopping-cart"></i> Sales</a>
-        <a href="${createLink(controller: 'checkout', action: 'checkout')}" onclick="return checkAccess('checkout');"><i class="fas fa-cash-register"></i> Checkout</a>
+        <a href="${createLink(controller: 'order', action: 'checkout')}" onclick="return checkAccess('checkout');"><i class="fas fa-cash-register"></i> Checkout</a>
         <a href="${createLink(controller: 'settings', action: 'settings')}" onclick="return checkAccess('settings');"><i class="fas fa-cog"></i> Settings</a>
         <a href="${createLink(controller: 'subscription', action: 'subscription')}" onclick="return checkAccess('subscription');"><i class="fas fa-credit-card"></i> Subscription</a>
         <a href="${createLink(controller: 'admin', action: 'roleManagement')}" onclick="return checkAccess('roleManagement');"><i class="fas fa-users"></i> User Management</a>

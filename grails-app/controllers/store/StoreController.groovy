@@ -1,37 +1,44 @@
 package store
 
-import grails.converters.JSON
 import grails.gorm.transactions.Transactional
-
-//import grails.plugin.springsecurity.annotation.Secured
-
+import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
-
 
 class StoreController {
 
-    def index() {
-        render "Hello, Congratulations for your first POS"
 
+
+    class StoreController {
+
+        def inventory() {
+            def user = session.user
+            if (!user) {
+                redirect(controller: 'auth', action: 'login')
+                return
+            }
+
+            def userRoles = user.roles.collect { it.roleName }
+            def permissions = [:]
+
+            user.roles.each { role ->
+                role.permissions.each { permission ->
+                    permissions[permission.pageName] = permission
+                }
+            }
+
+            session.userRoles = userRoles
+            session.userPermissions = permissions
+
+            if (!permissions["inventory"]?.canView) {
+                render(view: "/accessDenied")
+                return
+            }
+
+            def products = Product.list()
+            render(view: "inventory", model: [products: products, permissions: permissions["inventory"]])
+        }
     }
 
-
-    def inventory() {
-        int maxResults = 8  // Show 8 products per page
-        int currentPage = params.page ? params.page.toInteger() : 1
-        int totalProducts = Product.count()  // Get total number of products
-        int totalPages = Math.ceil(totalProducts / maxResults)  // Calculate total pages
-        int offset = (currentPage - 1) * maxResults  // Calculate offset for the query
-
-        // Fetch the products for the current page
-        def productList = Product.list(max: maxResults, offset: offset)
-
-        // Fetch all products for search functionality
-        def allProducts = Product.list()
-
-        // Pass the necessary data to the GSP
-        [productList: productList, currentPage: currentPage, totalPages: totalPages, allProducts: allProducts]
-    }
 
     def showProduct(Long id) {
         def product = Product.get(id)
@@ -96,17 +103,4 @@ class StoreController {
         }
     }
 
-
-    class DashboardController {
-
-        def index() {
-            if (!session.user) {
-                redirect(controller: "auth", action: "login")
-                return
-            }
-
-            def availablePages = session.allowedPages ?: []
-            render(view: "dashboard", model: [availablePages: availablePages])
-        }
-    }
 }

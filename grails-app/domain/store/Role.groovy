@@ -1,15 +1,14 @@
 package store
 
 class Role {
-    String name
+    String roleName // e.g., "Admin", "Cashier", "Accountant"
+
+    static hasMany = [permissions: Permission, users: AppUser]
 
     static constraints = {
-        name unique: true, nullable: false
+        roleName unique: true, blank: false
     }
-
     static mapping = {
-        table 'role'  // Ensure correct table mapping
-        version false // ✅ Ensure Grails does not use a version column
+        version false  // Disable optimistic locking
     }
-
 }

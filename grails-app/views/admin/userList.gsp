@@ -1,12 +1,65 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="layout" content="main" />
     <title>User Management</title>
     <meta name="_csrf" content="${session['csrfToken']}" />
-
+    <!-- Bootstrap & jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Custom Styles -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+     body {
+         background: linear-gradient(to right, #f8f9fa, #e9ecef);
+         font-family: 'Poppins', sans-serif;
+     }
+
+    .header {
+        background-color: #343a40;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .btn-custom {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .btn-custom:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    th, td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    tr:hover {
+        background-color: #f1f3f5;
+        transition: background-color 0.3s ease;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+    }
+
+
+    </style>
+
+
     <script>
         $(document).ready(function(){
             var csrfToken = $('meta[name="_csrf"]').attr('content');
@@ -93,11 +146,18 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h2>User Management</h2>
-    <button class="btn btn-primary open-modal" data-action="add">Add User</button>
+    <div class="header text-center">
+        <h2 class="fw-bold"><i class="fas fa-users"></i> User Management</h2>
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+        <button class="btn btn-success btn-custom open-modal" data-action="add">
+            <i class="fas fa-user-plus"></i> Add User
+        </button>
+    </div>
 
-    <table class="table table-bordered mt-3">
-        <thead>
+    <div class="table-responsive mt-4">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-dark">
         <tr>
             <th>Username</th>
             <th>Allowed Pages</th>
@@ -114,23 +174,29 @@
                     <g:set var="userRole" value="${store.UserRole.findByUser(user)?.role?.name}"/>
                     ${userRole ?: 'No role assigned'}
                 </td>
-
-
                 <td>
-                    <button class="btn btn-warning open-modal" data-action="edit" data-id="${user.id}">Edit</button>
-                    <button class="btn btn-danger delete-user" data-id="${user.id}">Delete</button>
+                    <button class="btn btn-warning btn-custom open-modal" data-action="edit" data-id="${user.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-custom delete-user" data-id="${user.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </td>
             </tr>
         </g:each>
         </tbody>
     </table>
+    </div>
+</div>
 
-    <div class="modal fade" id="userModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">User Form</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- User Form Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h4 class="modal-title">User Form</h4>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="userForm">
@@ -154,19 +220,20 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Allowed Pages</label>
-                            <g:each var="page" in="${['inventory', 'sales', 'checkout', 'settings', 'subscription', 'dashboard']}">
+                            <g:each var="page" in="${['inventory', 'sales', 'checkout', 'settings', 'subscription']}">
                                 <label class="me-2">
                                     <input type="checkbox" name="allowedPages" value="${page}"> ${page}
                                 </label>
                             </g:each>
                         </div>
 
-                        <button type="button" id="saveUser" class="btn btn-success">Save</button>
+                        <button type="button" id="saveUser" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 </body>
 </html>

@@ -2,17 +2,16 @@ package store
 
 class AppUser {
     String username
-    String password
-    String allowedPages
+    String password  // Store hashed passwords
+    Boolean isAdmin = false
+
+    static hasMany = [roles: Role]
 
     static constraints = {
-        username unique: true, nullable: false
-        password nullable: false
-        allowedPages nullable: true
+        username unique: true, blank: false
+        password blank: false
     }
-
     static mapping = {
-        table 'app_user'  // ✅ Ensure correct table name
-        version false  // ✅ Disable version column
+        version false  // Disable optimistic locking
     }
 }

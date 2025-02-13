@@ -7,7 +7,7 @@ class Product {
     String productBarcode
     BigDecimal productPrice
     Integer productQuantity
-    String productImage  // Add this line for the image URL or file path
+    String productImage  // Image URL or file path
     Date dateCreated
     Date lastUpdated
 
@@ -18,8 +18,10 @@ class Product {
         productBarcode blank: false, unique: true, maxSize: 50
         productPrice min: 0.01, scale: 2
         productQuantity min: 0
-        productImage nullable: true // Allow image to be optional
+        productImage nullable: true // Optional image field
+    }
+
+    static mapping = {
+        version false  // Disable optimistic locking to fix 'Invalid column name version' error
     }
 }
-
-

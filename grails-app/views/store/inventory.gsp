@@ -1,12 +1,57 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="layout" content="main" />
     <title>Inventory</title>
     <meta name="_csrf" content="${session['csrfToken']}" />
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+    body {
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .header {
+        background-color: #343a40;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .btn-custom {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .btn-custom:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    th, td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    tr:hover {
+        background-color: #f1f3f5;
+        transition: background-color 0.3s ease;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+    }
+
+
+    </style>
+
 
     <script>
         $(document).ready(function(){
@@ -103,10 +148,18 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h2>Inventory</h2>
+    <div class="header text-center">
+        <h2 class="fw-bold"><i class="fas fa-things"></i> Inventory Management</h2>
+    </div>
+    <br>
     <div class="d-flex mb-3">
         <input type="text" id="searchInput" class="form-control" placeholder="Search products" style="width: 300px;"/>
-        <button class="btn btn-primary ms-auto open-modal" data-action="add">Add Product</button>
+
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+        <button class="btn btn-success btn-custom open-modal" data-action="add">
+            <i class="fas fa-user-plus"></i> Add Product
+        </button>
     </div>
 
     <table class="table table-bordered mt-3" id="productTable">
@@ -130,9 +183,17 @@
                 <td>${product.productBarcode}</td>
                 <td>${product.productPrice}</td>
                 <td>${product.productQuantity}</td>
+
                 <td>
-                    <button class="btn btn-warning open-modal" data-action="edit" data-id="${product.id}">Edit</button>
-                    <button class="btn btn-danger delete-product" data-id="${product.id}">Delete</button>
+                    <g:if test="${permissions?.canEdit}">
+                    <button class="btn btn-warning btn-custom open-modal" data-action="edit" data-id="${product.id}">
+                        <i class="fas fa-edit"></i></button>
+                    </g:if>
+                    <g:if test="${permissions?.canDelete}">
+                    <button class="btn btn-danger btn-custom delete-user" data-id="${product.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    </g:if>
                 </td>
             </tr>
         </g:each>

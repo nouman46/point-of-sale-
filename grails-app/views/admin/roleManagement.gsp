@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="layout" content="main" />
   <title>Role Management</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
@@ -161,13 +162,16 @@
           <tbody>
           <g:each var="page" in="${pages}">
             <tr>
-              <td>${page}</td>
+              <td>
+                <input type="hidden" name="pages" value="${page}"/> ${page}
+              </td>
               <td><input type="checkbox" name="canView_${page}"></td>
               <td><input type="checkbox" name="canEdit_${page}"></td>
               <td><input type="checkbox" name="canDelete_${page}"></td>
             </tr>
           </g:each>
           </tbody>
+
         </table>
       </form>
 

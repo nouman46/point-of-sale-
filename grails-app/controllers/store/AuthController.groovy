@@ -10,32 +10,35 @@ class AuthController {
                 println "✅ User Found: ${user.username}"
                 session.user = user
                 session.isAdmin = user.isAdmin
-                session.assignRole = user.assignRole.collect { it.roleName }
+
+                // Ensure roles are properly fetched
+                session.assignRole = user.assignRole ? user.assignRole*.roleName : []
 
                 def permissions = [:]
 
                 if (user.isAdmin) {
                     // ✅ Admin gets access to ALL pages with FULL permissions
-                    def allPages = ["inventory", "sales", "checkout", "users", "settings"] // Add all relevant pages
+                    def allPages = ["inventory", "sales", "checkout", "users", "settings", "reports", "subscription", "roleManagement"]
                     allPages.each { page ->
                         permissions[page] = [canView: true, canEdit: true, canDelete: true]
                     }
                 } else {
                     // ✅ Normal users get permissions from assigned roles
-                    user.assignRole.each { assignRole ->
-                        assignRole.permissions.each { perm ->
-                            permissions[perm.pageName] = [
-                                    canView  : perm.canView,
-                                    canEdit  : perm.canEdit,
-                                    canDelete: perm.canDelete
-                            ]
+                    user.assignRole?.each { assignRole ->
+                        assignRole.permissions?.each { perm ->
+                            if (!permissions.containsKey(perm.pageName)) {
+                                permissions[perm.pageName] = [canView: false, canEdit: false, canDelete: false]
+                            }
+                            permissions[perm.pageName].canView |= perm.canView
+                            permissions[perm.pageName].canEdit |= perm.canEdit
+                            permissions[perm.pageName].canDelete |= perm.canDelete
                         }
                     }
                 }
 
                 session.permissions = permissions
 
-                println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRoles}, Permissions: ${session.permissions}"
+                println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRole}, Permissions: ${session.permissions}"
                 flash.message = "Login successful!"
                 redirect(controller: "dashboard", action: "index")
                 return

@@ -1,3 +1,5 @@
+
+
 <%@ page contentType="text/html;charset=UTF-8" %>
 <html lang="en">
 <head>
@@ -174,6 +176,7 @@
             <th>Actions</th>
         </tr>
         </thead>
+
         <tbody>
         <g:each in="${productList}" var="product">
             <tr>

@@ -1,42 +1,32 @@
 package store
 
 import grails.gorm.transactions.Transactional
+import grails.validation.Validateable
 import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
 
 class StoreController {
 
+    def inventory() {
+        def username = session['loggedInUser']
+        def permissions = session['userPermissions']?.get('inventory')  // Extract only inventory permissions
 
+        println "Session Permissions for $username: $permissions"
 
-    class StoreController {
+        int maxResults = 8  // Show 8 products per page
+        int currentPage = params.page ? params.page.toInteger() : 1
+        int totalProducts = Product.count()  // Get total number of products
+        int totalPages = Math.ceil(totalProducts / maxResults)  // Calculate total pages
+        int offset = (currentPage - 1) * maxResults  // Calculate offset for the query
 
-        def inventory() {
-            def user = session.user
-            if (!user) {
-                redirect(controller: 'auth', action: 'login')
-                return
-            }
+        // Fetch the products for the current page
+        def productList = Product.list(max: maxResults, offset: offset)
 
-            def userRoles = user.roles.collect { it.roleName }
-            def permissions = [:]
+        // Fetch all products for search functionality
+        def allProducts = Product.list()
 
-            user.roles.each { role ->
-                role.permissions.each { permission ->
-                    permissions[permission.pageName] = permission
-                }
-            }
-
-            session.userRoles = userRoles
-            session.userPermissions = permissions
-
-            if (!permissions["inventory"]?.canView) {
-                render(view: "/accessDenied")
-                return
-            }
-
-            def products = Product.list()
-            render(view: "inventory", model: [products: products, permissions: permissions["inventory"]])
-        }
+        // Ensure permissions are passed to the GSP
+        return [productList: productList, currentPage: currentPage, totalPages: totalPages, allProducts: allProducts, permissions: permissions]
     }
 
 

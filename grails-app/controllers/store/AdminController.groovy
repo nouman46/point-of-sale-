@@ -69,24 +69,31 @@ class AdminController {
     }
 
 
-
     @Transactional
     def assignPermission() {
-        def role = AssignRole.get(params.roleId)
+        println "Received params: " + params // Debugging output
 
+        def role = AssignRole.get(params.roleId)
         if (!role) {
             flash.error = "Invalid Role!"
             redirect(action: "roleManagement")
             return
         }
 
-        // Remove old permissions for this role before adding new ones
+        // Check if any pages were selected
+        if (!params.pages) {
+            flash.error = "No pages selected!"
+            redirect(action: "roleManagement")
+            return
+        }
+
+        // Remove old permissions before adding new ones
         Permission.findAllByAssignRole(role)*.delete(flush: true)
 
-        // Iterate through each selected page and assign permissions
+        // Iterate through each selected page
         params.pages.each { page ->
             def permission = new Permission(
-                    assignRole: role,  // Ensure it is mapped correctly
+                    assignRole: role,
                     pageName: page,
                     canView: params["canView_${page}"] == "on",
                     canEdit: params["canEdit_${page}"] == "on",
@@ -94,14 +101,17 @@ class AdminController {
             )
 
             if (!permission.save(flush: true, failOnError: true)) {
-                permission.errors.allErrors.each { println it } // Debugging output
+                println "Error saving permission for ${page}: " + permission.errors
                 flash.error = "Failed to save permission for ${page}"
+            } else {
+                println "Saved permission: " + permission
             }
         }
 
         flash.message = "Permissions assigned successfully!"
         redirect(action: "roleManagement")
     }
+
 
 
 }

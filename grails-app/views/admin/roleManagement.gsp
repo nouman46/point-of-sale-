@@ -2,66 +2,180 @@
 <html>
 <head>
   <title>Role Management</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <style>
-  body {
-    background-color: #f4f4f4;
-    font-family: "Poppins", sans-serif;
-  }
-  .container {
-    margin-top: 30px;
-  }
-  .card {
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+<div class="container mt-4">
+  <h2 class="text-center mb-4">Role Management</h2>
 
-<div class="container">
-  <h2 class="text-center">Role Management</h2>
+<!-- Flash Messages -->
+  <g:if test="${flash.message}">
+    <div class="alert alert-success">${flash.message}</div>
+  </g:if>
+  <g:if test="${flash.error}">
+    <div class="alert alert-danger">${flash.error}</div>
+  </g:if>
 
-  <!-- Role Form -->
-  <div class="card p-3 mb-3">
-    <h5>Add/Edit Role</h5>
-    <form id="roleForm">
-      <input type="hidden" id="roleId">
-      <div class="mb-2">
-        <label>Role Name</label>
-        <input type="text" id="roleName" class="form-control" required>
-      </div>
-      <button type="button" class="btn btn-primary" onclick="saveRole()">Save Role</button>
-    </form>
-  </div>
+<!-- Tabs Navigation -->
+  <ul class="nav nav-tabs" id="roleTabs">
+    <li class="nav-item">
+      <a class="nav-link active" data-bs-toggle="tab" href="#users">Users</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="tab" href="#roles">Roles</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="tab" href="#permissions">Permissions</a>
+    </li>
+  </ul>
 
-  <!-- Role Listing -->
-  <div class="card p-3">
-    <h5>Existing Roles</h5>
-    <table class="table">
-      <thead>
-      <tr>
-        <th>Role</th>
-        <th>Actions</th>
-      </tr>
-      </thead>
-      <tbody id="roleList">
-      <!-- Roles will be dynamically populated here -->
-      </tbody>
-    </table>
-  </div>
+  <div class="tab-content mt-3">
+    <!-- Users Section -->
+    <div class="tab-pane fade show active" id="users">
+      <h4>Add User</h4>
+      <form action="${createLink(controller: 'admin', action: 'saveUser')}" method="post" class="mb-4">
+        <div class="row">
+          <div class="col-md-4">
+            <input type="text" name="username" class="form-control" placeholder="Username" required>
+          </div>
+          <div class="col-md-4">
+            <input type="password" name="password" class="form-control" placeholder="Password" required>
+          </div>
+          <div class="col-md-2">
+            <input type="checkbox" name="isAdmin"> Admin
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success">Add User</button>
+          </div>
+        </div>
+      </form>
 
-  <!-- Permissions Assignment -->
-  <div class="card p-3 mt-3">
-    <h5>Assign Permissions</h5>
-    <form id="permissionForm">
-      <select id="roleSelect" class="form-control mb-2">
-        <option value="">Select Role</option>
-      </select>
-      <table class="table">
+      <h4>Assign Role to User</h4>
+      <form action="${createLink(controller: 'admin', action: 'assignRole')}" method="post">
+        <div class="row">
+          <div class="col-md-5">
+            <select name="userId" class="form-select" required>
+              <option value="">Select User</option>
+              <g:each var="user" in="${users}">
+                <option value="${user.id}">${user.username}</option>
+              </g:each>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <select name="roleId" class="form-select" required>
+              <option value="">Select Role</option>
+              <option value="">-- Select Role --</option>
+              <g:each in="${roles}" var="role">
+                <option value="${role.id}">${role.roleName}</option>
+              </g:each>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Assign</button>
+          </div>
+        </div>
+      </form>
+
+      <h4 class="mt-4">User List</h4>
+      <table class="table table-bordered">
         <thead>
         <tr>
+          <th>Username</th>
+          <th>Role(s)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <g:each var="user" in="${users}">
+          <tr>
+            <td>${user.username}</td>
+            <td>
+              <g:each var="role" in="${user.assignRole}">
+                <span class="badge bg-info">${role.roleName}</span>
+              </g:each>
+            </td>
+          </tr>
+        </g:each>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Roles Section -->
+    <div class="tab-pane fade" id="roles">
+      <h4>Add Role</h4>
+      <form action="${createLink(controller: 'admin', action: 'saveRole')}" method="post" class="mb-4">
+        <div class="row">
+          <div class="col-md-8">
+            <input type="text" name="roleName" class="form-control" placeholder="Role Name" required>
+          </div>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-success">Add Role</button>
+          </div>
+        </div>
+      </form>
+
+      <h4>Existing Roles</h4>
+      <table class="table table-bordered">
+        <thead>
+        <tr>
+          <th>Role Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        <g:each var="role" in="${assignRoles}">
+          <tr>
+            <td>${role.roleName}</td>
+          </tr>
+        </g:each>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Permissions Section -->
+    <div class="tab-pane fade" id="permissions">
+      <h4>Assign Permissions to Role</h4>
+      <form action="${createLink(controller: 'admin', action: 'assignPermission')}" method="post">
+        <div class="row">
+          <div class="col-md-6">
+            <select name="roleId" id="roleDropdown" class="form-control">
+              <option value="">-- Select Role --</option>
+              <g:each in="${roles}" var="role">
+                <option value="${role.id}">${role.roleName}</option>
+              </g:each>
+            </select>
+
+          </div>
+          <div class="col-md-6">
+            <button type="submit" class="btn btn-primary">Save Permissions</button>
+          </div>
+        </div>
+
+        <table class="table table-bordered mt-3">
+          <thead>
+          <tr>
+            <th>Page</th>
+            <th>View</th>
+            <th>Edit</th>
+            <th>Delete</th>
+          </tr>
+          </thead>
+          <tbody>
+          <g:each var="page" in="${pages}">
+            <tr>
+              <td>${page}</td>
+              <td><input type="checkbox" name="canView_${page}"></td>
+              <td><input type="checkbox" name="canEdit_${page}"></td>
+              <td><input type="checkbox" name="canDelete_${page}"></td>
+            </tr>
+          </g:each>
+          </tbody>
+        </table>
+      </form>
+
+      <h4 class="mt-4">Current Permissions</h4>
+      <table class="table table-bordered">
+        <thead>
+        <tr>
+          <th>Role</th>
           <th>Page</th>
           <th>View</th>
           <th>Edit</th>
@@ -69,109 +183,21 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
-          <td>Inventory</td>
-          <td><input type="checkbox" name="inventory_view"></td>
-          <td><input type="checkbox" name="inventory_edit"></td>
-          <td><input type="checkbox" name="inventory_delete"></td>
-        </tr>
-        <tr>
-          <td>Sales</td>
-          <td><input type="checkbox" name="sales_view"></td>
-          <td><input type="checkbox" name="sales_edit"></td>
-          <td><input type="checkbox" name="sales_delete"></td>
-        </tr>
+        <g:each var="permission" in="${permissions}">
+          <tr>
+            <td>${permission.assignRole.roleName}</td>
+            <td>${permission.pageName}</td>
+            <td>${permission.canView ? '✅' : '❌'}</td>
+            <td>${permission.canEdit ? '✅' : '❌'}</td>
+            <td>${permission.canDelete ? '✅' : '❌'}</td>
+          </tr>
+        </g:each>
         </tbody>
       </table>
-      <button type="button" class="btn btn-success" onclick="savePermissions()">Save Permissions</button>
-    </form>
+    </div>
   </div>
 </div>
 
-<script>
-  $(document).ready(function() {
-    loadRoles();
-  });
-
-  function loadRoles() {
-    $.get("/admin/getRoles", function(data) {
-      console.log("Roles received:", data); // Debugging
-      if (!Array.isArray(data)) {
-        console.error("Invalid roles data received:", data);
-        return;
-      }
-
-      let roleOptions = '<option value="">Select Role</option>';
-      let roleRows = "";
-
-      data.forEach(role => {
-        roleOptions += `<option value="${role.id}">${role.roleName}</option>`;
-        roleRows += `<tr>
-                    <td>${role.roleName}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning" onclick="editRole(${role.id}, '${role.roleName}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteRole(${role.id})">Delete</button>
-                    </td>
-                </tr>`;
-      });
-
-      $("#roleSelect").html(roleOptions);
-      $("#roleList").html(roleRows);
-    });
-
-
-    $("#roleSelect").html(roleOptions);
-      $("#roleList").html(roleRows);
-    });
-  }
-
-  function saveRole() {
-    let roleData = {
-      id: $("#roleId").val(),
-      roleName: $("#roleName").val()
-    };
-
-    $.post("/admin/saveRole", roleData, function(response) {
-      alert(response.message);
-      $("#roleForm")[0].reset();
-      loadRoles();
-    });
-  }
-
-  function editRole(id, name) {
-    $("#roleId").val(id);
-    $("#roleName").val(name);
-  }
-
-  function deleteRole(id) {
-    if (confirm("Are you sure you want to delete this role?")) {
-      $.post("/admin/deleteRole", { id: id }, function(response) {
-        alert(response.message);
-        loadRoles();
-      });
-    }
-  }
-
-  function savePermissions() {
-    let roleId = $("#roleSelect").val();
-    let permissions = {
-      roleId: roleId,
-      inventory: {
-        canView: $("input[name='inventory_view']").is(":checked"),
-        canEdit: $("input[name='inventory_edit']").is(":checked"),
-        canDelete: $("input[name='inventory_delete']").is(":checked")
-      },
-      sales: {
-        canView: $("input[name='sales_view']").is(":checked"),
-        canEdit: $("input[name='sales_edit']").is(":checked"),
-        canDelete: $("input[name='sales_delete']").is(":checked")
-      }
-    };
-
-    $.post("/admin/savePermissions", permissions, function(response) {
-      alert(response.message);
-    });
-  }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

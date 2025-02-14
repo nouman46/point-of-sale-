@@ -10,7 +10,7 @@ class AuthController {
                 println "✅ User Found: ${user.username}"
                 session.user = user
                 session.isAdmin = user.isAdmin
-                session.roles = user.roles.collect { it.roleName }
+                session.assignRole = user.assignRole.collect { it.roleName }
 
                 def permissions = [:]
 
@@ -22,8 +22,8 @@ class AuthController {
                     }
                 } else {
                     // ✅ Normal users get permissions from assigned roles
-                    user.roles.each { role ->
-                        role.permissions.each { perm ->
+                    user.assignRole.each { assignRole ->
+                        assignRole.permissions.each { perm ->
                             permissions[perm.pageName] = [
                                     canView  : perm.canView,
                                     canEdit  : perm.canEdit,
@@ -35,7 +35,7 @@ class AuthController {
 
                 session.permissions = permissions
 
-                println "✅ Session Set: ${session.user.username}, Roles: ${session.roles}, Permissions: ${session.permissions}"
+                println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRoles}, Permissions: ${session.permissions}"
                 flash.message = "Login successful!"
                 redirect(controller: "dashboard", action: "index")
                 return

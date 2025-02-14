@@ -1,17 +1,19 @@
 package store
 
 class Permission {
-    String pageName  // e.g., "inventory", "sales", "checkout"
+    String pageName
     Boolean canView = false
     Boolean canEdit = false
     Boolean canDelete = false
 
-    static belongsTo = [role: Role]
+    static belongsTo = [assignRole: AssignRole]  // Ensure correct association
 
     static constraints = {
         pageName blank: false
     }
+
     static mapping = {
-        version false  // Disable optimistic locking
+        version false
+        assignRole column: "assign_role_id"  // Ensure correct FK mapping
     }
 }

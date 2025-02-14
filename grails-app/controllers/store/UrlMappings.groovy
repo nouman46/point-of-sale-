@@ -4,9 +4,15 @@ class UrlMappings {
 
     static mappings = {
         "/auth/login"(controller: "auth", action: "login")
+        "/admin/roleManagement"(controller: "admin", action: "roleManagement")
+        "/admin/roleManagement"(controller: "admin", action: "roleManagement")
+        "/admin/saveUser"(controller: "admin", action: "saveUser")
+        "/admin/assignRole"(controller: "admin", action: "assignRole")
+        "/admin/saveRole"(controller: "admin", action: "saveRole")
+        "/admin/assignPermission"(controller: "admin", action: "assignPermission")
         "/auth/logout"(controller: "auth", action: "logout")
         "/"(controller: "dashboard", action: "index")  // Default landing page
-        "/admin/roleManagement"(controller: "admin", action: "roleManagement")
+
         "/dashboard"(controller: "dashboard", action: "index")
         "/inventory"(controller: "store", action: "inventory")
         "/sales"(controller: "sales", action: "sales")

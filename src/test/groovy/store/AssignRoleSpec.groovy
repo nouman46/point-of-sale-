@@ -3,7 +3,7 @@ package store
 import grails.testing.gorm.DomainUnitTest
 import spock.lang.Specification
 
-class PageSpec extends Specification implements DomainUnitTest<Page> {
+class AssignRoleSpec extends Specification implements DomainUnitTest<AssignRole> {
 
     def setup() {
     }

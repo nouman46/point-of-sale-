@@ -2,6 +2,7 @@ package store
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import java.text.SimpleDateFormat
 
 class OrderController {
 
@@ -103,7 +104,39 @@ class OrderController {
     }
 
     def listOrders() {
-        def orders = Order.list(sort: "dateCreated", order: "desc")
-        render(view: "orderList", model: [orders: orders])
+        // Retrieve startDate and endDate parameters from the request
+        String startDateStr = params.startDate
+        String endDateStr = params.endDate
+
+        def orders = Order.createCriteria().list {
+            if (startDateStr && endDateStr) {
+                // Convert String to java.util.Date
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+                Date startDate = sdf.parse(startDateStr)
+                Date endDate = sdf.parse(endDateStr)
+
+                // Adjust endDate to include the full day (23:59:59)
+                Calendar cal = Calendar.getInstance()
+                cal.setTime(endDate)
+                cal.set(Calendar.HOUR_OF_DAY, 23)
+                cal.set(Calendar.MINUTE, 59)
+                cal.set(Calendar.SECOND, 59)
+                cal.set(Calendar.MILLISECOND, 999)
+                endDate = cal.getTime()
+
+                // Ensure orders on startDate and endDate are included
+                ge("dateCreated", startDate) // dateCreated >= startDate
+                le("dateCreated", endDate)   // dateCreated <= endDate
+            }
+            order("dateCreated", "desc")  // Sort by latest orders
+        }
+
+        // Calculate the total sales amount
+        def totalSales = orders.sum { it.totalAmount }
+
+        // Render the view with the filtered orders and total sales
+        render(view: "orderList", model: [orders: orders, startDate: startDateStr, endDate: endDateStr, totalSales: totalSales])
     }
+
+
 }

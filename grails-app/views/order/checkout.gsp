@@ -1,77 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="layout" content="main" />
     <title>Checkout</title>
-    <asset:stylesheet src="checkout.css"/>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
     <style>
-    /* Modal Styles */
-    .modal {
-        display: none; /* Initially hidden */
-        position: fixed;
-        z-index: 1000;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        padding: 20px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        border-radius: 10px;
-        text-align: center;
-        width: 350px;
-        transition: all 0.3s ease-in-out;
-    }
-    .modal-content {
-        padding: 20px;
-    }
-    .modal-overlay {
+    /* Page fade-in effect */
+    body {
         display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
     }
-    .close {
-        float: right;
-        cursor: pointer;
-        font-size: 22px;
-        font-weight: bold;
+
+    /* Fade-in animation */
+    .fade-in {
+        animation: fadeInAnimation 0.5s ease-in-out;
+    }
+
+    @keyframes fadeInAnimation {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Slide-down animation */
+    .slide-down {
+        display: none;
+    }
+
+    /* Fade-out effect for removing items */
+    .fade-out {
+        opacity: 0;
+        transition: opacity 0.4s ease-out;
     }
     </style>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <h1>Checkout</h1>
+<div class="container mt-4 fade-in">
+    <h1 class="text-center mb-4">🛒 Checkout</h1>
 
     <g:form id="checkoutForm">
         <!-- Customer Name -->
-        <div class="form-group">
-            <label>Customer Name:</label>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Customer Name:</label>
             <g:textField name="customerName" class="form-control" required="true"/>
         </div>
 
         <!-- Barcode Input -->
-        <div class="form-group">
-            <label>Scan Barcode:</label>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Scan Barcode:</label>
             <div class="input-group">
                 <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." autofocus>
-                <div class="input-group-append">
-                    <button type="button" id="scanButton" class="btn btn-primary add-item-btn">
-                        ➕ Add Product
-                    </button>
-                </div>
+                <button type="button" id="scanButton" class="btn btn-primary">
+                    ➕ Add Product
+                </button>
             </div>
         </div>
 
         <input type="hidden" id="totalInput" name="total" value="0.00">
 
         <!-- Table for Products -->
-        <table class="table" id="itemsTable">
-            <thead>
+        <table class="table table-striped table-hover mt-4" id="itemsTable">
+            <thead class="table-dark">
             <tr>
                 <th>Product</th>
                 <th>Price</th>
@@ -86,37 +84,41 @@
         </table>
 
         <!-- Total Section -->
-        <div class="total-section">
-            <div class="row">
-                <div class="col-md-6 offset-md-6">
-                    <div class="d-flex justify-content-between font-weight-bold">
-                        <span>Total:</span>
-                        <span id="total">0.00 PKR</span>
-                    </div>
-                </div>
-            </div>
+        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
+            <h4 class="fw-bold">Total:</h4>
+            <h4 id="total" class="text-success">0.00 PKR</h4>
         </div>
 
         <!-- Checkout Button -->
-        <button type="button" id="checkoutButton" class="btn btn-success btn-lg btn-block mt-4 checkout-btn">
+        <button type="button" id="checkoutButton" class="btn btn-success btn-lg w-100 mt-3">
             ✅ Complete Checkout
         </button>
     </g:form>
 </div>
 
 <!-- Checkout Confirmation Modal -->
-<div class="modal-overlay"></div> <!-- Background overlay -->
-<div id="checkoutModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>✅ Checkout Completed!</h2>
-        <p>Your order has been successfully placed.</p>
-        <button type="button" id="closeSuccess" class="btn btn-success">OK</button>
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">✅ Checkout Completed!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Your order has been successfully placed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="closeSuccess" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     $(document).ready(function () {
+        // Fade in the page smoothly on load
+        $("body").fadeIn(400);
+
         // Fetch product when barcode is scanned
         $('#scanButton').click(function () {
             const barcode = $('#barcodeInput').val();
@@ -126,7 +128,11 @@
                     data: { productBarcode: barcode },
                     success: function (data) {
                         console.log("✅ Product fetched:", data);
-                        $('#itemsBody').append(data);
+
+                        let newRow = $(data).hide(); // Start hidden
+                        $('#itemsBody').append(newRow);
+                        newRow.fadeIn(400); // Smooth fade-in animation
+
                         updateTotals();
                         $('#barcodeInput').val('').focus();
                     },
@@ -148,10 +154,13 @@
             updateTotals();
         });
 
-        // Remove item from list
+        // Remove item with fade-out effect
         $(document).on('click', '.remove-item', function () {
-            $(this).closest('tr').remove();
-            updateTotals();
+            let row = $(this).closest('tr');
+            row.fadeOut(400, function () {
+                $(this).remove();
+                updateTotals();
+            });
         });
 
         // Handle Checkout Button Click
@@ -176,17 +185,10 @@
                 }
             });
 
-            console.log("Collected Products:", products);
-
             if (products.length === 0) {
                 alert("❌ No products added to checkout.");
                 return;
             }
-
-            console.log("Data being sent to backend:", {
-                customerName: customerName,
-                products: products
-            });
 
             // Send data to backend
             $.ajax({
@@ -199,17 +201,12 @@
                 }),
                 success: function (response) {
                     if (response.status === "success") {
-                        $(".modal-overlay").fadeIn(); // Show overlay
-                        $("#checkoutModal").fadeIn(); // Show modal
+                        const checkoutModal = new bootstrap.Modal(document.getElementById("checkoutModal"));
+                        checkoutModal.show();
 
-                        setTimeout(function () {
-                            $(".modal-overlay").fadeOut();
-                            $("#checkoutModal").fadeOut();
-                        }, 3000); // Auto-hide modal after 3 seconds
-
-                        $("#checkoutForm")[0].reset(); // Reset form
-                        $("#itemsBody").empty(); // Clear table
-                        $("#total").text("0.00 PKR"); // Reset total price
+                        $("#checkoutForm")[0].reset();
+                        $("#itemsBody").empty();
+                        $("#total").text("0.00 PKR");
                     } else {
                         alert("❌ Error: " + response.message);
                     }
@@ -218,12 +215,6 @@
                     alert("❌ Something went wrong. Please try again.");
                 }
             });
-        });
-
-        // Close modal
-        $(".close, #closeSuccess").click(function () {
-            $(".modal-overlay").fadeOut();
-            $("#checkoutModal").fadeOut();
         });
 
         // Update total price
@@ -237,6 +228,7 @@
             $('#totalInput').val(subtotal.toFixed(2));
         }
     });
+
 </script>
 
 </body>

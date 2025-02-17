@@ -70,7 +70,7 @@
         <a href="${createLink(controller: 'dashboard', action: 'index')}"><i class="fas fa-home"></i> Dashboard</a>
         <a href="${createLink(controller: 'store', action: 'inventory')}" onclick="return checkAccess('inventory');"><i class="fas fa-box"></i> Inventory</a>
         <a href="${createLink(controller: 'order', action: 'listOrders')}" onclick="return checkAccess('listOrders');">
-            <i class="fas fa-shopping-cart"></i> Orders
+            <i class="fas fa-shopping-cart"></i> Sales
         </a>
         <a href="${createLink(controller: 'order', action: 'checkout')}" onclick="return checkAccess('checkout');"><i class="fas fa-cash-register"></i> Checkout</a>
         <a href="${createLink(controller: 'settings', action: 'settings')}" onclick="return checkAccess('settings');"><i class="fas fa-cog"></i> Settings</a>

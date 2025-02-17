@@ -16,9 +16,20 @@ class UrlMappings {
         "/dashboard"(controller: "dashboard", action: "index")
         "/inventory"(controller: "store", action: "inventory")
         "/sales"(controller: "sales", action: "sales")
+        // ✅ Checkout Page
         "/order/checkout"(controller: "order", action: "checkout")
+
+        // ✅ Fetch Product by Barcode
         "/order/getProductByBarcode"(controller: "order", action: "getProductByBarcode")
+
+        // ✅ Save Order (POST request)
         "/order/saveOrder"(controller: "order", action: "saveOrder", method: "POST")
+
+        // ✅ List All Orders
+        "/order/listOrders"(controller: "order", action: "listOrders")
+
+        // ✅ View Specific Order Details
+        "/order/$id/details"(controller: "order", action: "orderDetails")
         "/settings"(controller: "settings", action: "settings")
         "/subscription"(controller: "subscription", action: "subscription")
         "/admin/userList"(controller: "admin", action: "userList")

@@ -51,6 +51,11 @@
             transform: scale(1.05);
         }
 
+        /* Add cursor pointer for table headers */
+        th {
+            cursor: pointer;
+        }
+
         /* Error message styling */
         .error-message {
             color: red;
@@ -63,6 +68,11 @@
         .form-group {
             position: relative; /* Make sure the error message is positioned relative to this */
         }
+
+        /* Search box */
+        #searchBox {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -72,6 +82,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="fw-bold text-primary">📋 Sales Orders</h1>
     </div>
+
+    <!-- Search Box -->
+    <input type="text" id="searchBox" class="form-control mb-4" placeholder="Search by Order ID or Customer Name">
 
     <!-- Date Filter Form -->
     <form action="${createLink(controller: 'order', action: 'listOrders')}" method="get" id="orderFilterForm">
@@ -93,15 +106,15 @@
 
     <!-- Orders Table -->
     <div class="table-responsive fade-in">
-        <table class="table table-striped table-bordered shadow-sm">
+        <table class="table table-striped table-bordered shadow-sm" id="orderTable">
             <thead class="table-dark">
-            <tr>
-                <th>🆔 Order ID</th>
-                <th>👤 Customer Name</th>
-                <th>💰 Total Price</th>
-                <th>📅 Date</th>
-                <th>🔍 Action</th>
-            </tr>
+                <tr>
+                    <th onclick="sortTable(0)">🆔 Order ID &#x2195;</th>
+                    <th onclick="sortTable(1)">👤 Customer Name &#x2195;</th>
+                    <th onclick="sortTable(2)">💰 Total Price &#x2195;</th>
+                    <th onclick="sortTable(3)">📅 Date &#x2195;</th>
+                    <th>🔍 Action</th>
+                </tr>
             </thead>
             <tbody>
             <g:each var="order" in="${orders}" status="index">
@@ -128,7 +141,7 @@
     </div>
 </div>
 
-<!-- JavaScript for Animations and Date Validation -->
+<!-- JavaScript for Animations, Date Validation, Table Sorting, and Search -->
 <script>
     function animateOnView() {
         const observer = new IntersectionObserver((entries, observer) => {
@@ -170,7 +183,44 @@
 
         endDateInput.addEventListener("change", validateDates);
         startDateInput.addEventListener("change", validateDates); // Also validate when start date changes
+
+        // Search function
+        const searchBox = document.getElementById("searchBox");
+        searchBox.addEventListener("keyup", function () {
+            const filter = searchBox.value.toLowerCase();
+            const rows = document.querySelectorAll("#orderTable tbody tr");
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName("td");
+                const orderId = cells[0].textContent.toLowerCase();  // Order ID (column 0)
+                const customerName = cells[1].textContent.toLowerCase();  // Customer Name (column 1)
+
+                // Only check Order ID and Customer Name for matches
+                const matchFound = orderId.includes(filter) || customerName.includes(filter);
+
+                row.style.display = matchFound ? "" : "none";  // Show or hide row based on match
+            });
+        });
+
     });
+
+    // Sort table function
+    let sortDirection = [true, true, true, true]; // true = ascending, false = descending
+    function sortTable(columnIndex) {
+        const table = document.getElementById("orderTable");
+        const rows = Array.from(table.rows).slice(1);
+        const isAscending = sortDirection[columnIndex];
+
+        rows.sort((rowA, rowB) => {
+            const cellA = rowA.cells[columnIndex].textContent.trim();
+            const cellB = rowB.cells[columnIndex].textContent.trim();
+
+            const comparison = isNaN(cellA) || isNaN(cellB) ? cellA.localeCompare(cellB) : parseFloat(cellA) - parseFloat(cellB);
+            return isAscending ? comparison : -comparison;
+        });
+
+        rows.forEach(row => table.appendChild(row)); // Reorder rows
+        sortDirection[columnIndex] = !isAscending; // Toggle sort direction
+    }
 </script>
 
 </body>

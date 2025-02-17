@@ -77,11 +77,13 @@ class OrderController {
         order.totalAmount = order.orderItems.sum { it.subtotal }
 
         if (order.save(flush: true, failOnError: true)) {
-            render([status: "success", message: "Checkout completed!"] as JSON)
+            // Include orderId in the response
+            render([status: "success", message: "Checkout completed!", orderId: order.id] as JSON)
         } else {
             render([status: "error", message: "Error while saving the order"] as JSON)
         }
     }
+
 
     def orderDetails(Long id) {
         def order = Order.get(id)

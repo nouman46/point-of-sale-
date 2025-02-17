@@ -27,6 +27,7 @@ class UrlMappings {
 
         // ✅ List All Orders
         "/order/listOrders"(controller: "order", action: "listOrders")
+        "/order/orderDetails/$id?"(controller: "order", action: "orderDetails")
 
         // ✅ View Specific Order Details
         "/order/$id/details"(controller: "order", action: "orderDetails")

@@ -7,11 +7,31 @@ class UrlMappings {
         "/admin/roleManagement"(controller: "admin", action: "roleManagement")
         "/admin/roleManagement"(controller: "admin", action: "roleManagement")
         "/admin/saveUser"(controller: "admin", action: "saveUser")
+        "/admin/editUser/$id"(controller: 'admin', action: 'editUser')
+        "/admin/deleteUser"(controller: "admin", action: "deleteUser")
+        "/admin/editUser"(controller: "admin", action: "editUser")
+
+
+        // URL for deleting a user
+// Edit user action
+
+
+
+        // URL for editing a role
+        "/admin/editRole/$id"(controller: 'admin', action: 'editRole')
+
+        // URL for deleting a role
         "/admin/assignRole"(controller: "admin", action: "assignRole")
         "/admin/saveRole"(controller: "admin", action: "saveRole")
+
         "/admin/assignPermission"(controller: "admin", action: "assignPermission")
         "/auth/logout"(controller: "auth", action: "logout")
         "/"(controller: "dashboard", action: "index")  // Default landing page
+        "/admin/editRole"(controller: "admin", action: "editRole")
+        "/admin/deleteRole"(controller: "admin", action: "deleteRole")
+
+
+
 
         "/dashboard"(controller: "dashboard", action: "index")
         "/inventory"(controller: "store", action: "inventory")
@@ -34,10 +54,10 @@ class UrlMappings {
         "/subscription"(controller: "subscription", action: "subscription")
         "/admin/userList"(controller: "admin", action: "userList")
         "/admin/saveUser"(controller: "admin", action: "saveUser")
-        "/admin/editUser/$id"(controller: "admin", action: "editUser")
+
         "/admin/updateUser"(controller: "admin", action: "updateUser")
         "/admin/showUser/$id"(controller: "admin", action: "showUser")  // Fetch a user for editing
-        "/admin/deleteUser/$id"(controller: "admin", action: "deleteUser")  // Delete user
+        // Delete user
         "/store/inventory"(controller: "store", action: "inventory")
         "/store/showProduct/$id"(controller: "store", action: "showProduct")
         "/store/saveProduct"(controller: "store", action: "saveProduct")

@@ -187,17 +187,24 @@
                 <td>${product.productPrice}</td>
                 <td>${product.productQuantity}</td>
 
+
+
+
+
                 <td>
-                    <g:if test="${permissions?.canEdit}">
-                    <button class="btn btn-warning btn-custom open-modal" data-action="edit" data-id="${product.id}">
-                        <i class="fas fa-edit"></i></button>
+                    <g:if test="${session.permissions?.inventory?.canEdit}">
+                        <button class="btn btn-warning btn-sm open-modal" data-action="edit" data-id="${product.id}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
                     </g:if>
-                    <g:if test="${permissions?.canDelete}">
-                    <button class="btn btn-danger btn-custom delete-user" data-id="${product.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
+
+                    <g:if test="${session.permissions?.inventory?.canDelete}">
+                        <button class="btn btn-danger btn-sm delete-product" data-id="${product.id}">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
                     </g:if>
                 </td>
+
             </tr>
         </g:each>
         </tbody>

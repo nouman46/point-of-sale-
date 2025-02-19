@@ -31,7 +31,10 @@ class UrlMappings {
         // ✅ View Specific Order Details
         "/order/$id/details"(controller: "order", action: "orderDetails")
         "/settings"(controller: "settings", action: "settings")
-        "/subscription"(controller: "subscription", action: "subscription")
+        "/subscription"(controller: "subscription", action: "index")
+        "/subscription/index"(controller: "subscription", action: "index")
+        "/subscription/subscribe/$planId"(controller: "subscription", action: "subscribe")
+
         "/admin/userList"(controller: "admin", action: "userList")
         "/admin/saveUser"(controller: "admin", action: "saveUser")
         "/admin/editUser/$id"(controller: "admin", action: "editUser")

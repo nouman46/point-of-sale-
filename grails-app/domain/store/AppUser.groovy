@@ -4,6 +4,7 @@ class AppUser {
     String username
     String password
     Boolean isAdmin = false
+    UserSubscription activeSubscription
 
     static hasMany = [assignRole: AssignRole]
     static belongsTo = AssignRole  // Ensure correct bidirectional mapping
@@ -11,6 +12,7 @@ class AppUser {
     static constraints = {
         username unique: true, blank: false
         password blank: false
+        activeSubscription(nullable: true)
     }
 
     static mapping = {

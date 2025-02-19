@@ -19,6 +19,11 @@ class UrlMappings {
         "/admin/assignPermission"(controller: "admin", action: "assignPermission")
         // ✅ Logout Action
         "/auth/logout"(controller: "auth", action: "logout")
+        "/"(controller: "dashboard", action: "index")  // Default landing page
+
+        // ✅ Store Owner Registration Page
+        "/storeOwner/register"(controller: 'storeOwner', action: 'register')
+
         // ✅ Default Landing Page
         "/"(controller: "dashboard", action: "index")
         // ✅ Dashboard Home
@@ -75,5 +80,10 @@ class UrlMappings {
         "500"(view: "/error")
         // ✅ Not Found Page
         "404"(view: "/notFound")
+
+
+
+        "500"(view: "/error")  // Error page
+        "404"(view: "/notFound")  // Not Found page
     }
 }

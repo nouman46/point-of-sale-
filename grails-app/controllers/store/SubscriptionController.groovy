@@ -3,8 +3,6 @@ package store
 import grails.gorm.transactions.Transactional
 
 class SubscriptionController {
-    def subscriptionService
-    def springSecurityService
 
     def index() {
         if (!hasAdminAccess()) {
@@ -12,18 +10,11 @@ class SubscriptionController {
             return
         }
 
-        def user = AppUser.get(springSecurityService.principal.id)
+        def user = session.user
         def currentSubscription = UserSubscription.findByUserAndIsActive(user, true)
         def plans = SubscriptionPlan.list()
 
         [plans: plans, currentSubscription: currentSubscription]
-
-//        plans.each { plan ->
-//            plan.features = plan.features.collect { feature ->
-//                feature.replaceAll(/([A-Z])/) { match -> " " + match.toLowerCase() }
-//            }
-//        }
-//        render(view: "index", model:[plans: plans, currentSubscription: session.user?.activeSubscription])
 
     }
 
@@ -34,9 +25,8 @@ class SubscriptionController {
             return
         }
 
-        def user = AppUser.get(springSecurityService.principal.id)
-        def planID = params.long('planId')
-        def plan = SubscriptionPlan.get(planID)
+        def user = session.user
+        def plan = SubscriptionPlan.get(planId)
 
         if (!plan) {
             flash.message = "Plan not found."
@@ -44,78 +34,61 @@ class SubscriptionController {
             return
         }
 
-        // Deactivate current subscription if exists
-        def currentSubscription = UserSubscription.findByUserAndIsActive(user, true)
-        if (currentSubscription) {
-            currentSubscription.isActive = false
-            currentSubscription.save(flush: true)
+        UserSubscription.withTransaction { status ->
+            try {
+                // Deactivate current subscription if exists
+                def currentSubscription = UserSubscription.findByUserAndIsActive(user, true)
+                println("Current subscription: $currentSubscription")
+
+                if (currentSubscription) {
+                    currentSubscription.isActive = false
+                    if (!currentSubscription.save(flush: true)) {
+                        println("Failed to deactivate current subscription: ${currentSubscription.errors}")
+                        throw new RuntimeException("Failed to deactivate current subscription: ${currentSubscription.errors}")
+                    }
+                }
+                UserSubscription.findAllByUserAndIsActive(user, true).each { sub ->
+                    sub.isActive = false
+                    if (!sub.save(flush: true)) {
+                        throw new RuntimeException("Failed to deactivate subscription: ${sub.errors}")
+                    }
+                }
+                println("Deactivated current subscription: $currentSubscription")
+
+
+                // Create new subscription
+                def newSubscription = new UserSubscription(
+                        user: user,
+                        plan: plan,
+                        startDate: new Date(),
+                        endDate: calculateEndDate(plan.billingCycle))
+
+                if (!newSubscription.save(flush: true)) {
+                    throw new RuntimeException("Failed to save new subscription: ${newSubscription.errors}")
+                }
+                println("New subscription: $newSubscription")
+
+                def userFromDB = AppUser.get(user.id)
+                println("User from DB: $userFromDB")
+                userFromDB.activeSubscription = newSubscription
+                if (!userFromDB.save(flush: true)) {
+                    println("User save failed: ${userFromDB.errors}")
+                }
+                println("User after save: $user")
+
+                println("Successfully subscribed to ${plan.name}")
+                flash.message = "Successfully subscribed to ${plan.name}"
+
+            } catch (Exception e) {
+                status.setRollbackOnly()
+                println("Failed to subscribe: ${e.message}")
+                flash.message = "Failed to subscribe: ${e.message}"
+            }
+
         }
-
-        // Create new subscription
-        def newSubscription = new UserSubscription(
-                user: user,
-                plan: plan,
-                startDate: new Date(),
-                endDate: calculateEndDate(plan.billingCycle)
-        )
-
-        if (newSubscription.save(flush: true)) {
-            flash.message = "Successfully subscribed to ${plan.name}"
-        } else {
-            flash.message = "Failed to subscribe: ${newSubscription.errors}"
-        }
-
         redirect(action: "index")
-
-//        def sessionUser = session.user
-//        if (!sessionUser) {
-//            flash.message = "Login required."
-//            redirect(controller: "auth", action: "login")
-//            return
-//        }
-//
-//        def plan = SubscriptionPlan.get(planId)
-//        if (!plan) {
-//            flash.message = "Plan not found."
-//            redirect(action: "index")
-//            return
-//        }
-//
-//        UserSubscription.withTransaction { status ->
-//            try {
-//                // Deactivate old subscription
-//                UserSubscription.where { user == sessionUser && isActive == true }.updateAll(isActive: false)
-//                println("Deactivated old subscription for ${sessionUser.username}")
-//
-//                // Create new subscription
-//                def newSub = new UserSubscription(
-//                        plan: plan,
-//                        startDate: new Date(),
-//                        endDate: subscriptionService.calculateEndDate(plan.billingCycle),
-//                        isActive: true,
-//                        user: sessionUser // Use sessionUser here
-//                )
-//                println("Creating new subscription for ${sessionUser.username}")
-//
-//                if (newSub.save(flush:true)) { // Flush here after saving newSub
-//                    sessionUser.activeSubscription = newSub // Update sessionUser object
-//                    sessionUser.save(flush: true) // Save sessionUser object again
-//                    session.user = AppUser.get(sessionUser.id) // Refresh session user just to be sure
-//                    flash.message = "Subscribed to ${plan.name}!"
-//                    println("Subscription successful for ${sessionUser.username}")
-//                } else {
-//                    flash.message = "Subscription failed: ${newSub.errors}"
-//                    status.setRollbackOnly() // Rollback the transaction if saving fails
-//                    println("Subscription failed for ${sessionUser.username}")
-//                }
-//            } catch (Exception e) {
-//                status.setRollbackOnly() // Rollback the transaction in case of any exception
-//                flash.message = "An error occurred: ${e.message}"
-//                println("Error in subscription: ${e.message}")
-//            }
-//        }
-//        redirect(action: "index")
     }
+
     private static Date calculateEndDate(int billingCycle) {
         Calendar cal = Calendar.instance
         cal.add(Calendar.MONTH, billingCycle)
@@ -123,7 +96,7 @@ class SubscriptionController {
     }
 
     private boolean hasAdminAccess() {
-        def user = AppUser.get(springSecurityService.principal.id)
-        user?.isAdmin
+        def user = session.user
+        return user?.isAdmin ?: false
     }
 }

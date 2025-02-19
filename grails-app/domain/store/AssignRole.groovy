@@ -1,5 +1,6 @@
 package store
 
+
 class AssignRole {
     String roleName
 
@@ -12,6 +13,6 @@ class AssignRole {
 
     static mapping = {
         version false
-        permissions cascade: "all-delete-orphan"  // Ensure cascading updates
+
     }
 }

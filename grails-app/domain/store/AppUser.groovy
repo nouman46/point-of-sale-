@@ -4,10 +4,11 @@ class AppUser {
     String username
     String password
     Boolean isAdmin = false
+    AppUser createdBy  // Stores the admin who created the user
     UserSubscription activeSubscription
 
     static hasMany = [assignRole: AssignRole]
-    static belongsTo = AssignRole  // Ensure correct bidirectional mapping
+    static belongsTo = AssignRole
 
     static constraints = {
         username unique: true, blank: false

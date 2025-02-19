@@ -18,7 +18,7 @@ class AuthController {
 
                 if (user.isAdmin) {
                     // ✅ Admin gets access to ALL pages with FULL permissions
-                    def allPages = ["inventory", "sales", "checkout", "users", "settings", "reports", "subscription", "roleManagement"]
+                    def allPages = ["inventory", "sales", "checkout", "settings", "subscription", "roleManagement"]
                     allPages.each { page ->
                         permissions[page] = [canView: true, canEdit: true, canDelete: true]
                     }

@@ -204,6 +204,11 @@
                         const checkoutModal = new bootstrap.Modal(document.getElementById("checkoutModal"));
                         checkoutModal.show();
 
+                        // Redirect to the order details page
+                        setTimeout(function() {
+                            window.location.href = "/order/orderDetails/" + response.orderId;
+                        }, 2000); // Redirect after 2 seconds
+
                         $("#checkoutForm")[0].reset();
                         $("#itemsBody").empty();
                         $("#total").text("0.00 PKR");

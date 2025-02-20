@@ -1,5 +1,7 @@
 package store
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+
 class BootStrap {
 
     def init = { servletContext ->
@@ -31,9 +33,12 @@ class BootStrap {
                 }
 
                 // Admin User Setup
+
+                def passwordEncoder = new BCryptPasswordEncoder()
                 def adminUser = AppUser.findByUsername("admin")
                 if (!adminUser) {
-                    adminUser = new AppUser(username: "admin", password: "password", isAdmin: true).save(failOnError: true)
+                    String hashedPassword = passwordEncoder.encode("password")
+                    adminUser = new AppUser(username: "admin", password: hashedPassword, isAdmin: true, createdBy: adminUser).save(failOnError: true)
 
                     // Create or fetch the 'Basic' plan
                     def basicPlan = SubscriptionPlan.findByName("Basic")
@@ -61,6 +66,7 @@ class BootStrap {
                 }
 
                 println "Admin user and subscription plans initialized"
+
             } catch (Exception e) {
                 status.setRollbackOnly()
                 println "An error occurred while initializing subscription plans and admin: ${e.message}"

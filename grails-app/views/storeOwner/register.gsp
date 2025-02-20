@@ -52,6 +52,14 @@
                                         Please provide a store name.
                                     </div>
                                 </div>
+                                <div class="mb-3">
+                                    <label for="subscriptionPlanId" class="form-label">Select Subscription Plan</label>
+                                    <select name="subscriptionPlanId" class="form-control">
+                                      <g:each in="${subscriptionPlans}" var="plan">
+                                        <option value="${plan.id}">${plan.name}</option>
+                                      </g:each>
+                                    </select>
+                                </div>
                                 <div class="d-grid gap-2">
                                     <g:submitButton name="register" class="btn btn-primary btn-lg" value="Register" />
                                 </div>

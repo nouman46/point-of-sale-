@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Login</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <asset:stylesheet src="application.css"/>
   <style>
   body {
     background: linear-gradient(135deg, #1e1e2d, #323247);
@@ -62,6 +62,7 @@
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
+    text-decoration: none;
   }
 
   .btn-login:hover {
@@ -92,6 +93,9 @@
     </div>
     <button type="submit" class="btn-login">Login</button>
   </form>
+  <div class="mt-3" >
+    <a href="${createLink(controller: 'storeOwner', action: 'register')}"><button class="btn-login">Register</button></a></button>
+  </div>
 </div>
 </body>
 </html>

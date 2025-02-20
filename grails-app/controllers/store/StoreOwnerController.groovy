@@ -1,5 +1,6 @@
 package store
 
+import grails.gorm.transactions.Transactional
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.mindrot.jbcrypt.BCrypt
 
@@ -9,12 +10,17 @@ class StoreOwnerController {
 
     def index() { }
 
+    @Transactional
     def register() {
         if (request.method == 'POST') {
             def storeOwner = new StoreOwner(params)
             String hashedPassword = BCrypt.hashpw(params.password,BCrypt.gensalt())
 
-            def appUser = new AppUser(username: params.username, password: hashedPassword, isAdmin: true, createdBy: params.username)
+            def appUser = new AppUser(username: params.username, password: hashedPassword, isAdmin: true)
+
+            appUser.save(flash: true)
+            appUser.createdBy = appUser
+            appUser.save(flush: true)
 
             // Assuming subscriptionPlanId is sent from the form
             def plan = SubscriptionPlan.get(params.long('subscriptionPlanId'))
@@ -38,6 +44,7 @@ class StoreOwnerController {
                 render(view: "register", model:[storeOwner: new StoreOwner(), subscriptionPlans: SubscriptionPlan.list()])
                 return
             }
+
             flash.message = "Registration successful"
             redirect(controller: "auth", action: "login")
         } else {

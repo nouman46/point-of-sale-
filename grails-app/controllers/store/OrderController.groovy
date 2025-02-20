@@ -2,7 +2,7 @@ package store
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
-import java.text.SimpleDateFormat
+import grails.validation.Validateable
 
 class OrderController {
 
@@ -35,22 +35,21 @@ class OrderController {
     }
 
     @Transactional
-    def saveOrder() {
-        println "🛒 Processing Order..."
-
-        def requestData = request.JSON
-        def customerName = requestData.customerName
-        def products = requestData.products
-
-        if (!products) {
-            render([status: "error", message: "No products found in the request!"] as JSON)
+    def saveOrder(OrderCommand command) {
+        if (command.hasErrors()) {
+            def errors = command.errors.allErrors.collectEntries {
+                [(it.field): message(code: it.defaultMessage)]
+            }
+            render([status: "error", message: "Validation failed", errors: errors] as JSON)
             return
         }
 
-        def order = new Order(customerName: customerName, totalAmount: 0)
+        println "🛒 Processing Order for ${command.customerName}..."
+
+        def order = new Order(customerName: command.customerName, totalAmount: 0)
         order.orderItems = []
 
-        products.each { productData ->
+        command.products.each { productData ->
             def product = Product.findByProductBarcode(productData.productBarcode)
 
             if (product) {
@@ -69,21 +68,17 @@ class OrderController {
                     render([status: "error", message: "Not enough stock for ${product.productName}"] as JSON)
                     return
                 }
-            } else {
-                println "❌ Product not found for barcode: ${productData.productBarcode}"
             }
         }
 
         order.totalAmount = order.orderItems.sum { it.subtotal }
 
         if (order.save(flush: true, failOnError: true)) {
-            // Include orderId in the response
             render([status: "success", message: "Checkout completed!", orderId: order.id] as JSON)
         } else {
             render([status: "error", message: "Error while saving the order"] as JSON)
         }
     }
-
 
     def orderDetails(Long id) {
         def order = Order.get(id)
@@ -95,8 +90,8 @@ class OrderController {
 
         def orderItems = order.orderItems.collect { item ->
             [
-                    productName: item.product?.productName, // ✅ Fixed property name
-                    price: item.product?.productPrice, // ✅ Fixed property name
+                    productName: item.product?.productName,
+                    price: item.product?.productPrice,
                     quantity: item.quantity,
                     subtotal: item.subtotal
             ]
@@ -106,18 +101,15 @@ class OrderController {
     }
 
     def listOrders() {
-        // Retrieve startDate and endDate parameters from the request
         String startDateStr = params.startDate
         String endDateStr = params.endDate
 
         def orders = Order.createCriteria().list {
             if (startDateStr && endDateStr) {
-                // Convert String to java.util.Date
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
                 Date startDate = sdf.parse(startDateStr)
                 Date endDate = sdf.parse(endDateStr)
 
-                // Adjust endDate to include the full day (23:59:59)
                 Calendar cal = Calendar.getInstance()
                 cal.setTime(endDate)
                 cal.set(Calendar.HOUR_OF_DAY, 23)
@@ -126,19 +118,57 @@ class OrderController {
                 cal.set(Calendar.MILLISECOND, 999)
                 endDate = cal.getTime()
 
-                // Ensure orders on startDate and endDate are included
-                ge("dateCreated", startDate) // dateCreated >= startDate
-                le("dateCreated", endDate)   // dateCreated <= endDate
+                ge("dateCreated", startDate)
+                le("dateCreated", endDate)
             }
-            order("dateCreated", "desc")  // Sort by latest orders
+            order("dateCreated", "desc")
         }
 
-        // Calculate the total sales amount
         def totalSales = orders.sum { it.totalAmount }
 
-        // Render the view with the filtered orders and total sales
         render(view: "orderList", model: [orders: orders, startDate: startDateStr, endDate: endDateStr, totalSales: totalSales])
     }
+}
 
 
+import grails.validation.Validateable
+
+import java.text.SimpleDateFormat
+
+class OrderCommand implements Validateable {
+    String customerName
+    List<ProductCommand> products = []
+
+    static constraints = {
+        customerName nullable: true, size: 1..255, validator: { val, obj ->
+            if (!val) {
+                return 'customerNameCannotBeBlank'
+            }
+        }
+
+        products nullable: true, validator: { val, obj ->
+            if (!val || val.isEmpty()) {
+                return 'atLeastOneProductRequired'
+            }
+        }
+    }
+}
+
+class ProductCommand {
+    String productBarcode
+    Integer quantity
+
+    static constraints = {
+        productBarcode nullable: true, size: 1..255, validator: { val, obj ->
+            if (!val) {
+                return 'productBarcodeCannotBeBlank'
+            }
+        }
+
+        quantity nullable: true, min: 1, validator: { val, obj ->
+            if (!val || val < 1) {
+                return 'quantityMustBeAtLeastOne'
+            }
+        }
+    }
 }

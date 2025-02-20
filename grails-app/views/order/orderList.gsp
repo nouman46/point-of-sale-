@@ -60,13 +60,13 @@
         .error-message {
             color: red;
             font-size: 0.875rem;
-            display: none; /* Initially hidden */
-            position: absolute; /* Position it above the input */
-            top: -20px; /* Adjust to position above the input */
+            display: none;
+            position: absolute;
+            top: -20px;
         }
 
         .form-group {
-            position: relative; /* Make sure the error message is positioned relative to this */
+            position: relative;
         }
 
         /* Search box */
@@ -96,7 +96,7 @@
             <div class="col-md-4 form-group">
                 <label for="endDate" class="form-label">📅 End Date:</label>
                 <input type="date" id="endDate" name="endDate" class="form-control" value="${params.endDate}"/>
-                <span id="endDateError" class="error-message">End Date cannot be earlier than Start Date.</span> <!-- Error message -->
+                <span id="endDateError" class="error-message">End Date cannot be earlier than Start Date.</span>
             </div>
             <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary" id="filterBtn">🔍 Filter Orders</button>
@@ -136,7 +136,7 @@
 
         <!-- Total Sales Amount -->
         <div class="d-flex justify-content-end mt-3">
-            <h4>Total Sales: <span class="text-success">${totalSales} PKR</span></h4>
+            <h4>Total Sales: <span class="text-success" id="totalSales">${totalSales} PKR</span></h4>
         </div>
     </div>
 </div>
@@ -164,63 +164,58 @@
         const startDateInput = document.getElementById("startDate");
         const endDateInput = document.getElementById("endDate");
         const errorMessage = document.getElementById("endDateError");
-        const filterForm = document.getElementById("orderFilterForm");
         const filterBtn = document.getElementById("filterBtn");
+        const searchBox = document.getElementById("searchBox");
+        const totalSalesElement = document.getElementById("totalSales");
 
         function validateDates() {
             const startDate = new Date(startDateInput.value);
             const endDate = new Date(endDateInput.value);
 
-            // Validate only if endDate is completely entered
             if (endDateInput.value && endDate < startDate) {
-                errorMessage.style.display = "inline"; // Show error message
-                filterBtn.disabled = true; // Disable the submit button
+                errorMessage.style.display = "inline";
+                filterBtn.disabled = true;
             } else {
-                errorMessage.style.display = "none"; // Hide error message if dates are valid
-                filterBtn.disabled = false; // Enable the submit button
+                errorMessage.style.display = "none";
+                filterBtn.disabled = false;
             }
         }
 
         endDateInput.addEventListener("change", validateDates);
-        startDateInput.addEventListener("change", validateDates); // Also validate when start date changes
+        startDateInput.addEventListener("change", validateDates);
 
-        // Search function
-        const searchBox = document.getElementById("searchBox");
+        function updateTotalSales() {
+            let total = 0;
+            const rows = document.querySelectorAll("#orderTable tbody tr");
+
+            rows.forEach(row => {
+                if (row.style.display !== "none") {
+                    const amountText = row.cells[2].textContent.trim().replace(" PKR", "");
+                    const amount = parseFloat(amountText);
+                    if (!isNaN(amount)) {
+                        total += amount;
+                    }
+                }
+            });
+
+            totalSalesElement.textContent = total + " PKR";
+        }
+
         searchBox.addEventListener("keyup", function () {
             const filter = searchBox.value.toLowerCase();
             const rows = document.querySelectorAll("#orderTable tbody tr");
+
             rows.forEach(row => {
-                const cells = row.getElementsByTagName("td");
-                const orderId = cells[0].textContent.toLowerCase();  // Order ID (column 0)
-                const customerName = cells[1].textContent.toLowerCase();  // Customer Name (column 1)
-
-                // Only check Order ID and Customer Name for matches
-                const matchFound = orderId.includes(filter) || customerName.includes(filter);
-
-                row.style.display = matchFound ? "" : "none";  // Show or hide row based on match
+                const orderId = row.cells[0].textContent.toLowerCase();
+                const customerName = row.cells[1].textContent.toLowerCase();
+                row.style.display = orderId.includes(filter) || customerName.includes(filter) ? "" : "none";
             });
+
+            updateTotalSales();
         });
 
+        updateTotalSales();
     });
-
-    // Sort table function
-    let sortDirection = [true, true, true, true]; // true = ascending, false = descending
-    function sortTable(columnIndex) {
-        const table = document.getElementById("orderTable");
-        const rows = Array.from(table.rows).slice(1);
-        const isAscending = sortDirection[columnIndex];
-
-        rows.sort((rowA, rowB) => {
-            const cellA = rowA.cells[columnIndex].textContent.trim();
-            const cellB = rowB.cells[columnIndex].textContent.trim();
-
-            const comparison = isNaN(cellA) || isNaN(cellB) ? cellA.localeCompare(cellB) : parseFloat(cellA) - parseFloat(cellB);
-            return isAscending ? comparison : -comparison;
-        });
-
-        rows.forEach(row => table.appendChild(row)); // Reorder rows
-        sortDirection[columnIndex] = !isAscending; // Toggle sort direction
-    }
 </script>
 
 </body>

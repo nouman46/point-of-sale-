@@ -53,11 +53,10 @@
     .logout-btn:hover {
         background: #ff6666;
     }
-    /* Main content area */
     .main-content {
-        margin-left: 250px; /* Adjust content to move right of the sidebar */
+        margin-left: 250px;
         padding: 20px;
-        width: calc(100% - 250px); /* Make it fill remaining space */
+        width: calc(100% - 250px);
         transition: margin-left 0.3s ease;
     }
     </style>
@@ -67,15 +66,27 @@
 <g:layoutHead/>
 <g:if test="${session.user}">
     <div class="sidebar">
-        <a href="${createLink(controller: 'dashboard', action: 'index')}"><i class="fas fa-home"></i> Dashboard</a>
-        <a href="${createLink(controller: 'store', action: 'inventory')}" onclick="return checkAccess('inventory');"><i class="fas fa-box"></i> Inventory</a>
-        <a href="${createLink(controller: 'order', action: 'listOrders')}" onclick="return checkAccess('listOrders');">
-            <i class="fas fa-shopping-cart"></i> Sales
-        </a>
-        <a href="${createLink(controller: 'order', action: 'checkout')}" onclick="return checkAccess('checkout');"><i class="fas fa-cash-register"></i> Checkout</a>
-        <a href="${createLink(controller: 'settings', action: 'settings')}" onclick="return checkAccess('settings');"><i class="fas fa-cog"></i> Settings</a>
-        <a href="${createLink(controller: 'subscription', action: 'subscription')}" onclick="return checkAccess('subscription');"><i class="fas fa-credit-card"></i> Subscription</a>
-        <a href="${createLink(controller: 'admin', action: 'roleManagement')}" onclick="return checkAccess('roleManagement');"><i class="fas fa-users"></i> User Management</a>
+        <g:if test="${session.isAdmin || session.permissions['dashboard']?.canView}">
+            <a href="${createLink(controller: 'dashboard', action: 'index')}"><i class="fas fa-home"></i> Dashboard</a>
+        </g:if>
+        <g:if test="${session.isAdmin || session.permissions['inventory']?.canView}">
+            <a href="${createLink(controller: 'store', action: 'inventory')}"><i class="fas fa-box"></i> Inventory</a>
+        </g:if>
+        <g:if test="${session.isAdmin || session.permissions['sales']?.canView}">
+            <a href="${createLink(controller: 'order', action: 'listOrders')}"><i class="fas fa-shopping-cart"></i> Sales</a>
+        </g:if>
+        <g:if test="${session.isAdmin || session.permissions['checkout']?.canView}">
+            <a href="${createLink(controller: 'order', action: 'checkout')}"><i class="fas fa-cash-register"></i> Checkout</a>
+        </g:if>
+        <g:if test="${session.isAdmin || session.permissions['settings']?.canView}">
+            <a href="${createLink(controller: 'settings', action: 'settings')}"><i class="fas fa-cog"></i> Settings</a>
+        </g:if>
+        <g:if test="${session.isAdmin || session.permissions['subscription']?.canView}">
+            <a href="${createLink(controller: 'subscription', action: 'subscription')}"><i class="fas fa-credit-card"></i> Subscription</a>
+        </g:if>
+        <g:if test="${session.isAdmin || session.permissions['roleManagement']?.canView}">
+            <a href="${createLink(controller: 'admin', action: 'roleManagement')}"><i class="fas fa-users"></i> User Management</a>
+        </g:if>
         <a href="${createLink(controller: 'auth', action: 'logout')}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </g:if>
@@ -86,41 +97,20 @@
 </div>
 
 <script>
-    var userRoles = ${raw(session.roles as grails.converters.JSON)};
+    var isAdmin = ${session.isAdmin ?: false};
     var pagePermissions = ${raw(session.permissions as grails.converters.JSON)};
 
-    function checkAccess(page, action) {
-        console.log("Checking access for:", page, "Roles:", userRoles, "Permissions:", pagePermissions);
-
-        if (userRoles.includes("Admin")) {
-            return true; // Admin has full access
-        }
+    function checkAccess(page) {
+        if (isAdmin) return true; // Admin has full access
 
         var permission = pagePermissions[page];
-
-        if (!permission) {
+        if (!permission || !permission.canView) {
             alert("You do not have access to this page.");
             return false;
         }
-
-        if (action === "edit" && !permission.canEdit) {
-            alert("You do not have permission to edit.");
-            return false;
-        }
-
-        if (action === "delete" && !permission.canDelete) {
-            alert("You do not have permission to delete.");
-            return false;
-        }
-
         return true;
     }
-
-    function confirmLogout() {
-        if (confirm("Are you sure you want to logout?")) {
-            window.location.href = "/auth/logout";
-        }
-    }
 </script>
+
 </body>
 </html>

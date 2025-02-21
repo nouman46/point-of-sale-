@@ -5,11 +5,11 @@ info:
     grailsVersion: '@info.app.grailsVersion@'
 dataSource:
   driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
-  username: zeeshan
-  password: 'zee1234??'
+  username: user
+  password: '123'
   pooled: true
   jmxExport: true
-  url: jdbc:sqlserver://localhost:1433;databaseName=store;encrypt=true;trustServerCertificate=true
+  url: jdbc:sqlserver:// 192.168.18.25:1433;databaseName=POS;encrypt=true;trustServerCertificate=true
 
 cors:
   enabled: true
@@ -22,7 +22,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:sqlserver://localhost:1433;databaseName=store;encrypt=true;trustServerCertificate=true
+      url: jdbc:sqlserver:// 192.168.18.25:1433;databaseName=POS;encrypt=true;trustServerCertificate=true
   test:
     dataSource:
       dbCreate: update

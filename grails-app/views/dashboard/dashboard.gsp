@@ -219,10 +219,23 @@
                                 backgroundColor: 'rgba(52, 152, 219, 0.2)',
                                 borderWidth: 2,
                                 tension: 0.3,
-                                fill: true
+                                fill: true,
+                                pointRadius: 5,  // Increases the point size
+                                pointHitRadius: 10 // Expands the hoverable area
                             }]
+
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                tooltip: {
+                                    mode: 'nearest',
+                                    intersect: false // Allows hovering even when not exactly on the point
+                                }
+                            }
+                        }
+
                     });
                 }
             });

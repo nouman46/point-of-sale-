@@ -61,6 +61,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-jetty"
     implementation 'io.github.http-builder-ng:http-builder-ng-core:1.0.4'
+    implementation 'org.mindrot:jbcrypt:0.4'
 
 
     compileOnly "io.micronaut:micronaut-inject-groovy"

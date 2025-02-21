@@ -1,15 +1,25 @@
 package store
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.mindrot.jbcrypt.BCrypt
+
 class AuthController {
+//    def passwordEncoder = new BCryptPasswordEncoder()
 
     def login() {
         if (request.method == "POST") {
-            def user = AppUser.findByUsernameAndPassword(params.username, params.password)
+            def user = AppUser.findByUsername(params.username)
 
             if (user) {
+                println "Stored hash: ${user.password}"
+                println "Matches 'zeeshan123'? ${BCrypt.checkpw('zeeshan123', user.password)}"
+            }
+
+            if (user && BCrypt.checkpw(params.password, user.password)) {
                 println "✅ User Found: ${user.username}"
                 session.user = user
                 session.isAdmin = user.isAdmin
+
 
                 // Ensure roles are properly fetched
                 session.assignRole = user.assignRole ? user.assignRole*.roleName : []
@@ -18,9 +28,8 @@ class AuthController {
 
                 if (user.isAdmin) {
                     // ✅ Admin gets access to ALL pages with FULL permissions
-                    def allPages = ["inventory", "sales", "checkout", "users", "settings", "reports", "subscription", "roleManagement"]
-                    allPages.each { page ->
-                        permissions[page] = [canView: true, canEdit: true, canDelete: true]
+                    def allPages = ["inventory", "sales", "checkout", "settings", "subscription", "roleManagement"]
+                    allPages.each { page -> permissions[page] = [canView: true, canEdit: true, canDelete: true]
                     }
                 } else {
                     // ✅ Normal users get permissions from assigned roles

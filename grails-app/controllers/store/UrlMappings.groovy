@@ -3,14 +3,10 @@ package store
 class UrlMappings {
 
     static mappings = {
-        // ✅ Default Landing Page (Now set to Login Page)
-        "/"(controller: "auth", action: "login")
-
         // ✅ Login Page
         "/auth/login"(controller: "auth", action: "login")
-        // ✅ Logout Action
-        "/auth/logout"(controller: "auth", action: "logout")
-
+        // ✅ Admin Role Management Page
+        "/admin/roleManagement"(controller: "admin", action: "roleManagement")
         // ✅ Admin Role Management Page
         "/admin/roleManagement"(controller: "admin", action: "roleManagement")
         // ✅ Save New User
@@ -21,22 +17,16 @@ class UrlMappings {
         "/admin/saveRole"(controller: "admin", action: "saveRole")
         // ✅ Assign Permissions to Role
         "/admin/assignPermission"(controller: "admin", action: "assignPermission")
-
+        // ✅ Logout Action
+        "/auth/logout"(controller: "auth", action: "logout")
+        // ✅ Default Landing Page
+        "/"(controller: "dashboard", action: "index")
         // ✅ Dashboard Home
         "/dashboard"(controller: "dashboard", action: "index")
-
-        // ✅ Fetch Orders Data for Area Graph
-        "/dashboard/getOrdersData"(controller: "dashboard", action: "getOrdersData")
-        "/dashboard/getOrdersTrend"(controller: "dashboard", action: "getOrdersTrend")
-
-        // ✅ Fetch Product Quantities for Donut Chart
-        "/dashboard/getProductQuantities"(controller: "dashboard", action: "getProductQuantities")
-        "/dashboard/getOrdersOverTime"(controller: "dashboard", action: "getOrdersOverTime")
-
-
         // ✅ Inventory Page
         "/inventory"(controller: "store", action: "inventory")
-
+        // ✅ Sales Page
+        "/sales"(controller: "sales", action: "sales")
         // ✅ Checkout Page
         "/order/checkout"(controller: "order", action: "checkout")
         // ✅ Fetch Product by Barcode
@@ -47,16 +37,16 @@ class UrlMappings {
         "/order/listOrders"(controller: "order", action: "listOrders")
         // ✅ View Specific Order Details
         "/order/orderDetails/$id?"(controller: "order", action: "orderDetails")
+        // ✅ View Specific Order Details
         "/order/$id/details"(controller: "order", action: "orderDetails")
-
         // ✅ Settings Page
         "/settings"(controller: "settings", action: "settings")
-
         // ✅ Subscription Page
         "/subscription"(controller: "subscription", action: "subscription")
-
         // ✅ User List for Admin
         "/admin/userList"(controller: "admin", action: "userList")
+        // ✅ Save New User for Admin
+        "/admin/saveUser"(controller: "admin", action: "saveUser")
         // ✅ Edit User Details
         "/admin/editUser/$id"(controller: "admin", action: "editUser")
         // ✅ Update User Details
@@ -65,7 +55,6 @@ class UrlMappings {
         "/admin/showUser/$id"(controller: "admin", action: "showUser")
         // ✅ Delete User
         "/admin/deleteUser/$id"(controller: "admin", action: "deleteUser")
-
         // ✅ Store Inventory Page
         "/store/inventory"(controller: "store", action: "inventory")
         // ✅ View Product Details
@@ -74,7 +63,10 @@ class UrlMappings {
         "/store/saveProduct"(controller: "store", action: "saveProduct")
         // ✅ Delete Product
         "/store/deleteProduct/$id"(controller: "store", action: "deleteProduct")
-
+        // ✅ Login Action
+        "/auth/login"(controller: "auth", action: "login")
+        // ✅ Logout Action
+        "/auth/logout"(controller: "auth", action: "logout")
         // ✅ Error Page
         "500"(view: "/error")
         // ✅ Not Found Page

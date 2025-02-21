@@ -40,7 +40,11 @@ class UrlMappings {
         // ✅ View Specific Order Details
         "/order/$id/details"(controller: "order", action: "orderDetails")
         // ✅ Settings Page
-        "/settings"(controller: "settings", action: "settings")
+        "/settings"(controller: "setting", action: "index")
+        "/settings/index"(controller: "setting", action: "index")
+        "/setting/update"(controller: "setting", action: "index")
+
+        // ✅ Subscription Page
         // ✅ Subscription Page
         "/subscription"(controller: "subscription", action: "subscription")
         // ✅ User List for Admin
@@ -67,6 +71,9 @@ class UrlMappings {
         "/auth/login"(controller: "auth", action: "login")
         // ✅ Logout Action
         "/auth/logout"(controller: "auth", action: "logout")
+
+        "/storeOwner/register"(controller: "storeOwner", action: "register")
+
         // ✅ Error Page
         "500"(view: "/error")
         // ✅ Not Found Page

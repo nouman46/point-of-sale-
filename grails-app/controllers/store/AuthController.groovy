@@ -10,11 +10,6 @@ class AuthController {
         if (request.method == "POST") {
             def user = AppUser.findByUsername(params.username)
 
-            if (user) {
-                println "Stored hash: ${user.password}"
-                println "Matches 'zeeshan123'? ${BCrypt.checkpw('zeeshan123', user.password)}"
-            }
-
             if (user && BCrypt.checkpw(params.password, user.password)) {
                 println "✅ User Found: ${user.username}"
                 session.user = user

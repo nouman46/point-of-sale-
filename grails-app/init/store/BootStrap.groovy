@@ -1,10 +1,29 @@
 package store
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import grails.gorm.transactions.Transactional
 
 class BootStrap {
 
     def init = { servletContext ->
+        Setting.withTransaction { status ->
+            if (!Setting.findByKey('store_name')) {
+                new Setting(key: 'store_name', value: 'My Store', type: 'string', description: 'Store Name', category: 'Store Info').save()
+            }
+            if (!Setting.findByKey('store_address')) {
+                new Setting(key: 'store_address', value: '123 Main St', type: 'string', description: 'Store Address', category: 'Store Info').save()
+            }
+            if (!Setting.findByKey('default_currency')) {
+                new Setting(key: 'default_currency', value: 'USD', type: 'string', description: 'Default Currency', category: 'Store Info').save()
+            }
+            if (!Setting.findByKey('enable_tax')) {
+                new Setting(key: 'enable_tax', value: 'true', type: 'boolean', description: 'Enable Tax', category: 'Tax Settings').save()
+            }
+            if (!Setting.findByKey('tax_rate')) {
+                new Setting(key: 'tax_rate', value: '10', type: 'integer', description: 'Tax Rate (%)', category: 'Tax Settings').save()
+            }
+        }
+
         SubscriptionPlan.withTransaction { status ->
             try {
                 // Subscription Plans

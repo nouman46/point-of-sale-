@@ -35,15 +35,20 @@ class StoreOwnerController {
                 appUser.activeSubscription = userSubscription
             }
 
-            storeOwner.appUser = appUser
+            def adminRole = AssignRole.findByRoleName("ADMIN")
+            appUser.addToAssignRole(adminRole)
+            appUser.save(failOnError: true)
 
-            if (!storeOwnerService.saveStoreOwner(storeOwner)) {
-                storeOwner.errors.allErrors.each {
-                    flash.message = it.defaultMessage
-                }
-                render(view: "register", model:[storeOwner: new StoreOwner(), subscriptionPlans: SubscriptionPlan.list()])
-                return
-            }
+            storeOwner.appUser = appUser
+            storeOwner.save(flush: true)
+
+//            if (!storeOwnerService.saveStoreOwner(storeOwner)) {
+//                storeOwner.errors.allErrors.each {
+//                    flash.message = it.defaultMessage
+//                }
+//                render(view: "register", model:[storeOwner: new StoreOwner(), subscriptionPlans: SubscriptionPlan.list()])
+//                return
+//            }
 
             flash.message = "Registration successful"
             redirect(controller: "auth", action: "login")

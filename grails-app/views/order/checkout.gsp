@@ -44,21 +44,21 @@
     <h1 class="text-center mb-4">🛒 Checkout</h1>
 
     <g:form id="checkoutForm">
-        <!-- Customer Name -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">Customer Name:</label>
-            <g:textField name="customerName" class="form-control" />
-            <div id="customerNameError" class="error-message"></div> <!-- Error display -->
-        </div>
-
-        <!-- Barcode Input -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">Scan Barcode:</label>
-            <div class="input-group">
-                <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." autofocus>
-                <button type="button" id="scanButton" class="btn btn-primary">➕ Add Product</button>
+        <div class="row">
+            <!-- Customer Name -->
+            <div class="mb-3 w-50">
+                <label class="form-label fw-bold">Customer Name:</label>
+                <g:textField name="customerName" class="form-control" />
+                <div id="customerNameError" class="error-message"></div> <!-- Error display -->
             </div>
-            <div id="barcodeError" class="error-message"></div> <!-- Barcode error display -->
+
+            <!-- Barcode Input -->
+            <div class="mb-3 w-50">
+                <label class="form-label fw-bold">Scan Barcode:</label>
+                <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." autofocus>
+                <button type="button" id="scanButton" class="btn btn-primary mt-2">➕ Add Product</button>
+                <div id="barcodeError" class="error-message"></div> <!-- Barcode error display -->
+            </div>
         </div>
 
         <input type="hidden" id="totalInput" name="total" value="0.00">
@@ -233,3 +233,4 @@
 
 </body>
 </html>
+./

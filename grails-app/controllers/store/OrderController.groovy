@@ -16,6 +16,16 @@ class OrderController {
         println "CheckoutController: index action called"
         render(view: "/order/checkout")
     }
+    def getAllProducts() {
+        try {
+            def products = Product.list()
+            render products as JSON
+        } catch (Exception e) {
+            e.printStackTrace()
+            render(status: 500, text: "Internal Server Error")
+        }
+    }
+
 
     def getProductByBarcode() {
         try {
@@ -172,6 +182,23 @@ class OrderController {
         def totalSales = orders.sum { it.totalAmount }
 
         render(view: "orderList", model: [orders: orders, startDate: startDateStr, endDate: endDateStr, totalSales: totalSales])
+    }
+    @Transactional(readOnly = true)
+    def getOrdersOverTime() {
+        def orders = Order.createCriteria().list {
+            projections {
+                groupProperty('dateCreated', 'order_date') // Grouping by dateCreated
+                count('id', 'order_count')  // Counting order IDs
+            }
+            order("dateCreated", "asc")  // Ordering by dateCreated in ascending order
+        }
+
+        // Formatting the result
+        def formattedOrders = orders.collect {
+            [date: it.order_date.toString(), count: it.order_count]
+        }
+
+        render formattedOrders as JSON
     }
 }
 

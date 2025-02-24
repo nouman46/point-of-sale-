@@ -1,8 +1,6 @@
 package store
 
 import grails.converters.JSON
-import grails.gorm.transactions.Transactional
-import store.Order
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -20,16 +18,13 @@ class DashboardController {
             return
         }
 
-        def usersCreatedByAdmin = AppUser.findAllByCreatedBy(currentAdmin)
-        def userIds = usersCreatedByAdmin*.id
-
-        def totalOrders = Order.countByCreatedByInList(userIds)
+        def totalOrders = Order.countByCreatedBy(currentAdmin)
         def totalProducts = Product.countByCreatedBy(currentAdmin)
         def totalSales = Order.createCriteria().get {
             projections {
                 sum('totalAmount')
             }
-            'in'("createdBy", userIds)
+            eq("createdBy", currentAdmin)  // Fixed filtering
         } ?: 0.0
 
         render([
@@ -47,15 +42,12 @@ class DashboardController {
             return
         }
 
-        def usersCreatedByAdmin = AppUser.findAllByCreatedBy(currentAdmin)
-        def userIds = usersCreatedByAdmin*.id
-
         def ordersByDate = Order.createCriteria().list {
             projections {
                 groupProperty("dateCreated")
                 count("id")
             }
-            'in'("createdBy", userIds)
+            eq("createdBy", currentAdmin)  // Fixed filtering
             order("dateCreated", "asc")
         }
 

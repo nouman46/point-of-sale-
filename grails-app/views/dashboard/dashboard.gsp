@@ -247,8 +247,8 @@
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    let labels = data.map(item => item.name);
-                    let values = data.map(item => item.quantity);
+                    let labels = data.map(item => item.name); // Product names
+                    let values = data.map(item => item.quantity); // Quantities
 
                     destroyChart(productChartInstance);
 
@@ -256,17 +256,37 @@
                     productChartInstance = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
-                            labels: labels,
+                            labels: labels, // Labels stored for tooltips
                             datasets: [{
                                 data: values,
                                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FF9800']
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false // This hides the labels from being shown above the chart
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem) {
+                                            let index = tooltipItem.dataIndex;
+                                            return labels[index] + ": " + values[index]; // Fix for possible undefined values
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching product quantity data:", error);
                 }
             });
         }
+
     </script>
 </body>
 </html>

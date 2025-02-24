@@ -8,40 +8,27 @@ import org.springframework.dao.DataIntegrityViolationException
 class StoreController {
 
     def inventory() {
-        def user = session.user
-        def permissions = session.permissions?.get('inventory')
-
-        println "🔍 Checking Session Data in Inventory Page"
-        println "🔍 User: ${user?.username}"
-        println "🔍 User Roles: ${session.assignRole}"
-        println "🔍 Permissions for Inventory: ${permissions}"
-
-        if (!user) {
-            println "⚠️ No Logged-in User Found! Redirecting to login..."
-            flash.message = "Session expired. Please log in again."
+        def currentUser = session.user
+        if (!currentUser) {
+            flash.error = "Unauthorized access!"
             redirect(controller: "auth", action: "login")
             return
         }
 
-        if (!permissions?.canView) {
-            println "⛔ Unauthorized access! User '${user.username}' tried to access inventory without permission."
-            flash.message = "You do not have permission to view this page."
-            redirect(controller: "dashboard", action: "index")
-            return
-        }
+        // Eagerly fetch the createdBy association for the current user
+        currentUser = AppUser.findById(currentUser.id, [fetch: [createdBy: 'join']])
 
-        int maxResults = 8
-        int currentPage = params.page ? params.page.toInteger() : 1
-        int totalProducts = Product.count()
-        int totalPages = Math.ceil(totalProducts / maxResults)
-        int offset = (currentPage - 1) * maxResults
+        // Fetch the createdBy ID of the current user
+        def createdById = currentUser.createdBy?.id ?: currentUser.id
 
-        def productList = Product.list(max: maxResults, offset: offset)
-        def allProducts = Product.list()
+        // Fetch all products where the createdBy ID matches the current user's createdBy ID
+        def products = Product.findAllByCreatedBy(AppUser.get(createdById))
 
-        return [productList: productList, currentPage: currentPage, totalPages: totalPages, allProducts: allProducts, permissions: permissions]
+        // Debugging: Log the fetched products
+        log.info("Fetched Products: ${products.collect { it.productName }}")
+
+        render(view: "inventory", model: [products: products])
     }
-
 
     def showProduct(Long id) {
         def product = Product.get(id)
@@ -57,6 +44,14 @@ class StoreController {
         try {
             log.info("saveProduct action hit with params: ${params}")
 
+            // Check if a product with the same name already exists (excluding the current product if updating)
+            def existingProduct = Product.findByProductName(params.productName)
+            if (existingProduct && (!params.id || existingProduct.id != params.id)) {
+                flash.error = "Product already exists!"
+                redirect(action: "inventory") // Redirect back to inventory page
+                return
+            }
+
             def product = params.id ? Product.get(params.id) : new Product()
 
             // If an id was provided but no product was found, return a 404
@@ -65,17 +60,46 @@ class StoreController {
                 return
             }
 
+            // Set the createdBy field to the current admin or user
+            def currentUser = session.user
+            if (!currentUser) {
+                flash.error = "Unauthorized access!"
+                redirect(controller: "auth", action: "login")
+                return
+            }
+
             // Update product properties from parameters
             product.properties = params
 
-            if (product.validate() && product.save(flush: true)) {
-                render status: 200, text: "Product saved successfully"
-            } else {
-                render status: 400, text: "Failed to save product: " + product.errors
+            // Set the createdBy and admin fields
+            if (!product.createdBy) {
+                product.createdBy = currentUser
             }
+            // Set the admin field (if required, this could be the same as createdBy)
+            if (!product.admin) {
+                product.admin = currentUser
+            }
+
+            log.info("Product properties set: ${product.properties}")
+
+            // Validate and save product
+            if (product.validate()) {
+                if (product.save(flush: true)) {
+                    flash.message = "Product saved successfully"
+                } else {
+                    flash.error = "Failed to save product: " + product.errors
+                    log.error("Product validation failed: ${product.errors}")
+                }
+            } else {
+                flash.error = "Product validation failed: ${product.errors}"
+                log.error("Product validation failed: ${product.errors}")
+            }
+
+            redirect(action: "inventory") // Redirect back to inventory page
         } catch (Exception e) {
             log.error("Error in saveProduct action: ${e.message}", e)
-            render status: 500, text: "An error occurred while saving the product"
+            flash.error = "An error occurred while saving the product"
+            redirect(action: "inventory")
         }
     }
 
@@ -93,6 +117,14 @@ class StoreController {
                 return
             }
 
+            // Check if the current user is allowed to delete the product
+            def currentUser = session.user
+            if (!currentUser || (product.createdBy != currentUser && !AppUser.findAllByCreatedBy(currentUser).contains(product.createdBy))) {
+                flash.error = "Unauthorized access!"
+                redirect(controller: "auth", action: "login")
+                return
+            }
+
             // Try to delete the product
             product.delete(flush: true)
             log.info("Product with ID ${id} deleted successfully")
@@ -105,5 +137,4 @@ class StoreController {
             render status: 500, text: "An unexpected error occurred while deleting the product"
         }
     }
-
 }

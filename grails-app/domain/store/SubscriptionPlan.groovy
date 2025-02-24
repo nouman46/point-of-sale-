@@ -7,12 +7,14 @@ class SubscriptionPlan {
     Integer billingCycle // 1=Monthly, 12=Yearly
     Set<String> features // Features enabled in this plan (e.g., ["inventory", "reports"])
 
+
     static constraints = {
         name(blank: false, unique: true)
         description(nullable: true)
         price(min: 0.0)
         billingCycle(min: 1)
         features(nullable: false)
+
     }
 
     static mapping = {

@@ -10,12 +10,16 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4">Role Management</h2>
 
-<!-- Flash Messages -->
     <g:if test="${flash.message}">
-        <div class="alert alert-success">${flash.message}</div>
+        <div class="alert alert-success">
+            ${flash.message}
+        </div>
     </g:if>
+
     <g:if test="${flash.error}">
-        <div class="alert alert-danger">${flash.error}</div>
+        <div class="alert alert-danger">
+            ${flash.error}
+        </div>
     </g:if>
 
 <!-- Tabs Navigation -->
@@ -35,13 +39,13 @@
         <!-- Users Section -->
         <div class="tab-pane fade show active" id="users">
             <h4>Add User</h4>
-            <form action="${createLink(controller: 'admin', action: 'saveUser')}" method="post" class="mb-4">
+            <form id="addUserForm" action="${createLink(controller: 'admin', action: 'saveUser')}" method="POST" class="mb-4">
                 <div class="row">
                     <div class="col-md-4">
-                        <input type="text" name="username" class="form-control" placeholder="Username" required>
+                        <input type="text" id="addUsername" name="username" class="form-control" placeholder="Username" required>
                     </div>
                     <div class="col-md-4">
-                        <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        <input type="password" id="addPassword" name="password" class="form-control" placeholder="Password" required>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-success">Add User</button>
@@ -94,14 +98,11 @@
                             </g:each>
                         </td>
                         <td>
-                            <!-- Edit Button -->
                             <button class="btn btn-warning btn-sm edit-user-btn" data-id="${user.id}" data-username="${user.username}" data-roles="${user.assignRole*.id.join(',')}">
                                 ✏️ Edit
                             </button>
-
                         </td>
                         <td>
-                            <!-- Delete Button -->
                             <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}">
                                 ❌ Delete
                             </button>
@@ -115,10 +116,10 @@
         <!-- Roles Section -->
         <div class="tab-pane fade" id="roles">
             <h4>Add Role</h4>
-            <form action="${createLink(controller: 'admin', action: 'saveRole')}" method="post" class="mb-4">
+            <form id="addRoleForm" action="${createLink(controller: 'admin', action: 'saveRole')}" method="POST" class="mb-4">
                 <div class="row">
                     <div class="col-md-8">
-                        <input type="text" name="roleName" class="form-control" placeholder="Role Name" required>
+                        <input type="text" id="addRoleName" name="roleName" class="form-control" placeholder="Role Name" required>
                     </div>
                     <div class="col-md-4">
                         <button type="submit" class="btn btn-success">Add Role</button>
@@ -139,16 +140,10 @@
                     <tr>
                         <td>${role.roleName}</td>
                         <td>
-                            <!-- Edit Role Button -->
-                            <button class="btn btn-warning btn-sm edit-role-btn"
-                                    data-role-id="${role.id}"
-                                    data-role-name="${role.roleName}">
+                            <button class="btn btn-warning btn-sm edit-role-btn" data-role-id="${role.id}" data-role-name="${role.roleName}">
                                 ✏️ Edit
                             </button>
-
-                            <!-- Delete Role Button -->
-                            <button class="btn btn-danger btn-sm delete-role-btn"
-                                    data-role-id="${role.id}">
+                            <button class="btn btn-danger btn-sm delete-role-btn" data-role-id="${role.id}">
                                 ❌ Delete
                             </button>
                         </td>
@@ -200,7 +195,6 @@
                 </table>
             </form>
 
-            <!-- Group permissions by role -->
             <g:set var="groupedPermissions" value="${permissions.groupBy { it.assignRole.roleName }}" />
 
             <div class="accordion" id="permissionsAccordion">
@@ -257,12 +251,11 @@
                         <input type="hidden" id="editUserId" name="userId">
                         <div class="mb-3">
                             <label for="editUsername" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="editUsername" name="username">
+                            <input type="text" class="form-control" id="editUsername" name="username" required>
                         </div>
                         <div class="mb-3">
                             <label for="editRole" class="form-label">Roles</label>
                             <div id="editRoles">
-                            <!-- Role Checkboxes -->
                                 <g:each in="${roles}" var="role">
                                     <div class="form-check">
                                         <input class="form-check-input role-checkbox" type="checkbox" name="roles" value="${role.id}" id="role_${role.id}">
@@ -272,6 +265,11 @@
                                     </div>
                                 </g:each>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPassword" class="form-label">Password (Optional)</label>
+                            <input type="password" class="form-control" id="editPassword" name="password">
+                            <div class="form-text">Leave blank to keep the current password</div>
                         </div>
                         <button type="submit" class="btn btn-primary">Save changes</button>
                     </form>
@@ -324,126 +322,140 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Get the URLs from Grails before passing them to JavaScript
+        document.addEventListener("DOMContentLoaded", function () {
             var deleteUserUrl = "${createLink(controller: 'admin', action: 'deleteUser')}";
             var deleteRoleUrl = "${createLink(controller: 'admin', action: 'deleteRole')}";
 
-            // Delete User with Confirmation
             document.querySelectorAll(".delete-user-btn").forEach(button => {
-                button.addEventListener("click", function() {
+                button.addEventListener("click", function () {
                     let userId = this.dataset.id;
                     if (confirm("Are you sure you want to delete this user?")) {
                         fetch(deleteUserUrl + "?id=" + userId, {
-                            method: "POST",  // Use POST for compatibility with Grails
+                            method: "POST",
                             headers: {
-                                "X-HTTP-Method-Override": "DELETE"  // Override for DELETE
+                                "X-HTTP-Method-Override": "DELETE"
                             }
                         })
                             .then(response => response.text())
                             .then(data => {
                                 alert(data);
-                                location.reload();  // Reload page to reflect changes
+                                location.reload();
                             })
                             .catch(error => alert("Error deleting user: " + error));
                     }
                 });
             });
 
-            // Delete Role with Confirmation
             document.querySelectorAll(".delete-role-btn").forEach(button => {
-                button.addEventListener("click", function() {
+                button.addEventListener("click", function () {
                     let roleId = this.dataset.roleId;
-
-                    // Set the role ID in the delete form
                     document.getElementById("deleteRoleId").value = roleId;
-
-                    // Show the Delete Role Modal
                     new bootstrap.Modal(document.getElementById('deleteRoleModal')).show();
                 });
             });
-            // Populate Edit Role Modal
+
             document.querySelectorAll(".edit-role-btn").forEach(button => {
-                button.addEventListener("click", function() {
+                button.addEventListener("click", function () {
                     let roleId = this.dataset.roleId;
                     let roleName = this.dataset.roleName;
-
                     document.getElementById("editRoleId").value = roleId;
                     document.getElementById("editRoleName").value = roleName;
-
-                    // Show the Edit Role Modal
                     new bootstrap.Modal(document.getElementById('editRoleModal')).show();
                 });
             });
 
-// Populate Edit User Modal
             document.querySelectorAll(".edit-user-btn").forEach(button => {
-                button.addEventListener("click", function() {
+                button.addEventListener("click", function () {
                     let userId = this.dataset.id;
                     let username = this.dataset.username;
-                    let rolesData = this.dataset.roles || "";  // Default to an empty string if no roles
-                    let assignedRoles = rolesData.split(','); // Array of role IDs
+                    let rolesData = this.dataset.roles || "";
+                    let assignedRoles = rolesData.split(',');
 
                     document.getElementById("editUserId").value = userId;
                     document.getElementById("editUsername").value = username;
 
-                    // Check the checkboxes based on assigned roles
                     document.querySelectorAll(".role-checkbox").forEach(checkbox => {
                         checkbox.checked = assignedRoles.includes(checkbox.value);
                     });
 
-                    // Show the Edit User Modal
                     new bootstrap.Modal(document.getElementById('editUserModal')).show();
                 });
             });
 
-// Handle Edit User Form Submission
-            document.getElementById("editUserForm").addEventListener("submit", function(event) {
-                event.preventDefault();
-                let formData = new FormData(this);
+            $(document).ready(function () {
+                function validateRoleForm(formId) {
+                    let isValid = true;
+                    let specialCharPattern = /[^a-zA-Z0-9]/;
 
-                // Collect selected roles (assuming checkboxes for roles)
-                let selectedRoles = [];
-                document.querySelectorAll(".role-checkbox:checked").forEach(checkbox => {
-                    selectedRoles.push(checkbox.value);
+                    let roleNameField = $("#" + formId + " input[name='roleName']");
+                    if (roleNameField.length === 0) {
+                        alert("Error: Role Name field not found!");
+                        return false; // Prevents further execution
+                    }
+
+                    let roleName = roleNameField.val().trim();
+                    console.log("Validating role name:", roleName); // Debugging
+
+                    if (!roleName) {
+                        alert("Role Name is required!");
+                        isValid = false;
+                    } else if (specialCharPattern.test(roleName)) {
+                        alert("Role Name cannot contain special characters!");
+                        isValid = false;
+                    } else if (roleName.length < 3) {
+                        alert("Role Name must be at least 3 characters long!");
+                        isValid = false;
+                    } else if (/\s/.test(roleName)) {
+                        alert("Role Name cannot contain spaces!");
+                        isValid = false;
+                    }
+
+                    return isValid;
+                }
+
+                function validateUserForm(formId) {
+                    let isValid = true;
+                    let specialCharPattern = /[^a-zA-Z0-9]/;
+
+                    let usernameField = $("#" + formId + " input[name='username']");
+                    let username = usernameField.val().trim();
+
+                    if (specialCharPattern.test(username)) {
+                        alert("Username cannot contain special characters!");
+                        isValid = false;
+                    }
+
+                    return isValid;
+                }
+
+                // Attach separate validation for edit role form
+                $("#editRoleForm").on("submit", function (event) {
+                    event.preventDefault();
+                    if (validateRoleForm("editRoleForm")) {
+                        this.submit();
+                    }
                 });
 
-                // Append the selected roles as an array to FormData
-                selectedRoles.forEach(roleId => {
-                    formData.append("roles", roleId); // Append each role ID individually
+                // Attach validation for add role form
+                $("#addRoleForm").on("submit", function (event) {
+                    event.preventDefault();
+                    if (validateRoleForm("addRoleForm")) {
+                        this.submit();
+                    }
                 });
 
-                // Send the form data to the backend
-                fetch(this.action, {
-                    method: "POST",
-                    body: formData
-                })
-                    .then(response => response.text())
-                    .then(data => {
-                        alert(data);
-                        location.reload();  // Reload page to reflect changes
-                    })
-                    .catch(error => alert("Error updating user: " + error));
-            });
-            // Handle Edit Role Form Submission
-            document.getElementById("editRoleForm").addEventListener("submit", function(event) {
-                event.preventDefault();
-                let formData = new FormData(this);
-
-                fetch(this.action, {
-                    method: "POST",
-                    body: formData
-                })
-                    .then(response => response.text())
-                    .then(data => {
-                        alert(data);
-                        location.reload();  // Reload page to reflect changes
-                    })
-                    .catch(error => alert("Error updating role: " + error));
+                // Attach validation for user forms
+                $("#editUserForm, #addUserForm").on("submit", function (event) {
+                    event.preventDefault();
+                    if (validateUserForm(this.id)) {
+                        this.submit();
+                    }
+                });
             });
         });
+
     </script>
+
 </body>
 </html>

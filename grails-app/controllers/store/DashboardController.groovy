@@ -2,44 +2,63 @@ package store
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
-import grails.converters.JSON
 import store.Order
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
 class DashboardController {
 
-    def index() {
+    def dashboard() {
         render(view: "dashboard")
     }
 
-    // API to get the total count of all orders, total products, and total sales
+    // API to get total orders, products, and sales (Filtered by Admin)
     def getOrdersData() {
-        def totalOrders = Order.count() // ✅ Total number of orders
-        def totalProducts = Product.count() // ✅ Count of different products
-        def totalSales = Order.createCriteria().get { projections { sum('totalAmount') } } ?: 0.0 // ✅ Sum of all orders totalAmount
+        def currentAdmin = session.user
+        if (!currentAdmin) {
+            render(status: 403, text: "Unauthorized access!")
+            return
+        }
 
-        // Debugging: Log the values
-        println "🛒 Total Orders Count: ${totalOrders}"
-        println "📦 Total Products Count: ${totalProducts}"
-        println "💰 Total Sales Amount: ${totalSales}"
+        def usersCreatedByAdmin = AppUser.findAllByCreatedBy(currentAdmin)
+        def userIds = usersCreatedByAdmin*.id
 
-        // Return the data as JSON
+        def totalOrders = Order.countByCreatedByInList(userIds)
+        def totalProducts = Product.countByCreatedBy(currentAdmin)
+        def totalSales = Order.createCriteria().get {
+            projections {
+                sum('totalAmount')
+            }
+            'in'("createdBy", userIds)
+        } ?: 0.0
+
         render([
                 ordersThisMonth: totalOrders,
                 totalProducts: totalProducts,
                 totalSales: totalSales
         ] as JSON)
     }
+
+    // API to get order trends (Filtered by Admin)
     def getOrdersTrend() {
+        def currentAdmin = session.user
+        if (!currentAdmin) {
+            render(status: 403, text: "Unauthorized access!")
+            return
+        }
+
+        def usersCreatedByAdmin = AppUser.findAllByCreatedBy(currentAdmin)
+        def userIds = usersCreatedByAdmin*.id
+
         def ordersByDate = Order.createCriteria().list {
             projections {
-                groupProperty("dateCreated") // ✅ Group by full timestamp (wrong)
-                count("id")  // ✅ Count orders per timestamp (wrong)
+                groupProperty("dateCreated")
+                count("id")
             }
+            'in'("createdBy", userIds)
             order("dateCreated", "asc")
         }
 
-        // ✅ Fix: Group orders by date (ignoring time)
         def groupedOrders = ordersByDate.groupBy { row ->
             row[0]?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
         }.collect { date, entries ->
@@ -48,9 +67,16 @@ class DashboardController {
 
         render groupedOrders as JSON
     }
-    // API to get product quantities for the donut chart
+
+    // API to get product quantities (Filtered by Admin)
     def getProductQuantities() {
-        def products = Product.list()
+        def currentAdmin = session.user
+        if (!currentAdmin) {
+            render(status: 403, text: "Unauthorized access!")
+            return
+        }
+
+        def products = Product.findAllByCreatedBy(currentAdmin)
         def productData = products.collect { product ->
             [name: product.productName, quantity: product.productQuantity]
         }

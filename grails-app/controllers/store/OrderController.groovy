@@ -1,18 +1,29 @@
 package store
-
+import grails.validation.Validateable
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
-import grails.validation.Validateable
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 
 class OrderController {
 
     def checkout() {
+        if (!session.user) {
+            render(status: 403, text: "Unauthorized access")
+            return
+        }
         println "CheckoutController: index action called"
         render(view: "/order/checkout")
     }
 
     def getProductByBarcode() {
         try {
+            if (!session.user) {
+                render(status: 403, text: "Unauthorized access")
+                return
+            }
+
             println "🔍 getProductByBarcode called with barcode: '${params.productBarcode}'"
 
             if (!params.productBarcode) {
@@ -20,10 +31,13 @@ class OrderController {
                 return
             }
 
-            def product = Product.findByProductBarcode(params.productBarcode?.trim())
+            // Fetch the createdBy ID of the current user
+            def createdById = session.user.createdBy?.id ?: session.user.id
 
-            if (!product) {
-                render(status: 404, text: "Product not found")
+            // Fetch the product by barcode and ensure it belongs to the same createdBy hierarchy
+            def product = Product.findByProductBarcode(params.productBarcode?.trim())
+            if (!product || product.createdBy.id != createdById) {
+                render(status: 404, text: "Product not found or unauthorized")
                 return
             }
 
@@ -36,6 +50,11 @@ class OrderController {
 
     @Transactional
     def saveOrder(OrderCommand command) {
+        if (!session.user) {
+            render(status: 403, text: "Unauthorized access")
+            return
+        }
+
         if (command.hasErrors()) {
             def errors = command.errors.allErrors.collectEntries {
                 [(it.field): message(code: it.defaultMessage)]
@@ -46,19 +65,24 @@ class OrderController {
 
         println "🛒 Processing Order for ${command.customerName}..."
 
-        def order = new Order(customerName: command.customerName, totalAmount: 0)
+        // Fetch the current user (ensure it's attached to the session)
+        def currentUser = AppUser.get(session.user.id)
+
+        def order = new Order(customerName: command.customerName, totalAmount: 0, createdBy: currentUser)
         order.orderItems = []
 
         command.products.each { productData ->
             def product = Product.findByProductBarcode(productData.productBarcode)
 
-            if (product) {
+            // Ensure the product belongs to the same createdBy hierarchy
+            if (product && product.createdBy.id == currentUser.createdBy?.id ?: currentUser.id) {
                 if (product.productQuantity >= productData.quantity) {
                     def orderItem = new OrderItem(
                             order: order,
                             product: product,
                             quantity: productData.quantity,
-                            subtotal: product.productPrice * productData.quantity
+                            subtotal: product.productPrice * productData.quantity,
+                            createdBy: currentUser // Set the createdBy field for OrderItem
                     )
                     order.addToOrderItems(orderItem)
 
@@ -81,9 +105,17 @@ class OrderController {
     }
 
     def orderDetails(Long id) {
+        if (!session.user) {
+            render(status: 403, text: "Unauthorized access")
+            return
+        }
+
+        // Fetch the createdBy ID of the current user
+        def createdById = session.user.createdBy?.id ?: session.user.id
+
         def order = Order.get(id)
-        if (!order) {
-            flash.message = "Order not found!"
+        if (!order || order.createdBy.id != createdById) {
+            flash.message = "Order not found or unauthorized!"
             redirect(action: "listOrders")
             return
         }
@@ -101,10 +133,23 @@ class OrderController {
     }
 
     def listOrders() {
+        def currentUser = session.user
+        if (!currentUser) {
+            render(status: 403, text: "Unauthorized access")
+            return
+        }
+
+        // Eagerly fetch the createdBy association for the current user
+        currentUser = AppUser.findById(currentUser.id, [fetch: [createdBy: 'join']])
+
+        // Fetch the createdBy ID of the current user
+        def createdById = currentUser.createdBy?.id ?: currentUser.id
+
         String startDateStr = params.startDate
         String endDateStr = params.endDate
 
         def orders = Order.createCriteria().list {
+            eq("createdBy.id", createdById) // Fetch orders created by the same hierarchy
             if (startDateStr && endDateStr) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
                 Date startDate = sdf.parse(startDateStr)
@@ -129,11 +174,6 @@ class OrderController {
         render(view: "orderList", model: [orders: orders, startDate: startDateStr, endDate: endDateStr, totalSales: totalSales])
     }
 }
-
-
-import grails.validation.Validateable
-
-import java.text.SimpleDateFormat
 
 class OrderCommand implements Validateable {
     String customerName

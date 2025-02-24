@@ -1,10 +1,8 @@
 package store
 
-
-import grails.validation.Validateable
-import grails.converters.JSON
-import org.springframework.dao.DataIntegrityViolationException
 import grails.gorm.transactions.Transactional
+import org.mindrot.jbcrypt.BCrypt
+
 
 class AdminController {
 
@@ -18,14 +16,12 @@ class AdminController {
         def users = AppUser.findAllByCreatedBy(currentAdmin) // Fetch only users created by this admin
         def roles = AssignRole.list()
         def permissions = Permission.list()
-        def pages = ['inventory', 'sales', 'checkout', 'settings', 'subscription','roleManagement']
+        def pages = ['dashboard','inventory', 'listOrders', 'checkout', 'settings', 'subscription', 'roleManagement']
 
-        render(view: "roleManagement", model: [
-                users: users,
-                roles: roles,
-                permissions: permissions,
-                pages: pages
-        ])
+        render(view: "roleManagement", model: [users      : users,
+                                               roles      : roles,
+                                               permissions: permissions,
+                                               pages      : pages])
     }
 
 
@@ -37,20 +33,28 @@ class AdminController {
             return
         }
 
-        def user = new AppUser(
-                username: params.username,
-                password: params.password,
-                isAdmin: params.isAdmin ? true : false,
-                createdBy: currentAdmin // Assign the logged-in admin as creator
-        )
-
-        if (user.save(flush: true)) {
-            flash.message = "User added successfully"
+        def existinguser = AppUser.findByUsername(params.username)
+        if (existinguser) {
+            flash.error = "User already exists!"
         } else {
-            flash.error = "Failed to add user"
-        }
-    }
+            // Encrypt the password before saving
+            def encryptedPassword = BCrypt.hashpw(params.password, BCrypt.gensalt())
 
+            def user = new AppUser(
+                    username: params.username,
+                    password: encryptedPassword, // Save the encrypted password
+                    isAdmin: params.isAdmin ? true : false,
+                    createdBy: currentAdmin // Assign the logged-in admin as creator
+            )
+
+            if (user.save(flush: true)) {
+                flash.message = "User added successfully"
+            } else {
+                flash.error = "Failed to add User"
+            }
+        }
+        redirect(action: "roleManagement")
+    }
 
     @Transactional
     def saveRole() {
@@ -89,7 +93,6 @@ class AdminController {
         redirect(action: "roleManagement")
     }
 
-
     // Delete a user
     @Transactional
     def deleteUser() {
@@ -119,77 +122,92 @@ class AdminController {
         }
     }
 
-// Edit Role Method
     @Transactional
     def editRole() {
-        def role = AssignRole.get(params.id)
-        if (!role) {
-            render(status: 404, text: "Role not found!")
-            return
-        }
-
-        if (params.roleName) {
-            role.roleName = params.roleName
-        }
-
         try {
+            def role = AssignRole.get(params.id)
+            if (!role) {
+                flash.error = "Role not found!"
+                redirect(action: "roleManagement")
+                return
+            }
+
+            def existingRole = AssignRole.findByRoleName(params.roleName)
+            if (existingRole && existingRole.id != role.id) {
+                flash.error = "Role '${params.roleName}' already exists!"
+                redirect(action: "roleManagement")
+                return
+            }
+
+            if (params.roleName) {
+                role.roleName = params.roleName
+            }
+
             role.save(flush: true, failOnError: true)
             flash.message = "Role updated successfully!"
+            redirect(action: "roleManagement")
         } catch (Exception e) {
-            flash.error = "Error updating role!"
+            flash.error = "Error updating role: ${e.message}"
+            redirect(action: "roleManagement")
         }
     }
 
     @Transactional
     def editUser() {
-        def user = AppUser.get(params.userId)
+        try {
+            def user = AppUser.get(params.userId)
 
-        if (!user) {
-            flash.error = "User not found!"
-            return
-        }
+            if (!user) {
+                flash.error = "User not found!"
+                redirect(action: "roleManagement")
+                return
+            }
 
-        // Update username and password if provided
-        if (params.username) {
-            user.username = params.username
-        }
+            // Check if the new username already exists for another user
+            if (params.username && AppUser.findByUsername(params.username) && params.username != user.username) {
+                flash.error = "Username '${params.username}' is already taken!"
+                redirect(action: "roleManagement")
+                return
+            }
 
-        if (params.password) {
-            user.password = params.password
-        }
+            // Update username if provided
+            if (params.username) {
+                user.username = params.username
+            }
 
-        // Ensure roles are fetched to avoid lazy loading issues
-        user.assignRole = user.assignRole ?: []
+            // Encrypt the password if provided
+            if (params.password) {
+                user.password = BCrypt.hashpw(params.password, BCrypt.gensalt()) // Encrypt the password
+            }
 
-        // Explicitly remove each role association
-        user.assignRole.toList().each { role ->
-            user.removeFromAssignRole(role)
-        }
+            // Ensure roles are fetched to avoid lazy loading issues
+            user.assignRole = user.assignRole ?: []
 
-        // Flush the session to persist role removal
-        user.save(flush: true, failOnError: true)
+            // Explicitly remove each role association
+            user.assignRole.toList().each { role ->
+                user.removeFromAssignRole(role)
+            }
 
-        // Add new roles from the form
-        if (params.roles) {
-            def roleIds = params.list("roles")
-            roleIds.each { roleId ->
-                def role = AssignRole.get(roleId)
-                if (role) {
-                    user.addToAssignRole(role)
+            // Add new roles from the form
+            if (params.roles) {
+                def roleIds = params.list("roles")
+                roleIds.each { roleId ->
+                    def role = AssignRole.get(roleId)
+                    if (role) {
+                        user.addToAssignRole(role)
+                    }
                 }
             }
-        }
 
-        // Final save to store new role assignments
-        try {
+            // Final save to store new role assignments and updated password
             user.save(flush: true, failOnError: true)
             flash.message = "User updated successfully!"
+            redirect(action: "roleManagement")
         } catch (Exception e) {
             flash.error = "Error: Unable to edit user! ${e.message}"
+            redirect(action: "roleManagement")
         }
     }
-
-
     // Delete a role
     @Transactional
     def deleteRole() {
@@ -242,13 +260,11 @@ class AdminController {
 
         // Iterate through each selected page
         params.pages.each { page ->
-            def permission = new Permission(
-                    assignRole: role,
+            def permission = new Permission(assignRole: role,
                     pageName: page,
                     canView: params["canView_${page}"] == "on",
                     canEdit: params["canEdit_${page}"] == "on",
-                    canDelete: params["canDelete_${page}"] == "on"
-            )
+                    canDelete: params["canDelete_${page}"] == "on")
 
             if (!permission.save(flush: true, failOnError: true)) {
                 println "Error saving permission for ${page}: " + permission.errors
@@ -261,7 +277,6 @@ class AdminController {
         flash.message = "Permissions assigned successfully!"
         redirect(action: "roleManagement")
     }
-
 
 
 }

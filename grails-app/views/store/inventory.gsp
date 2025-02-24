@@ -1,5 +1,3 @@
-
-
 <%@ page contentType="text/html;charset=UTF-8" %>
 <html lang="en">
 <head>
@@ -51,9 +49,7 @@
         border-radius: 15px;
     }
 
-
     </style>
-
 
     <script>
         $(document).ready(function(){
@@ -156,7 +152,6 @@
     <br>
     <div class="d-flex mb-3">
         <input type="text" id="searchInput" class="form-control" placeholder="Search products" style="width: 300px;"/>
-
     </div>
     <div class="d-flex justify-content-end mt-4">
         <button class="btn btn-success btn-custom open-modal" data-action="add">
@@ -178,7 +173,7 @@
         </thead>
 
         <tbody>
-        <g:each in="${productList}" var="product">
+        <g:each in="${products}" var="product">
             <tr>
                 <td>${product.productName}</td>
                 <td>${product.productDescription}</td>
@@ -186,10 +181,6 @@
                 <td>${product.productBarcode}</td>
                 <td>${product.productPrice}</td>
                 <td>${product.productQuantity}</td>
-
-
-
-
 
                 <td>
                     <g:if test="${session.permissions?.inventory?.canEdit}">
@@ -204,23 +195,10 @@
                         </button>
                     </g:if>
                 </td>
-
             </tr>
         </g:each>
         </tbody>
     </table>
-
-    <!-- Pagination -->
-    <div class="d-flex justify-content-between">
-        <!-- Back Button -->
-        <a href="${createLink(controller: 'store', action: 'inventory', params: [page: currentPage - 1])}" class="btn btn-secondary"
-            ${currentPage == 1 ? 'disabled' : ''}>Back</a>
-
-        <!-- Next Button -->
-        <a href="${createLink(controller: 'store', action: 'inventory', params: [page: currentPage + 1])}" class="btn btn-secondary"
-            ${currentPage == totalPages ? 'disabled' : ''}>Next</a>
-    </div>
-
 
     <!-- Modal for adding/editing a product -->
     <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
@@ -263,5 +241,6 @@
             </div>
         </div>
     </div>
+</div>
 </body>
 </html>

@@ -44,7 +44,7 @@ class AuthController {
 
                 println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRole}, Permissions: ${session.permissions}"
                 flash.message = "Login successful!"
-                redirect(controller: "dashboard", action: "index")
+                redirect(controller: "dashboard", action: "dashboard")
                 return
             } else {
                 flash.message = "Invalid username or password"

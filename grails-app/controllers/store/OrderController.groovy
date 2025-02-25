@@ -5,6 +5,7 @@ import grails.gorm.transactions.Transactional
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import store.ProductCommand
 
 class OrderController {
 
@@ -194,21 +195,4 @@ class OrderCommand implements Validateable {
     }
 }
 
-class ProductCommand {
-    String productBarcode
-    Integer quantity
 
-    static constraints = {
-        productBarcode nullable: true, size: 1..255, validator: { val, obj ->
-            if (!val) {
-                return 'productBarcodeCannotBeBlank'
-            }
-        }
-
-        quantity nullable: true, min: 1, validator: { val, obj ->
-            if (!val || val < 1) {
-                return 'quantityMustBeAtLeastOne'
-            }
-        }
-    }
-}

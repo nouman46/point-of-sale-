@@ -1,7 +1,7 @@
 package store
 
-import grails.gorm.transactions.Transactional
 import grails.validation.Validateable
+import grails.gorm.transactions.Transactional
 import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
 
@@ -14,19 +14,9 @@ class StoreController {
             redirect(controller: "auth", action: "login")
             return
         }
-
-        // Eagerly fetch the createdBy association for the current user
         currentUser = AppUser.findById(currentUser.id, [fetch: [createdBy: 'join']])
-
-        // Fetch the createdBy ID of the current user
         def createdById = currentUser.createdBy?.id ?: currentUser.id
-
-        // Fetch all products where the createdBy ID matches the current user's createdBy ID
         def products = Product.findAllByCreatedBy(AppUser.get(createdById))
-
-        // Debugging: Log the fetched products
-        log.info("Fetched Products: ${products.collect { it.productName }}")
-
         render(view: "inventory", model: [products: products])
     }
 
@@ -35,106 +25,106 @@ class StoreController {
         if (product) {
             render product as JSON
         } else {
-            render status: 404, text: "Product not found"
+            response.status = 404
+            render([success: false, message: "Product not found"] as JSON)
         }
     }
 
     @Transactional
-    def saveProduct() {
-        try {
-            log.info("saveProduct action hit with params: ${params}")
+    def saveProduct(ProductInfoCommand productInfo) {
+        def currentUser = session.user
+        if (!currentUser) {
+            response.status = 401
+            render([success: false, message: "Unauthorized access!"] as JSON)
+            return
+        }
 
-            // Check if a product with the same name already exists (excluding the current product if updating)
-            def existingProduct = Product.findByProductName(params.productName)
-            if (existingProduct && (!params.id || existingProduct.id != params.id)) {
-                flash.error = "Product already exists!"
-                redirect(action: "inventory") // Redirect back to inventory page
-                return
-            }
+        bindData(productInfo, params)
 
-            def product = params.id ? Product.get(params.id) : new Product()
+        if (!productInfo.validate()) {
+            def errors = productInfo.errors.allErrors.collect { g.message(error: it) }.join("<br>")
+            response.status = 400
+            render([success: false, message: errors] as JSON) // Simplified message structure
+            return
+        }
 
-            // If an id was provided but no product was found, return a 404
-            if (params.id && !product) {
-                render status: 404, text: "Product not found"
-                return
-            }
+        def product = params.id ? Product.get(params.id) : new Product()
+        if (params.id && !product) {
+            response.status = 404
+            render([success: false, message: "Product not found"] as JSON)
+            return
+        }
 
-            // Set the createdBy field to the current admin or user
-            def currentUser = session.user
-            if (!currentUser) {
-                flash.error = "Unauthorized access!"
-                redirect(controller: "auth", action: "login")
-                return
-            }
+        product.properties = [
+                productName: productInfo.productName,
+                productDescription: productInfo.productDescription,
+                productSKU: productInfo.productSKU,
+                productBarcode: productInfo.productBarcode,
+                productPrice: productInfo.productPrice,
+                productQuantity: productInfo.productQuantity
+        ]
 
-            // Update product properties from parameters
-            product.properties = params
+        if (!product.createdBy) product.createdBy = currentUser
+        if (!product.admin) product.admin = currentUser
 
-            // Set the createdBy and admin fields
-            if (!product.createdBy) {
-                product.createdBy = currentUser
-            }
-            // Set the admin field (if required, this could be the same as createdBy)
-            if (!product.admin) {
-                product.admin = currentUser
-            }
-
-            log.info("Product properties set: ${product.properties}")
-
-            // Validate and save product
-            if (product.validate()) {
-                if (product.save(flush: true)) {
-                    flash.message = "Product saved successfully"
-                } else {
-                    flash.error = "Failed to save product: " + product.errors
-                    log.error("Product validation failed: ${product.errors}")
-                }
-            } else {
-                flash.error = "Product validation failed: ${product.errors}"
-                log.error("Product validation failed: ${product.errors}")
-            }
-
-            redirect(action: "inventory") // Redirect back to inventory page
-        } catch (Exception e) {
-            log.error("Error in saveProduct action: ${e.message}", e)
-            flash.error = "An error occurred while saving the product"
-            redirect(action: "inventory")
+        if (product.save(flush: true)) {
+            render([success: true, message: "Product ${params.id ? 'updated' : 'created'} successfully", product: product] as JSON)
+        } else {
+            def errors = product.errors.allErrors.collect { g.message(error: it) }.join("<br>")
+            response.status = 500
+            render([success: false, message: "Failed to save product:<br>${errors}"] as JSON)
         }
     }
-
 
     @Transactional
     def deleteProduct(Long id) {
         try {
-            log.info("deleteProduct action hit with product ID: ${id}")
-
             def product = Product.get(id)
-
             if (!product) {
-                log.warn("Product with ID ${id} not found")
-                render status: 404, text: "Product not found"
+                response.status = 404
+                render([success: false, message: "Product not found"] as JSON)
                 return
             }
 
-            // Check if the current user is allowed to delete the product
             def currentUser = session.user
             if (!currentUser || (product.createdBy != currentUser && !AppUser.findAllByCreatedBy(currentUser).contains(product.createdBy))) {
-                flash.error = "Unauthorized access!"
-                redirect(controller: "auth", action: "login")
+                response.status = 403
+                render([success: false, message: "Unauthorized access!"] as JSON)
                 return
             }
 
-            // Try to delete the product
+            if (OrderItem.countByProduct(product) > 0) {
+                response.status = 400
+                render([success: false, message: "Cannot delete product as it is referenced in existing orders"] as JSON)
+                return
+            }
+
             product.delete(flush: true)
-            log.info("Product with ID ${id} deleted successfully")
-            render status: 200, text: "Product deleted successfully"
+            render([success: true, message: "Product deleted successfully"] as JSON)
         } catch (DataIntegrityViolationException e) {
-            log.error("Data integrity violation while deleting product with ID ${id}: ${e.message}", e)
-            render status: 400, text: "Failed to delete product due to data integrity error"
+            response.status = 400
+            render([success: false, message: "Failed to delete product due to data integrity error"] as JSON)
         } catch (Exception e) {
-            log.error("Unexpected error while deleting product with ID ${id}: ${e.message}", e)
-            render status: 500, text: "An unexpected error occurred while deleting the product"
+            response.status = 500
+            render([success: false, message: "An unexpected error occurred: ${e.message}"] as JSON)
         }
+    }
+}
+
+class ProductInfoCommand implements Validateable {
+    String productName
+    String productDescription
+    String productSKU
+    String productBarcode
+    BigDecimal productPrice
+    Integer productQuantity
+
+    static constraints = {
+        productName blank: false, nullable: false, maxSize: 100
+        productDescription blank: false, nullable: false, maxSize: 500
+        productSKU blank: false, nullable: false, unique: true, maxSize: 50
+        productBarcode blank: false, nullable: false, unique: true, maxSize: 50
+        productPrice nullable: false, min: 0.01 as BigDecimal, scale: 2
+        productQuantity nullable: false, min: 0
     }
 }

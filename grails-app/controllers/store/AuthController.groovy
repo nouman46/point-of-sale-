@@ -55,7 +55,7 @@ class AuthController {
         }
 
         if (session.user) {
-            redirect(controller: "dashboard", action: "index")
+            redirect(controller: "dashboard", action: "dashboard")
             return
         }
 

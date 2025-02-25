@@ -74,4 +74,58 @@ class DashboardController {
         }
         render(productData as JSON)
     }
+
+    // API to get product data by barcode (Filtered by Admin)
+    def getProductDataByBarcode() {
+        try {
+            if (!session.user) {
+                render(status: 403, text: "Unauthorized access")
+                return
+            }
+
+            println "🔍 getProductDataByBarcode called with barcode: '${params.barcode}'"
+
+            if (!params.barcode) {
+                render(status: 400, text: "Barcode is required")
+                return
+            }
+
+            // Fetch the createdBy ID of the current user
+            def createdById = session.user.createdBy?.id ?: session.user.id
+
+            // Fetch the product by barcode and ensure it belongs to the same createdBy hierarchy
+            def product = Product.findByProductBarcode(params.barcode?.trim()) // Updated to use productBarcode
+            if (!product || product.createdBy.id != createdById) {
+                render(status: 404, text: "Product not found or unauthorized")
+                return
+            }
+
+            // Calculate total orders and sales for the product
+            def totalOrders = Order.createCriteria().get {
+                projections {
+                    countDistinct('id')
+                }
+                orderItems {
+                    eq("product", product)
+                }
+                eq("createdBy", session.user)
+            } ?: 0
+
+            def totalQuantitySold = OrderItem.createCriteria().get {
+                projections { sum('quantity') }  // Get total quantity sold
+                eq("product", product)
+            } ?: 0
+
+            def totalSales = totalQuantitySold * product.productPrice
+
+
+            render([
+                    totalOrders: totalOrders,
+                    totalSales: totalSales
+            ] as JSON)
+        } catch (Exception e) {
+            e.printStackTrace()
+            render(status: 500, text: "Internal Server Error")
+        }
+    }
 }

@@ -38,6 +38,8 @@ class UrlMappings {
         "/dashboard/getOrdersTrend"(controller: "dashboard", action: "getOrdersTrend")
         "/dashboard/getProductQuantities"(controller: "dashboard", action: "getProductQuantities")
         "/dashboard/getOrdersOverTime"(controller: "dashboard", action: "getOrdersOverTime")
+        "/dashboard/getProductDataByBarcode"(controller: "dashboard", action: "getProductDataByBarcode")
+
 
         // ✅ Store & Inventory
         "/store/inventory"(controller: "store", action: "inventory")

@@ -1,8 +1,6 @@
 package store
 
 import grails.converters.JSON
-import grails.gorm.transactions.Transactional
-import store.Order
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -20,16 +18,13 @@ class DashboardController {
             return
         }
 
-        def usersCreatedByAdmin = AppUser.findAllByCreatedBy(currentAdmin)
-        def userIds = usersCreatedByAdmin*.id
-
-        def totalOrders = Order.countByCreatedByInList(userIds)
+        def totalOrders = Order.countByCreatedBy(currentAdmin)
         def totalProducts = Product.countByCreatedBy(currentAdmin)
         def totalSales = Order.createCriteria().get {
             projections {
                 sum('totalAmount')
             }
-            'in'("createdBy", userIds)
+            eq("createdBy", currentAdmin)  // Fixed filtering
         } ?: 0.0
 
         render([
@@ -47,15 +42,12 @@ class DashboardController {
             return
         }
 
-        def usersCreatedByAdmin = AppUser.findAllByCreatedBy(currentAdmin)
-        def userIds = usersCreatedByAdmin*.id
-
         def ordersByDate = Order.createCriteria().list {
             projections {
                 groupProperty("dateCreated")
                 count("id")
             }
-            'in'("createdBy", userIds)
+            eq("createdBy", currentAdmin)  // Fixed filtering
             order("dateCreated", "asc")
         }
 
@@ -81,5 +73,59 @@ class DashboardController {
             [name: product.productName, quantity: product.productQuantity]
         }
         render(productData as JSON)
+    }
+
+    // API to get product data by barcode (Filtered by Admin)
+    def getProductDataByBarcode() {
+        try {
+            if (!session.user) {
+                render(status: 403, text: "Unauthorized access")
+                return
+            }
+
+            println "🔍 getProductDataByBarcode called with barcode: '${params.barcode}'"
+
+            if (!params.barcode) {
+                render(status: 400, text: "Barcode is required")
+                return
+            }
+
+            // Fetch the createdBy ID of the current user
+            def createdById = session.user.createdBy?.id ?: session.user.id
+
+            // Fetch the product by barcode and ensure it belongs to the same createdBy hierarchy
+            def product = Product.findByProductBarcode(params.barcode?.trim()) // Updated to use productBarcode
+            if (!product || product.createdBy.id != createdById) {
+                render(status: 404, text: "Product not found or unauthorized")
+                return
+            }
+
+            // Calculate total orders and sales for the product
+            def totalOrders = Order.createCriteria().get {
+                projections {
+                    countDistinct('id')
+                }
+                orderItems {
+                    eq("product", product)
+                }
+                eq("createdBy", session.user)
+            } ?: 0
+
+            def totalQuantitySold = OrderItem.createCriteria().get {
+                projections { sum('quantity') }  // Get total quantity sold
+                eq("product", product)
+            } ?: 0
+
+            def totalSales = totalQuantitySold * product.productPrice
+
+
+            render([
+                    totalOrders: totalOrders,
+                    totalSales: totalSales
+            ] as JSON)
+        } catch (Exception e) {
+            e.printStackTrace()
+            render(status: 500, text: "Internal Server Error")
+        }
     }
 }

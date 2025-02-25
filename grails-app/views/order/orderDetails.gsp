@@ -38,14 +38,37 @@
     .btn:hover {
         transform: scale(1.05);
     }
+
+    /* Hide sidebar, URL bar, and buttons when printing */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .printable-content, .printable-content * {
+            visibility: visible;
+        }
+        .printable-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print {
+            display: none !important;
+        }
+        @page {
+            margin: 0;
+        }
+    }
     </style>
 </head>
 <body>
 
-<div class="container mt-5 fade-in">
+<div class="container mt-5 fade-in printable-content">
     <!-- Order Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="fw-bold text-primary">🛒 Order Details</h1>
+        <button class="btn btn-primary btn-lg no-print" onclick="printOrder()">🖨️ Print</button>
     </div>
 
     <!-- Order Summary Card -->
@@ -83,14 +106,14 @@
     </div>
 
     <!-- Back Button -->
-    <div class="text-end mt-4 fade-in">
+    <div class="text-end mt-4 fade-in no-print">
         <a href="${createLink(controller: 'order', action: 'listOrders')}" class="btn btn-secondary btn-lg">
             ⬅️ Back to Orders
         </a>
     </div>
 </div>
 
-<!-- JavaScript for triggering animations dynamically -->
+<!-- JavaScript for triggering animations dynamically and print function -->
 <script>
     // Function to trigger animations when elements come into view
     function animateOnView() {
@@ -106,6 +129,11 @@
         document.querySelectorAll(".fade-in").forEach(element => {
             observer.observe(element);
         });
+    }
+
+    // Function to print only the order details without URL
+    function printOrder() {
+        window.print();
     }
 
     // Run animation trigger when navigating via AJAX or normal load

@@ -124,6 +124,10 @@
             .stats-container { flex-direction: column; }
             .chart-box { width: 100%; max-width: none; }
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -133,7 +137,14 @@
         <h1>Admin Dashboard</h1>
     </div>
 
+
     <div class="stats-container">
+    <div class="box">
+                <i class="fas fa-barcode"></i>
+                <h3>Filter by Barcode</h3>
+                <input type="text" id="barcodeInput" placeholder="Enter Barcode" style="margin: 10px 0; padding: 5px; width: 80%;">
+                <button onclick="filterByBarcode()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Filter</button>
+            </div>
         <div class="box total-orders" onclick="window.location.href='/order/listOrders'">
             <i class="fas fa-shopping-cart"></i>
             <h3>Total Orders</h3>
@@ -151,8 +162,22 @@
             <h3>Total Sales</h3>
             <div class="count" id="totalSales">Loading...</div>
         </div>
+
+        <!-- Add these boxes for filtered results -->
+        <div class="box filtered-orders hidden">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Orders with Product</h3>
+            <div class="count" id="filteredOrders">0</div>
+        </div>
+
+        <div class="box filtered-sales hidden">
+            <i class="fas fa-dollar-sign"></i>
+            <h3>Sales of Product</h3>
+            <div class="count" id="filteredSales">RS 0.00</div>
+        </div>
     </div>
 
+    <!-- Charts are visible by default -->
     <div class="charts-wrapper">
         <div class="chart-box">
             <div class="chart-title">Orders Trend Over Time</div>
@@ -247,8 +272,8 @@
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    let labels = data.map(item => item.name);
-                    let values = data.map(item => item.quantity);
+                    let labels = data.map(item => item.name); // Product names
+                    let values = data.map(item => item.quantity); // Quantities
 
                     destroyChart(productChartInstance);
 
@@ -256,17 +281,67 @@
                     productChartInstance = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
-                            labels: labels,
+                            labels: labels, // Labels stored for tooltips
                             datasets: [{
                                 data: values,
                                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FF9800']
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false // This hides the labels from being shown above the chart
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem) {
+                                            let index = tooltipItem.dataIndex;
+                                            return labels[index] + ": " + values[index]; // Fix for possible undefined values
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching product quantity data:", error);
                 }
             });
         }
+
+       function filterByBarcode() {
+           let barcode = $("#barcodeInput").val();
+           if (!barcode) {
+               alert("Please enter a barcode.");
+               return;
+           }
+
+           $.ajax({
+               url: '/dashboard/getProductDataByBarcode',
+               type: 'GET',
+               data: { barcode: barcode },
+               dataType: 'json',
+               success: function(data) {
+                   if (data.totalOrders || data.totalSales) {
+                       $(".filtered-orders").removeClass("hidden");
+                       $(".filtered-sales").removeClass("hidden");
+                   } else {
+                       $(".filtered-orders").addClass("hidden");
+                       $(".filtered-sales").addClass("hidden");
+                   }
+
+                   $("#filteredOrders").text(data.totalOrders || 0);
+                   $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
+               },
+               error: function(xhr, status, error) {
+                   console.error("Error fetching product data by barcode:", error);
+                   alert("Error fetching product data. Please try again.");
+               }
+           });
+       }
     </script>
 </body>
 </html>

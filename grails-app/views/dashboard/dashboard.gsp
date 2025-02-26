@@ -4,8 +4,8 @@
     <meta name="layout" content="main" />
     <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script> <!-- Icons -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery for AJAX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
         body {
@@ -80,9 +80,12 @@
             color: #222;
         }
 
+        .box.barcode-filter { border-left-color: #9b59b6; }
         .box.total-orders { border-left-color: #e74c3c; }
         .box.total-products { border-left-color: #3498db; }
         .box.total-sales { border-left-color: #2ecc71; }
+        .box.filtered-orders { border-left-color: #f1c40f; }
+        .box.filtered-sales { border-left-color: #e67e22; }
 
         .charts-wrapper {
             display: flex;
@@ -90,10 +93,11 @@
             width: 100%;
             flex-wrap: wrap;
             margin-top: 20px;
+            gap: 20px;
         }
 
         .chart-box {
-            width: 45%;
+            width: 30%;
             max-width: 500px;
             background: white;
             padding: 20px;
@@ -137,14 +141,16 @@
         <h1>Admin Dashboard</h1>
     </div>
 
-
     <div class="stats-container">
-    <div class="box">
-                <i class="fas fa-barcode"></i>
-                <h3>Filter by Barcode</h3>
-                <input type="text" id="barcodeInput" placeholder="Enter Barcode" style="margin: 10px 0; padding: 5px; width: 80%;">
+        <div class="box barcode-filter">
+            <i class="fas fa-barcode"></i>
+            <h3>Filter by Barcode</h3>
+            <input type="text" id="barcodeInput" placeholder="Enter Barcode" style="margin: 10px 0; padding: 5px; width: 80%;">
+            <div style="display: flex; gap: 10px;">
                 <button onclick="filterByBarcode()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Filter</button>
+                <button onclick="resetDashboard()" style="padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset</button>
             </div>
+        </div>
         <div class="box total-orders" onclick="window.location.href='/order/listOrders'">
             <i class="fas fa-shopping-cart"></i>
             <h3>Total Orders</h3>
@@ -163,7 +169,6 @@
             <div class="count" id="totalSales">Loading...</div>
         </div>
 
-        <!-- Add these boxes for filtered results -->
         <div class="box filtered-orders hidden">
             <i class="fas fa-shopping-cart"></i>
             <h3>Orders with Product</h3>
@@ -177,26 +182,31 @@
         </div>
     </div>
 
-    <!-- Charts are visible by default -->
     <div class="charts-wrapper">
-        <div class="chart-box">
+        <div class="chart-box orders-trend-chart"> <!-- Added class for targeting -->
             <div class="chart-title">Orders Trend Over Time</div>
             <canvas id="ordersChart"></canvas>
         </div>
-        <div class="chart-box">
+        <div class="chart-box product-quantity-chart"> <!-- Added class for targeting -->
             <div class="chart-title">Product Quantity Distribution</div>
             <canvas id="productChart"></canvas>
+        </div>
+        <div class="chart-box filtered-product-chart hidden"> <!-- Starts hidden -->
+            <div class="chart-title">Filtered Product Quantity</div>
+            <canvas id="filteredProductChart"></canvas>
         </div>
     </div>
 
     <script>
         let ordersChartInstance = null;
         let productChartInstance = null;
+        let filteredProductChartInstance = null;
 
         $(document).ready(function() {
             loadDashboardData();
             loadOrdersTrend();
             loadProductQuantities();
+            // No initial load for filteredProductChart since it starts hidden
         });
 
         function destroyChart(chartInstance) {
@@ -245,22 +255,20 @@
                                 borderWidth: 2,
                                 tension: 0.3,
                                 fill: true,
-                                pointRadius: 5,  // Increases the point size
-                                pointHitRadius: 10 // Expands the hoverable area
+                                pointRadius: 5,
+                                pointHitRadius: 10
                             }]
-
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 0.5 } }
+                            },
                             plugins: {
-                                tooltip: {
-                                    mode: 'nearest',
-                                    intersect: false // Allows hovering even when not exactly on the point
-                                }
+                                tooltip: { mode: 'nearest', intersect: false }
                             }
                         }
-
                     });
                 }
             });
@@ -272,8 +280,8 @@
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    let labels = data.map(item => item.name); // Product names
-                    let values = data.map(item => item.quantity); // Quantities
+                    let labels = data.map(item => item.name);
+                    let values = data.map(item => item.quantity);
 
                     destroyChart(productChartInstance);
 
@@ -281,7 +289,7 @@
                     productChartInstance = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
-                            labels: labels, // Labels stored for tooltips
+                            labels: labels,
                             datasets: [{
                                 data: values,
                                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FF9800']
@@ -291,14 +299,12 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: {
-                                    display: false // This hides the labels from being shown above the chart
-                                },
+                                legend: { display: false },
                                 tooltip: {
                                     callbacks: {
                                         label: function(tooltipItem) {
                                             let index = tooltipItem.dataIndex;
-                                            return labels[index] + ": " + values[index]; // Fix for possible undefined values
+                                            return labels[index] + ": " + values[index];
                                         }
                                     }
                                 }
@@ -312,36 +318,128 @@
             });
         }
 
-       function filterByBarcode() {
-           let barcode = $("#barcodeInput").val();
-           if (!barcode) {
-               alert("Please enter a barcode.");
-               return;
-           }
+        function loadFilteredProductQuantity(barcode) {
+            destroyChart(filteredProductChartInstance);
+            let ctx = document.getElementById("filteredProductChart").getContext("2d");
 
-           $.ajax({
-               url: '/dashboard/getProductDataByBarcode',
-               type: 'GET',
-               data: { barcode: barcode },
-               dataType: 'json',
-               success: function(data) {
-                   if (data.totalOrders || data.totalSales) {
-                       $(".filtered-orders").removeClass("hidden");
-                       $(".filtered-sales").removeClass("hidden");
-                   } else {
-                       $(".filtered-orders").addClass("hidden");
-                       $(".filtered-sales").addClass("hidden");
-                   }
+            $.ajax({
+                url: '/dashboard/getProductDataByBarcode',
+                type: 'GET',
+                data: { barcode: barcode },
+                dataType: 'json',
+                success: function(data) {
+                    let labels = [data.productName || 'Unknown Product', 'Remaining'];
+                    let values = [data.quantity || 0, Math.max(100 - (data.quantity || 0), 0)];
 
-                   $("#filteredOrders").text(data.totalOrders || 0);
-                   $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
-               },
-               error: function(xhr, status, error) {
-                   console.error("Error fetching product data by barcode:", error);
-                   alert("Error fetching product data. Please try again.");
-               }
-           });
-       }
+                    destroyChart(filteredProductChartInstance);
+                    filteredProductChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: ['#FF6384', '#E0E0E0']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem) {
+                                            let index = tooltipItem.dataIndex;
+                                            return labels[index] + ": " + values[index];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching filtered product quantity:", error);
+                    destroyChart(filteredProductChartInstance);
+                    filteredProductChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Error Loading Data'],
+                            datasets: [{
+                                data: [1],
+                                backgroundColor: ['#FF4444']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { enabled: false }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function filterByBarcode() {
+            let barcode = $("#barcodeInput").val().trim();
+            if (!barcode) {
+                alert("Please enter a barcode.");
+                resetDashboard();
+                return;
+            }
+
+            $(".total-orders").addClass("hidden");
+            $(".total-products").addClass("hidden");
+            $(".total-sales").addClass("hidden");
+            $(".orders-trend-chart").addClass("hidden"); // Hide Orders Trend chart
+            $(".product-quantity-chart").addClass("hidden"); // Hide Product Quantity chart
+
+            $.ajax({
+                url: '/dashboard/getProductDataByBarcode',
+                type: 'GET',
+                data: { barcode: barcode },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.totalOrders || data.totalSales || data.quantity) {
+                        $(".filtered-orders").removeClass("hidden");
+                        $(".filtered-sales").removeClass("hidden");
+                        $(".filtered-product-chart").removeClass("hidden"); // Show Filtered Product chart
+                    } else {
+                        $(".filtered-orders").addClass("hidden");
+                        $(".filtered-sales").addClass("hidden");
+                        $(".filtered-product-chart").addClass("hidden");
+                    }
+
+                    $("#filteredOrders").text(data.totalOrders || 0);
+                    $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
+                    loadFilteredProductQuantity(barcode);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching product data by barcode:", error);
+                    alert("Error fetching product data. Please try again.");
+                    $(".filtered-product-chart").addClass("hidden"); // Hide on error
+                }
+            });
+        }
+
+        function resetDashboard() {
+            $("#barcodeInput").val("");
+            $(".total-orders").removeClass("hidden");
+            $(".total-products").removeClass("hidden");
+            $(".total-sales").removeClass("hidden");
+            $(".orders-trend-chart").removeClass("hidden"); // Show Orders Trend chart
+            $(".product-quantity-chart").removeClass("hidden"); // Show Product Quantity chart
+            $(".filtered-orders").addClass("hidden");
+            $(".filtered-sales").addClass("hidden");
+            $(".filtered-product-chart").addClass("hidden"); // Hide Filtered Product chart
+            $("#filteredOrders").text("0");
+            $("#filteredSales").text("RS 0.00");
+            loadDashboardData();
+            destroyChart(filteredProductChartInstance); // Clear filtered chart instance
+        }
     </script>
 </body>
 </html>

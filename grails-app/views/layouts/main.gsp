@@ -79,7 +79,7 @@
             <a href="${createLink(controller: 'order', action: 'checkout')}"><i class="fas fa-cash-register"></i> Checkout</a>
         </g:if>
         <g:if test="${session.isAdmin || session.permissions['settings']?.canView}">
-            <a href="${createLink(controller: 'settings', action: 'settings')}"><i class="fas fa-cog"></i> Settings</a>
+            <a href="${createLink(controller: 'setting', action: 'index')}"><i class="fas fa-cog"></i> Settings</a>
         </g:if>
         <g:if test="${session.isAdmin || session.permissions['subscription']?.canView}">
             <a href="${createLink(controller: 'subscription', action: 'subscription')}"><i class="fas fa-credit-card"></i> Subscription</a>

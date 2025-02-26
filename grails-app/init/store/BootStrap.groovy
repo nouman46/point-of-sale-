@@ -1,28 +1,12 @@
 package store
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import grails.gorm.transactions.Transactional
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class BootStrap {
 
     def init = { servletContext ->
-        Setting.withTransaction { status ->
-            if (!Setting.findByKey('store_name')) {
-                new Setting(key: 'store_name', value: 'My Store', type: 'string', description: 'Store Name', category: 'Store Info').save()
-            }
-            if (!Setting.findByKey('store_address')) {
-                new Setting(key: 'store_address', value: '123 Main St', type: 'string', description: 'Store Address', category: 'Store Info').save()
-            }
-            if (!Setting.findByKey('default_currency')) {
-                new Setting(key: 'default_currency', value: 'USD', type: 'string', description: 'Default Currency', category: 'Store Info').save()
-            }
-            if (!Setting.findByKey('enable_tax')) {
-                new Setting(key: 'enable_tax', value: 'true', type: 'boolean', description: 'Enable Tax', category: 'Tax Settings').save()
-            }
-            if (!Setting.findByKey('tax_rate')) {
-                new Setting(key: 'tax_rate', value: '10', type: 'integer', description: 'Tax Rate (%)', category: 'Tax Settings').save()
-            }
-        }
 
         SubscriptionPlan.withTransaction { status ->
             try {
@@ -51,8 +35,7 @@ class BootStrap {
                             features: ["inventory", "reports", "discounts", "multi-store management"] as Set).save(failOnError: true)
                 }
 
-                // Admin User Setup
-
+                // Admin User and StoreOwner Setup
                 def passwordEncoder = new BCryptPasswordEncoder()
                 def adminUser = AppUser.findByUsername("admin")
                 if (!adminUser) {
@@ -82,6 +65,34 @@ class BootStrap {
                     }
                     adminUser.addToAssignRole(adminRole)
                     adminUser.save(failOnError: true)
+
+                    // Create and link a StoreOwner for the admin user
+                    def storeOwner = StoreOwner.findByUsername("admin_store")
+                    if (!storeOwner) {
+                        // Load the logo file from grails-app/assets/images
+                        def logoPath = "grails-app/assets/images/pos-logo.png"
+                        def logoFile = new File(logoPath)
+                        byte[] logoBytes = null
+                        String logoContentType = null
+                        if (logoFile.exists()) {
+                            logoBytes = Files.readAllBytes(logoFile.toPath())
+                            logoContentType = "image/png" // Corrected for .jpg file
+                            println "Logo file found and loaded from ${logoPath}"
+                        } else {
+                            println "Logo file not found at ${logoPath}"
+                        }
+
+                        println("🔐 BootStrap.init logoBytes: ${logoBytes}")
+
+                        storeOwner = new StoreOwner(username: "admin_store",
+                                password: passwordEncoder.encode("storepassword"), // Use a secure password
+                                email: "admin@store.com",
+                                storeName: "Admin's Store",
+                                appUser: adminUser, // Link to the admin AppUser
+                                logo: logoBytes,
+                                logoContentType: logoContentType).save(failOnError: true)
+                    }
+                    println("Store owner created for admin user")
                 }
 
                 println "Admin user and subscription plans initialized"

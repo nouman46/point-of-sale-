@@ -13,72 +13,156 @@
         background: linear-gradient(to right, #f8f9fa, #e9ecef);
         font-family: 'Poppins', sans-serif;
     }
-
     .header {
         background-color: #343a40;
         color: white;
         padding: 15px;
         border-radius: 10px;
     }
-
     .btn-custom {
         transition: all 0.3s ease-in-out;
     }
-
     .btn-custom:hover {
         transform: scale(1.05);
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     }
-
     table {
         border-radius: 10px;
         overflow: hidden;
     }
-
     th, td {
         text-align: center;
         vertical-align: middle;
     }
-
     tr:hover {
         background-color: #f1f3f5;
         transition: background-color 0.3s ease;
     }
-
     .modal-content {
         border-radius: 15px;
     }
-
+    th.sortable {
+        cursor: pointer;
+        position: relative;
+    }
+    th.sortable::after {
+        content: '\25B4\25BE'; /* Up and down arrows */
+        font-size: 10px;
+        margin-left: 5px;
+        opacity: 0.5;
+    }
+    th.sortable.asc::after {
+        content: '\25B4'; /* Up arrow */
+        opacity: 1;
+    }
+    th.sortable.desc::after {
+        content: '\25BE'; /* Down arrow */
+        opacity: 1;
+    }
     </style>
 
     <script>
-        $(document).ready(function(){
-            // Read CSRF token from meta tag
+        $(document).ready(function() {
             var csrfToken = $('meta[name="_csrf"]').attr('content');
+            var rowsPerPage = 5; // Number of rows per page
+            var currentPage = 1;
+            var allRows = $("#productTable tbody tr");
 
-            // Handle search functionality
-            $("#searchInput").keyup(function(){
+            // Search functionality
+            $("#searchInput").keyup(function() {
                 var searchValue = $(this).val().toLowerCase();
-                $("#productTable tbody tr").each(function(){
+                allRows.each(function() {
                     var rowText = $(this).text().toLowerCase();
-                    if(rowText.indexOf(searchValue) > -1) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
+                    $(this).toggle(rowText.includes(searchValue));
                 });
+                updatePagination();
             });
 
+            // Sorting functionality
+            $('th.sortable').click(function() {
+                var table = $(this).parents('table').eq(0);
+                var rows = table.find('tbody tr:visible').toArray().sort(comparer($(this).index()));
+                this.asc = !this.asc; // Toggle sort direction
+                if (!this.asc) rows = rows.reverse();
+                $(this).siblings().removeClass('asc desc'); // Clear other sort indicators
+                $(this).addClass(this.asc ? 'asc' : 'desc'); // Set current sort indicator
+                table.find('tbody').empty().append(rows);
+                updatePagination();
+            });
+
+            function comparer(index) {
+                return function(a, b) {
+                    var valA = getCellValue(a, index), valB = getCellValue(b, index);
+                    return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB);
+                };
+            }
+
+            function getCellValue(row, index) {
+                return $(row).children('td').eq(index).text();
+            }
+
+            // Pagination functionality
+            function updatePagination() {
+                var visibleRows = $("#productTable tbody tr:visible");
+                var totalRows = visibleRows.length;
+                var totalPages = Math.ceil(totalRows / rowsPerPage);
+
+                visibleRows.hide();
+                var start = (currentPage - 1) * rowsPerPage;
+                var end = start + rowsPerPage;
+                visibleRows.slice(start, end).show();
+
+                var pagination = $("#pagination");
+                pagination.empty();
+                if (totalPages > 1) {
+                    // Previous button
+                    pagination.append(
+                        '<li class="page-item' + (currentPage === 1 ? ' disabled' : '') + '">' +
+                        '<a class="page-link" href="#" data-page="' + (currentPage - 1) + '">Previous</a>' +
+                        '</li>'
+                    );
+                    // Page numbers
+                    for (var i = 1; i <= totalPages; i++) {
+                        pagination.append(
+                            '<li class="page-item' + (i === currentPage ? ' active' : '') + '">' +
+                            '<a class="page-link" href="#" data-page="' + i + '">' + i + '</a>' +
+                            '</li>'
+                        );
+                    }
+                    // Next button
+                    pagination.append(
+                        '<li class="page-item' + (currentPage === totalPages ? ' disabled' : '') + '">' +
+                        '<a class="page-link" href="#" data-page="' + (currentPage + 1) + '">Next</a>' +
+                        '</li>'
+                    );
+                }
+            }
+
+            // Pagination click handler
+            $("#pagination").on("click", "a.page-link", function(e) {
+                e.preventDefault();
+                var page = $(this).data("page");
+                if (page && page > 0) {
+                    currentPage = page;
+                    updatePagination();
+                }
+            });
+
+            // Initialize pagination on page load
+            updatePagination();
+
             // Open modal for adding or editing a product
-            $(".open-modal").click(function(){
+            $(".open-modal").click(function() {
                 var action = $(this).data("action");
                 var id = $(this).data("id");
-                $("#productForm")[0].reset();  // Reset form
-                $("#productId").val("");       // Clear hidden field
-                $("#productModal").modal("show");  // Show modal
+                $("#productForm")[0].reset();
+                $("#productId").val("");
+                $("#form-errors").hide().empty();
+                $("#success-message").hide();
+                $("#modalTitle").text(action === "edit" ? "Edit Product" : "Add Product");
+                $("#productModal").modal("show");
 
-                // For edit, fetch existing product data
-                if(action === "edit") {
+                if (action === "edit") {
                     $.ajax({
                         type: "GET",
                         url: "/store/showProduct/" + id,
@@ -93,38 +177,46 @@
                             $("#productQuantity").val(data.productQuantity);
                         },
                         error: function(xhr) {
-                            alert("Error fetching product data: " + xhr.responseText);
+                            $("#form-errors").html("Error fetching product: " + (xhr.responseJSON?.message || xhr.statusText)).show();
                         }
                     });
                 }
             });
 
             // Save product via AJAX
-            $("#saveProduct").click(function(event){
-                event.preventDefault();  // Prevent normal form submission
+            $("#saveProduct").click(function(event) {
+                event.preventDefault();
+                $("#form-errors").hide().empty();
+                $("#success-message").hide();
+
+                var formData = $("#productForm").serialize();
 
                 $.ajax({
-                    type: "POST",
                     url: "/store/saveProduct",
-                    data: $("#productForm").serialize(),
+                    type: "POST",
+                    data: formData,
                     beforeSend: function(xhr) {
-                        xhr.setRequestHeader("X-CSRF-TOKEN", csrfToken);
+                        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
                     },
                     success: function(response) {
-                        alert("Product saved successfully!");
-                        $("#productModal").modal("hide");
-                        location.reload();
+                        if (response.success) {
+                            $("#success-message").html(response.message).show();
+                            $("#productModal").modal("hide");
+                            location.reload();
+                        } else {
+                            $("#form-errors").html(response.message).show();
+                        }
                     },
                     error: function(xhr) {
-                        alert("Error saving product: " + xhr.responseText);
+                        $("#form-errors").html("Error: " + (xhr.responseJSON?.message || xhr.statusText)).show();
                     }
                 });
             });
 
             // Delete product via AJAX
-            $(".delete-product").click(function(){
+            $(".delete-product").click(function() {
                 var id = $(this).data("id");
-                if(confirm("Are you sure you want to delete this product?")) {
+                if (confirm("Are you sure you want to delete this product?")) {
                     $.ajax({
                         type: "POST",
                         url: "/store/deleteProduct/" + id,
@@ -132,11 +224,15 @@
                             xhr.setRequestHeader("X-CSRF-TOKEN", csrfToken);
                         },
                         success: function(response) {
-                            alert("Product deleted successfully!");
-                            location.reload();
+                            if (response.success) {
+                                alert(response.message);
+                                location.reload();
+                            } else {
+                                alert("Failed to delete: " + response.message);
+                            }
                         },
                         error: function(xhr) {
-                            alert("Error deleting product: " + xhr.responseText);
+                            alert("Error: " + (xhr.responseJSON?.message || xhr.statusText));
                         }
                     });
                 }
@@ -162,16 +258,15 @@
     <table class="table table-bordered mt-3" id="productTable">
         <thead>
         <tr>
-            <th>Product Name</th>
-            <th>Product Description</th>
-            <th>Product SKU</th>
-            <th>Product Barcode</th>
-            <th>Product Price</th>
-            <th>Product Quantity</th>
+            <th class="sortable">Product Name</th>
+            <th class="sortable">Product Description</th>
+            <th class="sortable">Product SKU</th>
+            <th class="sortable">Product Barcode</th>
+            <th class="sortable">Product Price</th>
+            <th class="sortable">Product Quantity</th>
             <th>Actions</th>
         </tr>
         </thead>
-
         <tbody>
         <g:each in="${products}" var="product">
             <tr>
@@ -181,14 +276,12 @@
                 <td>${product.productBarcode}</td>
                 <td>${product.productPrice}</td>
                 <td>${product.productQuantity}</td>
-
                 <td>
                     <g:if test="${session.permissions?.inventory?.canEdit}">
                         <button class="btn btn-warning btn-sm open-modal" data-action="edit" data-id="${product.id}">
                             <i class="bi bi-pencil"></i> Edit
                         </button>
                     </g:if>
-
                     <g:if test="${session.permissions?.inventory?.canDelete}">
                         <button class="btn btn-danger btn-sm delete-product" data-id="${product.id}">
                             <i class="bi bi-trash"></i> Delete
@@ -200,15 +293,22 @@
         </tbody>
     </table>
 
+    <!-- Pagination -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center" id="pagination"></ul>
+    </nav>
+
     <!-- Modal for adding/editing a product -->
     <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Product Form</h4>
+                    <h4 class="modal-title" id="modalTitle">Product Form</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div id="success-message" class="alert alert-success" style="display: none;"></div>
+                    <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
                     <form id="productForm">
                         <input type="hidden" id="productId" name="id">
                         <div class="mb-3">

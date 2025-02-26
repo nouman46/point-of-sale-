@@ -17,12 +17,12 @@ class Product {
 
 
     static constraints = {
-        productName blank: false, maxSize: 255
-        productDescription nullable: true, maxSize: 500
-        productSKU blank: false, unique: true, maxSize: 50
-        productBarcode blank: false, unique: true, maxSize: 50
-        productPrice min: 0.01, scale: 2
-        productQuantity min: 0
+        productName blank: false, nullable: false, unique: true, maxSize: 100
+        productDescription blank: false, nullable: false, maxSize: 500
+        productSKU blank: false, nullable: false, unique: true, maxSize: 50
+        productBarcode blank: false, nullable: false, unique: true, maxSize: 50
+        productPrice nullable: false, scale: 2, min: 0.01
+        productQuantity nullable: false, min: 0
         createdBy nullable: false  // Ensure creator is always recorded
     }
     static mapping = {

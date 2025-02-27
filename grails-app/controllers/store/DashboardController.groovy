@@ -24,7 +24,7 @@ class DashboardController {
             projections {
                 sum('totalAmount')
             }
-            eq("createdBy", currentAdmin)  // Fixed filtering
+            eq("createdBy", currentAdmin)
         } ?: 0.0
 
         render([
@@ -47,7 +47,7 @@ class DashboardController {
                 groupProperty("dateCreated")
                 count("id")
             }
-            eq("createdBy", currentAdmin)  // Fixed filtering
+            eq("createdBy", currentAdmin)
             order("dateCreated", "asc")
         }
 
@@ -90,17 +90,13 @@ class DashboardController {
                 return
             }
 
-            // Fetch the createdBy ID of the current user
             def createdById = session.user.createdBy?.id ?: session.user.id
-
-            // Fetch the product by barcode and ensure it belongs to the same createdBy hierarchy
-            def product = Product.findByProductBarcode(params.barcode?.trim()) // Updated to use productBarcode
+            def product = Product.findByProductBarcode(params.barcode?.trim())
             if (!product || product.createdBy.id != createdById) {
                 render(status: 404, text: "Product not found or unauthorized")
                 return
             }
 
-            // Calculate total orders and sales for the product
             def totalOrders = Order.createCriteria().get {
                 projections {
                     countDistinct('id')
@@ -112,16 +108,17 @@ class DashboardController {
             } ?: 0
 
             def totalQuantitySold = OrderItem.createCriteria().get {
-                projections { sum('quantity') }  // Get total quantity sold
+                projections { sum('quantity') }
                 eq("product", product)
             } ?: 0
 
             def totalSales = totalQuantitySold * product.productPrice
 
-
             render([
                     totalOrders: totalOrders,
-                    totalSales: totalSales
+                    totalSales: totalSales,
+                    productName: product.productName,
+                    quantity: product.productQuantity
             ] as JSON)
         } catch (Exception e) {
             e.printStackTrace()

@@ -5,7 +5,6 @@ import grails.gorm.transactions.Transactional
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import store.ProductCommand
 
 class OrderController {
 
@@ -42,11 +41,15 @@ class OrderController {
                 return
             }
 
-            // Fetch the createdBy ID of the current user
-            def createdById = session.user.createdBy?.id ?: session.user.id
+            // Fetch the current user from session
+            def currentUser = AppUser.findById(session.user.id, [fetch: [createdBy: 'join']])
+
+            // Get the actual creator (Admin) of the Shopkeeper or self if it's an Admin
+            def createdById = currentUser.createdBy?.id ?: currentUser.id
 
             // Fetch the product by barcode and ensure it belongs to the same createdBy hierarchy
             def product = Product.findByProductBarcode(params.productBarcode?.trim())
+
             if (!product || product.createdBy.id != createdById) {
                 render(status: 404, text: "Product not found or unauthorized")
                 return
@@ -58,6 +61,7 @@ class OrderController {
             render(status: 500, text: "Internal Server Error")
         }
     }
+
 
     @Transactional
     def saveOrder(OrderCommand command) {
@@ -76,24 +80,27 @@ class OrderController {
 
         println "🛒 Processing Order for ${command.customerName}..."
 
-        // Fetch the current user (ensure it's attached to the session)
+        // Fetch the current user
         def currentUser = AppUser.get(session.user.id)
 
-        def order = new Order(customerName: command.customerName, totalAmount: 0, createdBy: currentUser)
+        // Get the correct `createdBy` ID: If the user is a Shopkeeper, use their Admin’s `createdBy`
+        def createdByUser = currentUser.createdBy ?: currentUser
+
+        def order = new Order(customerName: command.customerName, totalAmount: 0, createdBy: createdByUser)
         order.orderItems = []
 
         command.products.each { productData ->
             def product = Product.findByProductBarcode(productData.productBarcode)
 
             // Ensure the product belongs to the same createdBy hierarchy
-            if (product && product.createdBy.id == currentUser.createdBy?.id ?: currentUser.id) {
+            if (product && product.createdBy.id == createdByUser.id) {
                 if (product.productQuantity >= productData.quantity) {
                     def orderItem = new OrderItem(
                             order: order,
                             product: product,
                             quantity: productData.quantity,
                             subtotal: product.productPrice * productData.quantity,
-                            createdBy: currentUser // Set the createdBy field for OrderItem
+                            createdBy: createdByUser // Assign the correct createdBy
                     )
                     order.addToOrderItems(orderItem)
 
@@ -115,17 +122,26 @@ class OrderController {
         }
     }
 
+
+
+
+    @Transactional(readOnly = true)
     def orderDetails(Long id) {
         if (!session.user) {
             render(status: 403, text: "Unauthorized access")
             return
         }
 
-        // Fetch the createdBy ID of the current user
-        def createdById = session.user.createdBy?.id ?: session.user.id
+        // Fetch the current user
+        def currentUser = AppUser.get(session.user.id)
 
-        def order = Order.get(id)
-        if (!order || order.createdBy.id != createdById) {
+        // Fetch the order with `createdBy` eagerly loaded
+        def order = Order.createCriteria().get {
+            eq("id", id)
+            createAlias("createdBy", "cb", org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN)
+        }
+
+        if (!order || order.createdBy.id != (currentUser.createdBy?.id ?: currentUser.id)) {
             flash.message = "Order not found or unauthorized!"
             redirect(action: "listOrders")
             return
@@ -142,6 +158,7 @@ class OrderController {
 
         render(view: "orderDetails", model: [order: order, orderItems: orderItems])
     }
+
 
     def listOrders() {
         def currentUser = session.user
@@ -222,4 +239,21 @@ class OrderCommand implements Validateable {
     }
 }
 
+class ProductCommand {
+    String productBarcode
+    Integer quantity
 
+    static constraints = {
+        productBarcode nullable: true, size: 1..255, validator: { val, obj ->
+            if (!val) {
+                return 'productBarcodeCannotBeBlank'
+            }
+        }
+
+        quantity nullable: true, min: 1, validator: { val, obj ->
+            if (!val || val < 1) {
+                return 'quantityMustBeAtLeastOne'
+            }
+        }
+    }
+}

@@ -22,18 +22,5 @@ class AppUser {
         assignRoles joinTable: [name: "app_user_assign_role", key: "app_user_id", column: "assign_role_id"]
     }
 
-//    def beforeInsert() {
-//        encodePassword()
-//    }
 //
-//    def beforeUpdate() {
-//        if (isDirty('password')) {
-//            encodePassword()
-//        }
-//    }
-//
-//    protected void encodePassword() {
-//        def passwordEncoder = new BCryptPasswordEncoder()
-//        password = passwordEncoder.encode(password)
-//    }
 }

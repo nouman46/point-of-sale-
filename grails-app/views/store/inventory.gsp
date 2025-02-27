@@ -8,31 +8,67 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
     body {
-        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
     }
     .header {
-        background-color: #343a40;
+        background: linear-gradient(45deg, #343a40, #495057);
         color: white;
-        padding: 15px;
-        border-radius: 10px;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in;
     }
     .btn-custom {
         transition: all 0.3s ease-in-out;
+        padding: 10px 20px;
+        border-radius: 8px;
     }
     .btn-custom:hover {
         transform: scale(1.05);
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        animation: pulse 0.5s ease-in-out;
+    }
+    .search-container {
+        position: relative;
+        width: 300px;
+    }
+    #searchInput {
+        padding-left: 40px;
+        border-radius: 8px;
+        border: 2px solid #ced4da;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #searchInput:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
+        outline: none;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
     }
     table {
-        border-radius: 10px;
+        border-radius: 15px;
         overflow: hidden;
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 1s ease-in;
     }
     th, td {
         text-align: center;
         vertical-align: middle;
+        padding: 12px;
     }
     tr:hover {
         background-color: #f1f3f5;
@@ -40,88 +76,103 @@
     }
     .modal-content {
         border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        animation: zoomIn 0.5s ease-in;
     }
     th.sortable {
         cursor: pointer;
         position: relative;
+        background-color: #e9ecef;
     }
     th.sortable::after {
-        content: '\25B4\25BE'; /* Up and down arrows */
+        content: '\25B4\25BE';
         font-size: 10px;
         margin-left: 5px;
         opacity: 0.5;
+        color: #495057;
     }
     th.sortable.asc::after {
-        content: '\25B4'; /* Up arrow */
+        content: '\25B4';
         opacity: 1;
+        color: #0d6efd;
     }
     th.sortable.desc::after {
-        content: '\25BE'; /* Down arrow */
+        content: '\25BE';
         opacity: 1;
+        color: #0d6efd;
+    }
+    .pagination {
+        animation: fadeIn 1s ease-in;
+    }
+    .pagination .page-item .page-link {
+        border-radius: 8px;
+        transition: all 0.3s ease-in-out;
+    }
+    .pagination .page-item:hover .page-link {
+        background-color: #0d6efd;
+        color: white;
+        transform: scale(1.05);
+    }
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes zoomIn {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
     }
     </style>
-
     <script>
         $(document).ready(function() {
             var csrfToken = $('meta[name="_csrf"]').attr('content');
-            var rowsPerPage = 5; // Number of rows per page
+            var rowsPerPage = 6;
             var currentPage = 1;
-            var allRows = $("#productTable tbody tr");
+            var originalRows = $("#productTable tbody tr").clone(); // Store original rows
+            var allRows = originalRows.clone(); // Working set of rows
 
-            // Search functionality
-            $("#searchInput").keyup(function() {
-                var searchValue = $(this).val().toLowerCase();
-                allRows.each(function() {
-                    var rowText = $(this).text().toLowerCase();
-                    $(this).toggle(rowText.includes(searchValue));
-                });
-                updatePagination();
-            });
-
-            // Sorting functionality
-            $('th.sortable').click(function() {
-                var table = $(this).parents('table').eq(0);
-                var rows = table.find('tbody tr:visible').toArray().sort(comparer($(this).index()));
-                this.asc = !this.asc; // Toggle sort direction
-                if (!this.asc) rows = rows.reverse();
-                $(this).siblings().removeClass('asc desc'); // Clear other sort indicators
-                $(this).addClass(this.asc ? 'asc' : 'desc'); // Set current sort indicator
-                table.find('tbody').empty().append(rows);
-                updatePagination();
-            });
-
-            function comparer(index) {
-                return function(a, b) {
-                    var valA = getCellValue(a, index), valB = getCellValue(b, index);
-                    return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB);
-                };
-            }
-
-            function getCellValue(row, index) {
-                return $(row).children('td').eq(index).text();
-            }
-
-            // Pagination functionality
+            // Function to update pagination and table content
             function updatePagination() {
-                var visibleRows = $("#productTable tbody tr:visible");
-                var totalRows = visibleRows.length;
+                var totalRows = allRows.length;
                 var totalPages = Math.ceil(totalRows / rowsPerPage);
 
-                visibleRows.hide();
-                var start = (currentPage - 1) * rowsPerPage;
-                var end = start + rowsPerPage;
-                visibleRows.slice(start, end).show();
+                // Validate currentPage
+                if (totalPages === 0) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+                if (currentPage < 1) currentPage = 1;
 
+                // Calculate rows to display
+                var start = (currentPage - 1) * rowsPerPage;
+                var end = Math.min(start + rowsPerPage, totalRows);
+
+                // Clear current table body and append only the rows for this page
+                $("#productTable tbody").empty();
+                for (var i = start; i < end; i++) {
+                    $("#productTable tbody").append(allRows.eq(i).clone());
+                }
+
+                // Update pagination controls
                 var pagination = $("#pagination");
                 pagination.empty();
-                if (totalPages > 1) {
-                    // Previous button
+                if (totalRows > 0) {
                     pagination.append(
                         '<li class="page-item' + (currentPage === 1 ? ' disabled' : '') + '">' +
                         '<a class="page-link" href="#" data-page="' + (currentPage - 1) + '">Previous</a>' +
                         '</li>'
                     );
-                    // Page numbers
                     for (var i = 1; i <= totalPages; i++) {
                         pagination.append(
                             '<li class="page-item' + (i === currentPage ? ' active' : '') + '">' +
@@ -129,12 +180,13 @@
                             '</li>'
                         );
                     }
-                    // Next button
                     pagination.append(
                         '<li class="page-item' + (currentPage === totalPages ? ' disabled' : '') + '">' +
                         '<a class="page-link" href="#" data-page="' + (currentPage + 1) + '">Next</a>' +
                         '</li>'
                     );
+                } else {
+                    pagination.append('<li class="page-item disabled"><span class="page-link">No results</span></li>');
                 }
             }
 
@@ -142,17 +194,51 @@
             $("#pagination").on("click", "a.page-link", function(e) {
                 e.preventDefault();
                 var page = $(this).data("page");
-                if (page && page > 0) {
+                if (page && page > 0 && page <= Math.ceil(allRows.length / rowsPerPage)) {
                     currentPage = page;
                     updatePagination();
                 }
             });
 
-            // Initialize pagination on page load
+            // Search functionality with sorting
+            $("#searchInput").keyup(function() {
+                var searchValue = $(this).val().toLowerCase().trim();
+                if (searchValue === "") {
+                    allRows = originalRows.clone(); // Reset to original rows when search is cleared
+                } else {
+                    allRows = originalRows.filter(function() {
+                        return $(this).text().toLowerCase().includes(searchValue);
+                    });
+                }
+                currentPage = 1;
+                updatePagination();
+            });
+
+            // Sorting functionality for both table headers and search results
+            $('th.sortable').click(function() {
+                var index = $(this).index();
+                var rowsArray = allRows.toArray().sort(function(a, b) {
+                    var valA = $(a).children('td').eq(index).text().toLowerCase();
+                    var valB = $(b).children('td').eq(index).text().toLowerCase();
+                    return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.localeCompare(valB);
+                });
+                if ($(this).hasClass('asc')) {
+                    rowsArray.reverse();
+                    $(this).removeClass('asc').addClass('desc');
+                } else {
+                    $(this).removeClass('desc').addClass('asc');
+                }
+                $(this).siblings().removeClass('asc desc');
+                allRows = $(rowsArray); // Update allRows with sorted array
+                currentPage = 1;
+                updatePagination();
+            });
+
+            // Initialize pagination
             updatePagination();
 
-            // Open modal for adding or editing a product
-            $(".open-modal").click(function() {
+            // Modal and AJAX handlers with event delegation
+            $(document).on("click", ".open-modal", function() {
                 var action = $(this).data("action");
                 var id = $(this).data("id");
                 $("#productForm")[0].reset();
@@ -183,38 +269,7 @@
                 }
             });
 
-            // Save product via AJAX
-            $("#saveProduct").click(function(event) {
-                event.preventDefault();
-                $("#form-errors").hide().empty();
-                $("#success-message").hide();
-
-                var formData = $("#productForm").serialize();
-
-                $.ajax({
-                    url: "/store/saveProduct",
-                    type: "POST",
-                    data: formData,
-                    beforeSend: function(xhr) {
-                        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $("#success-message").html(response.message).show();
-                            $("#productModal").modal("hide");
-                            location.reload();
-                        } else {
-                            $("#form-errors").html(response.message).show();
-                        }
-                    },
-                    error: function(xhr) {
-                        $("#form-errors").html("Error: " + (xhr.responseJSON?.message || xhr.statusText)).show();
-                    }
-                });
-            });
-
-            // Delete product via AJAX
-            $(".delete-product").click(function() {
+            $(document).on("click", ".delete-product", function() {
                 var id = $(this).data("id");
                 if (confirm("Are you sure you want to delete this product?")) {
                     $.ajax({
@@ -237,25 +292,58 @@
                     });
                 }
             });
+
+            $("#saveProduct").click(function(event) {
+                event.preventDefault();
+                $("#form-errors").hide().empty();
+                $("#success-message").hide();
+                var formData = $("#productForm").serialize();
+                $.ajax({
+                    url: "/store/saveProduct",
+                    type: "POST",
+                    data: formData,
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#success-message").html(response.message).show();
+                            $("#productModal").modal("hide");
+                            location.reload();
+                        } else {
+                            $("#form-errors").html(response.message).show();
+                        }
+                    },
+                    error: function(xhr) {
+                        $("#form-errors").html("Error: " + (xhr.responseJSON?.message || xhr.statusText)).show();
+                    }
+                });
+            });
         });
     </script>
 </head>
 <body>
 <div class="container mt-5">
-    <div class="header text-center">
-        <h2 class="fw-bold"><i class="fas fa-things"></i> Inventory Management</h2>
+    <div class="header text-center animate__animated animate__fadeInDown">
+        <h2 class="fw-bold"><i class="fas fa-box-open"></i> Inventory Management</h2>
     </div>
     <br>
+    <div id="success-message" class="alert alert-success" style="display: none;"></div>
     <div class="d-flex mb-3">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search products" style="width: 300px;"/>
+        <div class="search-container animate__animated animate__fadeInLeft">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search products" style="width: 300px;"/>
+        </div>
     </div>
     <div class="d-flex justify-content-end mt-4">
-        <button class="btn btn-success btn-custom open-modal" data-action="add">
-            <i class="fas fa-user-plus"></i> Add Product
+<g:if test="${session.permissions?.inventory?.canEdit}">
+        <button class="btn btn-success btn-custom open-modal animate__animated animate__fadeInRight" data-action="add">
+            <i class="fas fa-box-plus"></i> Add Product
         </button>
+</g:if>
     </div>
 
-    <table class="table table-bordered mt-3" id="productTable">
+    <table class="table table-bordered mt-3 animate__animated animate__fadeInUp" id="productTable">
         <thead>
         <tr>
             <th class="sortable">Product Name</th>
@@ -276,8 +364,9 @@
                 <td>${product.productBarcode}</td>
                 <td>${product.productPrice}</td>
                 <td>${product.productQuantity}</td>
+            <g:if test="${session.permissions?.inventory?.canEdit}">
                 <td>
-                    <g:if test="${session.permissions?.inventory?.canEdit}">
+
                         <button class="btn btn-warning btn-sm open-modal" data-action="edit" data-id="${product.id}">
                             <i class="bi bi-pencil"></i> Edit
                         </button>
@@ -286,8 +375,9 @@
                         <button class="btn btn-danger btn-sm delete-product" data-id="${product.id}">
                             <i class="bi bi-trash"></i> Delete
                         </button>
-                    </g:if>
+
                 </td>
+                </g:if>
             </tr>
         </g:each>
         </tbody>
@@ -295,47 +385,47 @@
 
     <!-- Pagination -->
     <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center" id="pagination"></ul>
+        <ul class="pagination justify-content-center animate__animated animate__fadeIn" id="pagination"></ul>
     </nav>
 
     <!-- Modal for adding/editing a product -->
     <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
         <div class="modal-dialog">
-            <div class="modal-content">
+            <div class="modal-content animate__animated animate__zoomIn">
                 <div class="modal-header">
                     <h4 class="modal-title" id="modalTitle">Product Form</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="success-message" class="alert alert-success" style="display: none;"></div>
+
                     <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
                     <form id="productForm">
                         <input type="hidden" id="productId" name="id">
                         <div class="mb-3">
                             <label for="productName" class="form-label">Product Name</label>
-                            <input type="text" id="productName" name="productName" class="form-control" required>
+                            <input type="text" id="productName" name="productName" class="form-control animate__animated animate__fadeIn" required>
                         </div>
                         <div class="mb-3">
                             <label for="productDescription" class="form-label">Product Description</label>
-                            <input type="text" id="productDescription" name="productDescription" class="form-control" required>
+                            <input type="text" id="productDescription" name="productDescription" class="form-control animate__animated animate__fadeIn" required>
                         </div>
                         <div class="mb-3">
                             <label for="productSKU" class="form-label">Product SKU</label>
-                            <input type="text" id="productSKU" name="productSKU" class="form-control" required>
+                            <input type="text" id="productSKU" name="productSKU" class="form-control animate__animated animate__fadeIn" required>
                         </div>
                         <div class="mb-3">
                             <label for="productBarcode" class="form-label">Product Barcode</label>
-                            <input type="text" id="productBarcode" name="productBarcode" class="form-control" required>
+                            <input type="text" id="productBarcode" name="productBarcode" class="form-control animate__animated animate__fadeIn" required>
                         </div>
                         <div class="mb-3">
                             <label for="productPrice" class="form-label">Product Price</label>
-                            <input type="number" step="0.01" id="productPrice" name="productPrice" class="form-control" required>
+                            <input type="number" step="0.01" id="productPrice" name="productPrice" class="form-control animate__animated animate__fadeIn" required>
                         </div>
                         <div class="mb-3">
                             <label for="productQuantity" class="form-label">Product Quantity</label>
-                            <input type="number" id="productQuantity" name="productQuantity" class="form-control" required>
+                            <input type="number" id="productQuantity" name="productQuantity" class="form-control animate__animated animate__fadeIn" required>
                         </div>
-                        <button type="button" id="saveProduct" class="btn btn-success">Save</button>
+                        <button type="button" id="saveProduct" class="btn btn-success animate__animated animate__fadeIn">Save</button>
                     </form>
                 </div>
             </div>

@@ -7,7 +7,8 @@ import org.springframework.dao.DataIntegrityViolationException
 
 class StoreController {
 
-    def inventory() {
+
+def inventory() {
         def currentUser = session.user
         if (!currentUser) {
             flash.error = "Unauthorized access!"

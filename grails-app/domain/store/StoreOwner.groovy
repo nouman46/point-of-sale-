@@ -8,6 +8,8 @@ class StoreOwner {
     String email
     String storeName
     AppUser appUser
+    byte[] logo
+    String logoContentType
 
     static constraints = {
         username blank: false, unique: true
@@ -15,15 +17,7 @@ class StoreOwner {
         email email: true, blank: false, unique: true
         storeName blank: false
         appUser(nullable: false)
+        logo nullable: true, maxSize: 1024 * 1024 * 5 // Max 5MB
+        logoContentType nullable: true
     }
-
-    // Method to set the password hash
-//    void setPasswordHash(String plainPassword) {
-//        password = BCrypt.hashpw(plainPassword, BCrypt.gensalt())
-//    }
-//
-//    // Method to check if the provided password matches the stored hash
-//    boolean checkPassword(String plainPassword) {
-//        return BCrypt.checkpw(plainPassword, passwordHash)
-//    }
 }

@@ -9,18 +9,14 @@
 <body>
 <div class="container mt-4">
     <h2 class="text-center mb-4">Role Management</h2>
-
+<!-- Flash messages -->
     <g:if test="${flash.message}">
-        <div class="alert alert-success">
-            ${flash.message}
-        </div>
+        <div class="alert alert-success">${flash.message}</div>
+    </g:if>
+    <g:if test="${flash.error}">
+        <div class="alert alert-danger">${flash.error}</div>
     </g:if>
 
-    <g:if test="${flash.error}">
-        <div class="alert alert-danger">
-            ${flash.error}
-        </div>
-    </g:if>
 
 <!-- Tabs Navigation -->
     <ul class="nav nav-tabs" id="roleTabs">
@@ -78,40 +74,47 @@
                 </div>
             </form>
 
-            <h4 class="mt-4">User List</h4>
-            <table class="table table-bordered">
-                <thead>
+        <h4 class="mt-4">User List</h4>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role(s)</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            <g:each var="user" in="${users}">
                 <tr>
-                    <th>Username</th>
-                    <th>Role(s)</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
-                </thead>
-                <tbody>
-                <g:each var="user" in="${users}">
-                    <tr>
-                        <td>${user.username}</td>
-                        <td>
-                            <g:each var="role" in="${user.assignRole}">
-                                <span class="badge bg-info">${role.roleName}</span>
-                            </g:each>
-                        </td>
-                        <td>
+                    <td>${user.username}</td>
+                    <td>
+                        <g:each var="role" in="${user.assignRole}">
+                            <span class="badge bg-info">${role.roleName}</span>
+                        </g:each>
+                    </td>
+                    <td>
+                    <!-- Conditionally display Edit button if user is not assigned 'ADMIN' role -->
+                        <g:if test="${!user.assignRole*.roleName.contains('ADMIN') && session.permissions?.roleManagement?.canEdit}">
                             <button class="btn btn-warning btn-sm edit-user-btn" data-id="${user.id}" data-username="${user.username}" data-roles="${user.assignRole*.id.join(',')}">
                                 ✏️ Edit
                             </button>
-                        </td>
-                        <td>
+                        </g:if>
+                    </td>
+                    <td>
+                    <!-- Conditionally display Delete button if user is not assigned 'ADMIN' role -->
+                        <g:if test="${!user.assignRole*.roleName.contains('ADMIN') && session.permissions?.roleManagement?.canDelete}">
                             <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}">
                                 ❌ Delete
                             </button>
-                        </td>
-                    </tr>
-                </g:each>
-                </tbody>
-            </table>
-        </div>
+                        </g:if>
+                    </td>
+                </tr>
+            </g:each>
+            </tbody>
+        </table>
+
+    </div>
 
         <!-- Roles Section -->
         <div class="tab-pane fade" id="roles">
@@ -140,12 +143,16 @@
                     <tr>
                         <td>${role.roleName}</td>
                         <td>
+                            <g:if test="${session.permissions?.roleManagement?.canEdit}">
                             <button class="btn btn-warning btn-sm edit-role-btn" data-role-id="${role.id}" data-role-name="${role.roleName}">
                                 ✏️ Edit
                             </button>
+                            </g:if>
+                    <g:if test="${session.permissions?.roleManagement?.canDelete}">
                             <button class="btn btn-danger btn-sm delete-role-btn" data-role-id="${role.id}">
                                 ❌ Delete
                             </button>
+                    </g:if>
                         </td>
                     </tr>
                 </g:each>
@@ -167,7 +174,9 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+<g:if test="${session.permissions?.roleManagement?.canEdit}">
                         <button type="submit" class="btn btn-primary">Save Permissions</button>
+</g:if>
                     </div>
                 </div>
 
@@ -382,79 +391,7 @@
                     new bootstrap.Modal(document.getElementById('editUserModal')).show();
                 });
             });
-
-            $(document).ready(function () {
-                function validateRoleForm(formId) {
-                    let isValid = true;
-                    let specialCharPattern = /[^a-zA-Z0-9]/;
-
-                    let roleNameField = $("#" + formId + " input[name='roleName']");
-                    if (roleNameField.length === 0) {
-                        alert("Error: Role Name field not found!");
-                        return false; // Prevents further execution
-                    }
-
-                    let roleName = roleNameField.val().trim();
-                    console.log("Validating role name:", roleName); // Debugging
-
-                    if (!roleName) {
-                        alert("Role Name is required!");
-                        isValid = false;
-                    } else if (specialCharPattern.test(roleName)) {
-                        alert("Role Name cannot contain special characters!");
-                        isValid = false;
-                    } else if (roleName.length < 3) {
-                        alert("Role Name must be at least 3 characters long!");
-                        isValid = false;
-                    } else if (/\s/.test(roleName)) {
-                        alert("Role Name cannot contain spaces!");
-                        isValid = false;
-                    }
-
-                    return isValid;
-                }
-
-                function validateUserForm(formId) {
-                    let isValid = true;
-                    let specialCharPattern = /[^a-zA-Z0-9]/;
-
-                    let usernameField = $("#" + formId + " input[name='username']");
-                    let username = usernameField.val().trim();
-
-                    if (specialCharPattern.test(username)) {
-                        alert("Username cannot contain special characters!");
-                        isValid = false;
-                    }
-
-                    return isValid;
-                }
-
-                // Attach separate validation for edit role form
-                $("#editRoleForm").on("submit", function (event) {
-                    event.preventDefault();
-                    if (validateRoleForm("editRoleForm")) {
-                        this.submit();
-                    }
-                });
-
-                // Attach validation for add role form
-                $("#addRoleForm").on("submit", function (event) {
-                    event.preventDefault();
-                    if (validateRoleForm("addRoleForm")) {
-                        this.submit();
-                    }
-                });
-
-                // Attach validation for user forms
-                $("#editUserForm, #addUserForm").on("submit", function (event) {
-                    event.preventDefault();
-                    if (validateUserForm(this.id)) {
-                        this.submit();
-                    }
-                });
-            });
         });
-
     </script>
 
 </body>

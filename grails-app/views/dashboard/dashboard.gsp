@@ -18,6 +18,7 @@
         .dashboard-header {
             display: flex;
             align-items: center;
+            justify-content: center; /* Centers content horizontally */
             gap: 15px;
             background: #1e1e2d;
             padding: 15px;
@@ -26,7 +27,9 @@
             font-size: 22px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            text-align: center; /* Ensures text inside is centered */
         }
+
 
         .dashboard-header i {
             font-size: 28px;
@@ -113,6 +116,15 @@
             width: 100% !important;
             height: 300px !important;
         }
+        h1 {
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center; /* Centers text horizontally */
+            margin-top: 20px; /* Adjust spacing if needed */
+        }
+
+
 
         @media (max-width: 1024px) {
             .charts-wrapper {

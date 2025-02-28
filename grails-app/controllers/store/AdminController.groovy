@@ -1,3 +1,4 @@
+
 package store
 
 import grails.gorm.transactions.Transactional
@@ -81,13 +82,11 @@ class AdminController {
         if (!user.save(flush: true)) {
             // Map domain errors to user-friendly messages and log for debugging
             def errors = user.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}"
+                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
                 if (error.code == "unique" && error.field == "username") {
                     return g.message(code: "username.unique.error")
                 }
-                // Fallback for other errors, safely handling FieldError properties
-                def errorMessage = g.message(error: error) ?: "An error occurred: ${error.code}"
-                errorMessage
+                g.message(error: error) // Fallback for other errors
             }.join("<br>")
             flash.error = "Failed to add user:<br>${errors}"
             redirect(action: "roleManagement")
@@ -127,7 +126,7 @@ class AdminController {
             flash.message = "Role added successfully!"
         } else {
             def errors = role.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}"
+                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
                 g.message(error: error)
             }.join("<br>")
             flash.error = "Failed to add role:<br>${errors}"
@@ -187,13 +186,11 @@ class AdminController {
 
         if (!user.save(flush: true)) {
             def errors = user.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}"
+                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
                 if (error.code == "unique" && error.field == "username") {
                     return g.message(code: "username.unique.error")
                 }
-                // Fallback for other errors, safely handling FieldError properties
-                def errorMessage = g.message(error: error) ?: "An error occurred: ${error.code}"
-                errorMessage
+                return g.message(error: error)
             }.join("<br>")
             flash.error = "Failed to update user:<br>${errors}"
             redirect(action: "roleManagement")
@@ -237,7 +234,7 @@ class AdminController {
             flash.message = "Role updated successfully!"
         } else {
             def errors = role.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}"
+                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
                 g.message(error: error)
             }.join("<br>")
             flash.error = "Failed to update role:<br>${errors}"
@@ -333,16 +330,8 @@ class AdminController {
             return
         }
 
-        // Determine the creator ID to filter roles
-        Long creatorId = currentAdmin.isAdmin ? currentAdmin.id : currentAdmin.createdBy?.id
-        if (!creatorId) {
-            flash.error = "Unable to determine creator ID!"
-            redirect(action: "roleManagement")
-            return
-        }
-
         def role = AssignRole.get(params.roleId)
-        if (!role || role.createdBy != creatorId) {
+        if (!role) {
             flash.error = "Invalid Role!"
             redirect(action: "roleManagement")
             return
@@ -372,10 +361,9 @@ class AdminController {
             if (!permission.save(flush: true, failOnError: true)) {
                 println "Error saving permission for ${page}: " + permission.errors
                 flash.error = "Failed to save permission for ${page}"
-                redirect(action: "roleManagement")
-                return
+            } else {
+                println "Saved permission: " + permission
             }
-            println "Saved permission: " + permission
         }
 
         flash.message = "Permissions assigned successfully!"

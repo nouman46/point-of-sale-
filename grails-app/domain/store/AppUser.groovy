@@ -11,8 +11,9 @@ class AppUser {
     static belongsTo = AssignRole
 
     static constraints = {
-        username(unique: true, blank: false)
-        activeSubscription(nullable: true)
+        username blank: false, unique: ['createdBy'], matches: /^[a-zA-Z0-9_]+$/, maxSize: 50
+        password blank: false
+        activeSubscription nullable: true
         createdBy nullable: true
     }
 
@@ -21,6 +22,4 @@ class AppUser {
         createdBy column: 'created_by_id'
         assignRoles joinTable: [name: "app_user_assign_role", key: "app_user_id", column: "assign_role_id"]
     }
-
-//
 }

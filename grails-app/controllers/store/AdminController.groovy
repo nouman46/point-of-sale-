@@ -3,7 +3,6 @@ package store
 import grails.gorm.transactions.Transactional
 import org.mindrot.jbcrypt.BCrypt
 
-
 class AdminController {
 
     def roleManagement() {
@@ -23,6 +22,7 @@ class AdminController {
                 return
             }
             currentUser.createdBy?.id  // Initialize the association
+            println "Current user: ${currentUser.username}, createdBy: ${currentUser.createdBy?.id}"
         }
 
         // Determine the creator ID to filter by
@@ -76,13 +76,18 @@ class AdminController {
                 createdBy: currentAdmin
         )
 
+        println "Attempting to save user: username=${user.username}, createdBy=${currentAdmin.id}, isAdmin=${user.isAdmin}"
+
         if (!user.save(flush: true)) {
-            // Map domain errors to user-friendly messages
+            // Map domain errors to user-friendly messages and log for debugging
             def errors = user.errors.allErrors.collect { error ->
+                println "Error detail: code=${error.code}, field=${error.field}"
                 if (error.code == "unique" && error.field == "username") {
                     return g.message(code: "username.unique.error")
                 }
-                g.message(error: error) // Fallback for other errors
+                // Fallback for other errors, safely handling FieldError properties
+                def errorMessage = g.message(error: error) ?: "An error occurred: ${error.code}"
+                errorMessage
             }.join("<br>")
             flash.error = "Failed to add user:<br>${errors}"
             redirect(action: "roleManagement")
@@ -116,10 +121,15 @@ class AdminController {
                 createdBy: currentAdmin.id
         )
 
+        println "Attempting to save role: roleName=${role.roleName}, createdBy=${currentAdmin.id}"
+
         if (role.save(flush: true)) {
             flash.message = "Role added successfully!"
         } else {
-            def errors = role.errors.allErrors.collect { g.message(error: it) }.join("<br>")
+            def errors = role.errors.allErrors.collect { error ->
+                println "Error detail: code=${error.code}, field=${error.field}"
+                g.message(error: error)
+            }.join("<br>")
             flash.error = "Failed to add role:<br>${errors}"
         }
         redirect(action: "roleManagement")
@@ -155,6 +165,8 @@ class AdminController {
             ])
         }
 
+        println "Attempting to update user: userId=${user.id}, username=${userInfo.username}"
+
         user.username = userInfo.username
         if (userInfo.password?.trim()) {
             user.password = BCrypt.hashpw(userInfo.password, BCrypt.gensalt())
@@ -175,10 +187,13 @@ class AdminController {
 
         if (!user.save(flush: true)) {
             def errors = user.errors.allErrors.collect { error ->
+                println "Error detail: code=${error.code}, field=${error.field}"
                 if (error.code == "unique" && error.field == "username") {
                     return g.message(code: "username.unique.error")
                 }
-                return g.message(error: error)
+                // Fallback for other errors, safely handling FieldError properties
+                def errorMessage = g.message(error: error) ?: "An error occurred: ${error.code}"
+                errorMessage
             }.join("<br>")
             flash.error = "Failed to update user:<br>${errors}"
             redirect(action: "roleManagement")
@@ -214,16 +229,22 @@ class AdminController {
             return
         }
 
+        println "Attempting to update role: roleId=${role.id}, roleName=${roleInfo.roleName}"
+
         role.roleName = roleInfo.roleName
 
         if (role.save(flush: true)) {
             flash.message = "Role updated successfully!"
         } else {
-            def errors = role.errors.allErrors.collect { g.message(error: it) }.join("<br>")
+            def errors = role.errors.allErrors.collect { error ->
+                println "Error detail: code=${error.code}, field=${error.field}"
+                g.message(error: error)
+            }.join("<br>")
             flash.error = "Failed to update role:<br>${errors}"
         }
         redirect(action: "roleManagement")
     }
+
     @Transactional
     def assignRole() {
         def user = AppUser.get(params.userId)
@@ -312,8 +333,16 @@ class AdminController {
             return
         }
 
+        // Determine the creator ID to filter roles
+        Long creatorId = currentAdmin.isAdmin ? currentAdmin.id : currentAdmin.createdBy?.id
+        if (!creatorId) {
+            flash.error = "Unable to determine creator ID!"
+            redirect(action: "roleManagement")
+            return
+        }
+
         def role = AssignRole.get(params.roleId)
-        if (!role) {
+        if (!role || role.createdBy != creatorId) {
             flash.error = "Invalid Role!"
             redirect(action: "roleManagement")
             return
@@ -343,9 +372,10 @@ class AdminController {
             if (!permission.save(flush: true, failOnError: true)) {
                 println "Error saving permission for ${page}: " + permission.errors
                 flash.error = "Failed to save permission for ${page}"
-            } else {
-                println "Saved permission: " + permission
+                redirect(action: "roleManagement")
+                return
             }
+            println "Saved permission: " + permission
         }
 
         flash.message = "Permissions assigned successfully!"
@@ -353,7 +383,6 @@ class AdminController {
     }
 
 }
-
 import grails.validation.Validateable
 
 class UserInfoCommand implements Validateable {
@@ -363,13 +392,7 @@ class UserInfoCommand implements Validateable {
     boolean isEdit = false
 
     static constraints = {
-        username blank: false, nullable: false, maxSize: 50, matches: /^[a-zA-Z0-9_]+$/, unique: 'AppUser',
-                blankMessage: 'username.blank.error',
-                nullableMessage: 'username.required.error',
-                maxSizeMessage: 'username.maxSize.error',
-                matchesMessage: 'username.matches.error',
-                uniqueMessage: 'username.unique.error'
-
+        username blank: false, nullable: false, maxSize: 50, matches: /^[a-zA-Z0-9_]+$/
         password nullable: true, blank: true, minSize: 6, maxSize: 100,
                 nullableMessage: 'password.required.error',  // Only for clarity, overridden by validator
                 blankMessage: 'password.blank.error',        // Only for clarity, overridden by validator
@@ -387,20 +410,17 @@ class UserInfoCommand implements Validateable {
     }
 }
 
+import grails.validation.Validateable
+
 class RoleInfoCommand implements Validateable {
     String roleName
 
     static constraints = {
-        roleName blank: false, nullable: false, maxSize: 50, unique: 'AssignRole',
-                blankMessage: 'roleName.blank.error',
-                nullableMessage: 'roleName.required.error',
-                maxSizeMessage: 'roleName.maxSize.error',
-                uniqueMessage: 'roleName.unique.error',
-                validator: { val, obj ->
-                    if (val?.trim()?.toLowerCase() == 'admin') {
-                        return ['roleName.admin.error'] // Return the message key as a list
-                    }
-                    return true
-                }
+        roleName blank: false, nullable: false, maxSize: 50, validator: { val, obj ->
+            if (val?.trim()?.toLowerCase() == 'admin') {
+                return ['roleName.admin.error'] // Return the message key as a list
+            }
+            return true
+        }
     }
 }

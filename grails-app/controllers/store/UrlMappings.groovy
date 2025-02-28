@@ -4,7 +4,7 @@ class UrlMappings {
 
     static mappings = {
         // ✅ Default Landing Page (Now set to Login Page)'
-
+        "/webapp/web"(controller: "webapp", action: "web")
         "/"(controller: "auth", action: "login")
 
         // ✅ Authentication

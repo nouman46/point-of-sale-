@@ -354,9 +354,7 @@ class AdminController {
 
 }
 
-
 import grails.validation.Validateable
-
 
 class UserInfoCommand implements Validateable {
     String username

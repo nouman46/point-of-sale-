@@ -12,6 +12,11 @@ class AuthController {
             // Find the user by username, but we need to handle multiple users with the same username
             def users = AppUser.findAllByUsername(username)
 
+            if (user && BCrypt.checkpw(params.password, user.password)) {
+                println "✅ User Found: ${user.username}"
+                session.user = user
+                session.isAdmin = user.isAdmin
+                session.isSystemAdmin = user.isSystemAdmin
             if (!users) {
                 flash.message = "Invalid username or password"
                 println "❌ Authentication failed for ${username} - User not found"

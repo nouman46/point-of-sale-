@@ -9,12 +9,11 @@
 
     <!-- Custom Styles -->
     <style>
-        /* Page fade-in effect */
-        body {
+        /* Fade-in animation for checkout page */
+        .checkout-container {
             display: none;
         }
 
-        /* Fade-in animation */
         .fade-in {
             animation: fadeInAnimation 0.5s ease-in-out;
         }
@@ -30,6 +29,19 @@
             font-size: 14px;
             margin-top: 5px;
         }
+        /* Checkout Heading Styling */
+        .checkout-title {
+            background-color: #000; /* Black background */
+            color: #fff; /* White text */
+            padding: 15px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1); /* Light shadow */
+            margin-bottom: 20px;
+        }
+
     </style>
 
     <!-- jQuery -->
@@ -40,8 +52,9 @@
 </head>
 <body>
 
-<div class="container mt-4 fade-in">
-    <h1 class="text-center mb-4">🛒 Checkout</h1>
+<div class="container mt-4 fade-in checkout-container">
+    <h1 class="checkout-title">🛒 Checkout</h1>
+
 
     <g:form id="checkoutForm">
         <div class="row">
@@ -49,7 +62,7 @@
             <div class="mb-3 w-50">
                 <label class="form-label fw-bold">Customer Name:</label>
                 <g:textField name="customerName" class="form-control" />
-                <div id="customerNameError" class="error-message"></div> <!-- Error display -->
+                <div id="customerNameError" class="error-message"></div>
             </div>
 
             <!-- Barcode Input -->
@@ -57,7 +70,7 @@
                 <label class="form-label fw-bold">Scan Barcode:</label>
                 <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." autofocus>
                 <button type="button" id="scanButton" class="btn btn-primary mt-2">➕ Add Product</button>
-                <div id="barcodeError" class="error-message"></div> <!-- Barcode error display -->
+                <div id="barcodeError" class="error-message"></div>
             </div>
         </div>
 
@@ -109,11 +122,12 @@
 
 <script>
     $(document).ready(function () {
-        $("body").fadeIn(400);
+        // Fade in only the checkout content, not the entire page layout
+        $(".checkout-container").fadeIn(400);
 
         $('#scanButton').click(function () {
             const barcode = $('#barcodeInput').val();
-            $("#barcodeError").text(""); // Clear previous error
+            $("#barcodeError").text("");
 
             if (barcode) {
                 $.ajax({
@@ -127,7 +141,7 @@
                         $('#barcodeInput').val('').focus();
                     },
                     error: function () {
-                        $("#barcodeError").text("❌ Product not found!"); // Show error below input
+                        $("#barcodeError").text("❌ Product not found!");
                     }
                 });
             }
@@ -156,7 +170,7 @@
 
             let customerName = $("input[name='customerName']").val().trim();
             let products = [];
-            $("#customerNameError").text(""); // Clear previous errors
+            $("#customerNameError").text("");
             $("#barcodeError").text("");
 
             $("#itemsTable tbody tr").each(function () {
@@ -233,4 +247,3 @@
 
 </body>
 </html>
-./

@@ -162,6 +162,8 @@
                 <button onclick="filterByBarcode()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Filter</button>
                 <button onclick="resetDashboard()" style="padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset</button>
             </div>
+            <div id="barcodeError" class="hidden" style="color: red; font-size: 14px; margin-top: 5px;"></div>
+
         </div>
         <div class="box total-orders" onclick="window.location.href='/order/listOrders'">
             <i class="fas fa-shopping-cart"></i>
@@ -395,17 +397,12 @@
 
       function filterByBarcode() {
           let barcode = $("#barcodeInput").val().trim();
+          $("#barcodeError").addClass("hidden").text(""); // Clear previous errors
+
           if (!barcode) {
-              alert("Please enter a barcode.");
-              resetDashboard();
+              $("#barcodeError").text("Please enter a barcode.").removeClass("hidden");
               return;
           }
-
-          $(".total-orders").addClass("hidden");
-          $(".total-products").addClass("hidden");
-          $(".total-sales").addClass("hidden");
-          $(".orders-trend-chart").addClass("hidden");
-          $(".product-quantity-chart").addClass("hidden");
 
           $.ajax({
               url: '/dashboard/getProductDataByBarcode',
@@ -413,24 +410,37 @@
               data: { barcode: barcode },
               dataType: 'json',
               success: function(data) {
+                  // After passing validation, hide the default charts before showing filtered results
+                  $(".total-orders").addClass("hidden");
+                  $(".total-products").addClass("hidden");
+                  $(".total-sales").addClass("hidden");
+                  $(".orders-trend-chart").addClass("hidden");
+                  $(".product-quantity-chart").addClass("hidden");
+
                   if (data.totalOrders || data.totalSales || data.quantity) {
                       $(".filtered-orders").removeClass("hidden");
                       $(".filtered-sales").removeClass("hidden");
                       $(".filtered-product-chart").removeClass("hidden");
+
+                      $("#filteredOrders").text(data.totalOrders || 0);
+                      $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
+                      loadFilteredProductQuantity(barcode);
                   } else {
                       $(".filtered-orders").addClass("hidden");
                       $(".filtered-sales").addClass("hidden");
                       $(".filtered-product-chart").addClass("hidden");
                   }
-
-                  $("#filteredOrders").text(data.totalOrders || 0);
-                  $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
-                  loadFilteredProductQuantity(barcode);
               },
-              error: function(xhr, status, error) {
-                  console.error("Error fetching product data by barcode:", error);
-                  alert("Error fetching product data. Please try again.");
-                  $(".filtered-product-chart").addClass("hidden");
+              error: function(xhr) {
+                  if (xhr.status === 400) {
+                      $("#barcodeError").text("Barcode is required.").removeClass("hidden");
+                  } else if (xhr.status === 403) {
+                      $("#barcodeError").text("Unauthorized access. Please log in.").removeClass("hidden");
+                  } else if (xhr.status === 404) {
+                      $("#barcodeError").text("Product not found ").removeClass("hidden");
+                  } else {
+                      $("#barcodeError").text("An unexpected error occurred. Please try again.").removeClass("hidden");
+                  }
               }
           });
       }

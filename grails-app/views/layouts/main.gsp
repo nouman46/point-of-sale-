@@ -81,12 +81,6 @@
         <g:if test="${session.isAdmin || session.permissions['settings']?.canView}">
             <a href="${createLink(controller: 'setting', action: 'index')}"><i class="fas fa-cog"></i> Settings</a>
         </g:if>
-        <g:if test="${session.isAdmin || session.permissions['subscription']?.canView}">
-            <a href="${createLink(controller: 'subscription', action: 'subscription')}"><i class="fas fa-credit-card"></i> Subscription</a>
-        </g:if>
-        <g:if test="${session.isAdmin || session.permissions['roleManagement']?.canView}">
-            <a href="${createLink(controller: 'admin', action: 'roleManagement')}"><i class="fas fa-users"></i> User Management</a>
-        </g:if>
         <a href="${createLink(controller: 'auth', action: 'logout')}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </g:if>

@@ -18,6 +18,7 @@
         .dashboard-header {
             display: flex;
             align-items: center;
+            justify-content: center; /* Centers content horizontally */
             gap: 15px;
             background: #1e1e2d;
             padding: 15px;
@@ -26,7 +27,9 @@
             font-size: 22px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            text-align: center; /* Ensures text inside is centered */
         }
+
 
         .dashboard-header i {
             font-size: 28px;
@@ -113,6 +116,15 @@
             width: 100% !important;
             height: 300px !important;
         }
+        h1 {
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center; /* Centers text horizontally */
+            margin-top: 20px; /* Adjust spacing if needed */
+        }
+
+
 
         @media (max-width: 1024px) {
             .charts-wrapper {
@@ -198,248 +210,247 @@
     </div>
 
     <script>
-        let ordersChartInstance = null;
-        let productChartInstance = null;
-        let filteredProductChartInstance = null;
+      let ordersChartInstance = null;
+      let productChartInstance = null;
+      let filteredProductChartInstance = null;
 
-        $(document).ready(function() {
-            loadDashboardData();
-            loadOrdersTrend();
-            loadProductQuantities();
-            // No initial load for filteredProductChart since it starts hidden
-        });
+      $(document).ready(function() {
+          loadDashboardData();
+          loadOrdersTrend();
+          loadProductQuantities();
+      });
 
-        function destroyChart(chartInstance) {
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-        }
+      function destroyChart(chartInstance) {
+          if (chartInstance) {
+              chartInstance.destroy();
+          }
+      }
 
-        function loadDashboardData() {
-            $.ajax({
-                url: '/dashboard/getOrdersData',
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    $("#ordersThisMonth").text(data.ordersThisMonth ?? 0);
-                    $("#totalProducts").text(data.totalProducts ?? 0);
-                    $("#totalSales").text("RS " + (data.totalSales ?? 0).toFixed(2));
-                },
-                error: function() {
-                    console.error("Error fetching dashboard data.");
-                }
-            });
-        }
+      function loadDashboardData() {
+          $.ajax({
+              url: '/dashboard/getOrdersData',
+              type: 'GET',
+              dataType: 'json',
+              success: function(data) {
+                  $("#ordersThisMonth").text(data.ordersThisMonth ?? 0);
+                  $("#totalProducts").text(data.totalProducts ?? 0);
+                  $("#totalSales").text("RS " + (data.totalSales ?? 0).toFixed(2));
+              },
+              error: function() {
+                  console.error("Error fetching dashboard data.");
+              }
+          });
+      }
 
-        function loadOrdersTrend() {
-            $.ajax({
-                url: '/dashboard/getOrdersTrend',
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    let labels = data.map(item => item.date);
-                    let values = data.map(item => item.count);
+      function loadOrdersTrend() {
+          $.ajax({
+              url: '/dashboard/getOrdersTrend',
+              type: 'GET',
+              dataType: 'json',
+              success: function(data) {
+                  let labels = data.map(item => item.date);
+                  let values = data.map(item => item.count);
 
-                    destroyChart(ordersChartInstance);
+                  destroyChart(ordersChartInstance);
 
-                    let ctx = document.getElementById("ordersChart").getContext("2d");
-                    ordersChartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Orders Over Time',
-                                data: values,
-                                borderColor: '#3498db',
-                                backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                                borderWidth: 2,
-                                tension: 0.3,
-                                fill: true,
-                                pointRadius: 5,
-                                pointHitRadius: 10
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: { beginAtZero: true, ticks: { stepSize: 0.5 } }
-                            },
-                            plugins: {
-                                tooltip: { mode: 'nearest', intersect: false }
-                            }
-                        }
-                    });
-                }
-            });
-        }
+                  let ctx = document.getElementById("ordersChart").getContext("2d");
+                  ordersChartInstance = new Chart(ctx, {
+                      type: 'line',
+                      data: {
+                          labels: labels,
+                          datasets: [{
+                              label: 'Orders Over Time',
+                              data: values,
+                              borderColor: '#3498db',
+                              backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                              borderWidth: 2,
+                              tension: 0.3,
+                              fill: true,
+                              pointRadius: 5,
+                              pointHitRadius: 10
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                              y: { beginAtZero: true, ticks: { stepSize: 0.5 } }
+                          },
+                          plugins: {
+                              tooltip: { mode: 'nearest', intersect: false }
+                          }
+                      }
+                  });
+              }
+          });
+      }
 
-        function loadProductQuantities() {
-            $.ajax({
-                url: '/dashboard/getProductQuantities',
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    let labels = data.map(item => item.name);
-                    let values = data.map(item => item.quantity);
+      function loadProductQuantities() {
+          $.ajax({
+              url: '/dashboard/getProductQuantities',
+              type: 'GET',
+              dataType: 'json',
+              success: function(data) {
+                  let labels = data.map(item => item.name);
+                  let values = data.map(item => item.quantity);
 
-                    destroyChart(productChartInstance);
+                  destroyChart(productChartInstance);
 
-                    let ctx = document.getElementById("productChart").getContext("2d");
-                    productChartInstance = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: values,
-                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FF9800']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(tooltipItem) {
-                                            let index = tooltipItem.dataIndex;
-                                            return labels[index] + ": " + values[index];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error fetching product quantity data:", error);
-                }
-            });
-        }
+                  let ctx = document.getElementById("productChart").getContext("2d");
+                  productChartInstance = new Chart(ctx, {
+                      type: 'doughnut',
+                      data: {
+                          labels: labels,
+                          datasets: [{
+                              data: values,
+                              backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FF9800']
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: { display: false },
+                              tooltip: {
+                                  callbacks: {
+                                      label: function(tooltipItem) {
+                                          let index = tooltipItem.dataIndex;
+                                          return labels[index] + ": " + values[index];
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              },
+              error: function(xhr, status, error) {
+                  console.error("Error fetching product quantity data:", error);
+              }
+          });
+      }
 
-        function loadFilteredProductQuantity(barcode) {
-            destroyChart(filteredProductChartInstance);
-            let ctx = document.getElementById("filteredProductChart").getContext("2d");
+      function loadFilteredProductQuantity(barcode) {
+          destroyChart(filteredProductChartInstance);
+          let ctx = document.getElementById("filteredProductChart").getContext("2d");
 
-            $.ajax({
-                url: '/dashboard/getProductDataByBarcode',
-                type: 'GET',
-                data: { barcode: barcode },
-                dataType: 'json',
-                success: function(data) {
-                    let labels = [data.productName || 'Unknown Product', 'Remaining'];
-                    let values = [data.quantity || 0, Math.max(100 - (data.quantity || 0), 0)];
+          $.ajax({
+              url: '/dashboard/getProductDataByBarcode',
+              type: 'GET',
+              data: { barcode: barcode },
+              dataType: 'json',
+              success: function(data) {
+                  let productName = data.productName || 'Unknown Product';
+                  let quantity = data.quantity || 0;
 
-                    destroyChart(filteredProductChartInstance);
-                    filteredProductChartInstance = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: values,
-                                backgroundColor: ['#FF6384', '#E0E0E0']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(tooltipItem) {
-                                            let index = tooltipItem.dataIndex;
-                                            return labels[index] + ": " + values[index];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error fetching filtered product quantity:", error);
-                    destroyChart(filteredProductChartInstance);
-                    filteredProductChartInstance = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Error Loading Data'],
-                            datasets: [{
-                                data: [1],
-                                backgroundColor: ['#FF4444']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: { enabled: false }
-                            }
-                        }
-                    });
-                }
-            });
-        }
+                  destroyChart(filteredProductChartInstance);
+                  filteredProductChartInstance = new Chart(ctx, {
+                      type: 'doughnut',
+                      data: {
+                          labels: [productName],
+                          datasets: [{
+                              data: [quantity],
+                              backgroundColor: ['#FF6384']
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: { display: false },
+                              tooltip: {
+                                  callbacks: {
+                                      label: function(tooltipItem) {
+                                          return productName + ": " + quantity;
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              },
+              error: function(xhr, status, error) {
+                  console.error("Error fetching filtered product quantity:", error);
+                  destroyChart(filteredProductChartInstance);
+                  filteredProductChartInstance = new Chart(ctx, {
+                      type: 'doughnut',
+                      data: {
+                          labels: ['Error Loading Data'],
+                          datasets: [{
+                              data: [1],
+                              backgroundColor: ['#FF4444']
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                          }
+                      }
+                  });
+              }
+          });
+      }
 
-        function filterByBarcode() {
-            let barcode = $("#barcodeInput").val().trim();
-            if (!barcode) {
-                alert("Please enter a barcode.");
-                resetDashboard();
-                return;
-            }
+      function filterByBarcode() {
+          let barcode = $("#barcodeInput").val().trim();
+          if (!barcode) {
+              alert("Please enter a barcode.");
+              resetDashboard();
+              return;
+          }
 
-            $(".total-orders").addClass("hidden");
-            $(".total-products").addClass("hidden");
-            $(".total-sales").addClass("hidden");
-            $(".orders-trend-chart").addClass("hidden"); // Hide Orders Trend chart
-            $(".product-quantity-chart").addClass("hidden"); // Hide Product Quantity chart
+          $(".total-orders").addClass("hidden");
+          $(".total-products").addClass("hidden");
+          $(".total-sales").addClass("hidden");
+          $(".orders-trend-chart").addClass("hidden");
+          $(".product-quantity-chart").addClass("hidden");
 
-            $.ajax({
-                url: '/dashboard/getProductDataByBarcode',
-                type: 'GET',
-                data: { barcode: barcode },
-                dataType: 'json',
-                success: function(data) {
-                    if (data.totalOrders || data.totalSales || data.quantity) {
-                        $(".filtered-orders").removeClass("hidden");
-                        $(".filtered-sales").removeClass("hidden");
-                        $(".filtered-product-chart").removeClass("hidden"); // Show Filtered Product chart
-                    } else {
-                        $(".filtered-orders").addClass("hidden");
-                        $(".filtered-sales").addClass("hidden");
-                        $(".filtered-product-chart").addClass("hidden");
-                    }
+          $.ajax({
+              url: '/dashboard/getProductDataByBarcode',
+              type: 'GET',
+              data: { barcode: barcode },
+              dataType: 'json',
+              success: function(data) {
+                  if (data.totalOrders || data.totalSales || data.quantity) {
+                      $(".filtered-orders").removeClass("hidden");
+                      $(".filtered-sales").removeClass("hidden");
+                      $(".filtered-product-chart").removeClass("hidden");
+                  } else {
+                      $(".filtered-orders").addClass("hidden");
+                      $(".filtered-sales").addClass("hidden");
+                      $(".filtered-product-chart").addClass("hidden");
+                  }
 
-                    $("#filteredOrders").text(data.totalOrders || 0);
-                    $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
-                    loadFilteredProductQuantity(barcode);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error fetching product data by barcode:", error);
-                    alert("Error fetching product data. Please try again.");
-                    $(".filtered-product-chart").addClass("hidden"); // Hide on error
-                }
-            });
-        }
+                  $("#filteredOrders").text(data.totalOrders || 0);
+                  $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
+                  loadFilteredProductQuantity(barcode);
+              },
+              error: function(xhr, status, error) {
+                  console.error("Error fetching product data by barcode:", error);
+                  alert("Error fetching product data. Please try again.");
+                  $(".filtered-product-chart").addClass("hidden");
+              }
+          });
+      }
 
-        function resetDashboard() {
-            $("#barcodeInput").val("");
-            $(".total-orders").removeClass("hidden");
-            $(".total-products").removeClass("hidden");
-            $(".total-sales").removeClass("hidden");
-            $(".orders-trend-chart").removeClass("hidden"); // Show Orders Trend chart
-            $(".product-quantity-chart").removeClass("hidden"); // Show Product Quantity chart
-            $(".filtered-orders").addClass("hidden");
-            $(".filtered-sales").addClass("hidden");
-            $(".filtered-product-chart").addClass("hidden"); // Hide Filtered Product chart
-            $("#filteredOrders").text("0");
-            $("#filteredSales").text("RS 0.00");
-            loadDashboardData();
-            destroyChart(filteredProductChartInstance); // Clear filtered chart instance
-        }
+      function resetDashboard() {
+          $("#barcodeInput").val("");
+          $(".total-orders").removeClass("hidden");
+          $(".total-products").removeClass("hidden");
+          $(".total-sales").removeClass("hidden");
+          $(".orders-trend-chart").removeClass("hidden");
+          $(".product-quantity-chart").removeClass("hidden");
+          $(".filtered-orders").addClass("hidden");
+          $(".filtered-sales").addClass("hidden");
+          $(".filtered-product-chart").addClass("hidden");
+          $("#filteredOrders").text("0");
+          $("#filteredSales").text("RS 0.00");
+          loadDashboardData();
+          destroyChart(filteredProductChartInstance);
+      }
+
     </script>
 </body>
 </html>

@@ -21,7 +21,6 @@ class UrlMappings {
         "/admin/saveRole"(controller: "admin", action: "saveRole")
         "/admin/assignPermission"(controller: "admin", action: "assignPermission")
         "/admin/userList"(controller: "admin", action: "userList")
-
         "/admin/saveUser"(controller: "admin", action: "saveUser")
         // ✅ Edit User
         "/admin/editUser"(controller: "admin", action: "editUser")
@@ -36,6 +35,27 @@ class UrlMappings {
         "/admin/updateUser"(controller: "admin", action: "updateUser")
         "/admin/showUser/$id"(controller: "admin", action: "showUser")
         "/admin/deleteUser/$id"(controller: "admin", action: "deleteUser")
+
+        // ✅ Settings Role Management
+        "/setting/assignRole"(controller: "setting", action: "assignRole")
+        "/setting/saveRole"(controller: "setting", action: "saveRole")
+        "/setting/assignPermission"(controller: "setting", action: "assignPermission")
+        "/setting/userList"(controller: "setting", action: "userList")
+        "/setting/saveUser"(controller: "setting", action: "saveUser")
+        // ✅ Edit User
+        "/setting/editUser"(controller: "setting", action: "editUser")
+        // ✅ Delete User
+        "/setting/deleteUser"(controller: "setting", action: "deleteUser")
+        "/setting/deleteRole"(controller: "setting", action: "deleteRole")
+        // ✅ Assign Role to User
+        "/setting/assignRole"(controller: "setting", action: "assignRole")
+        "/setting/saveRole"(controller: "setting", action: "saveRole")
+        "/setting/assignPermission"(controller: "setting", action: "assignPermission")
+        "/setting/userList"(controller: "setting", action: "userList")
+        "/setting/editUser/$id"(controller: "setting", action: "editUser")
+        "/setting/updateUser"(controller: "setting", action: "updateUser")
+        "/setting/showUser/$id"(controller: "setting", action: "showUser")
+        "/setting/deleteUser/$id"(controller: "setting", action: "deleteUser")
 
         // ✅ Dashboard
         "/dashboard"(controller: "dashboard", action: "index")
@@ -112,7 +132,10 @@ class UrlMappings {
         "/storeOwner/update/$id"(controller: "setting", action: "updateStoreOwner", method: "PUT")
         "/setting/updateLogo"(controller: "setting", action: "updateLogo")
         "/setting/testLogo"(controller: "setting", action: "testLogo")
+        "/setting/requestSubscription"(controller: "setting", action: "requestSubscription")
 
+
+        "/systemadmin/listSubscriptionRequests"(controller: "systemadmin", action: "listSubscriptionRequests")
 
         // ✅ Subscription
         "/subscription"(controller: "subscription", action: "subscription")

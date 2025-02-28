@@ -14,6 +14,7 @@ class AuthController {
                 println "✅ User Found: ${user.username}"
                 session.user = user
                 session.isAdmin = user.isAdmin
+                session.isSystemAdmin = user.isSystemAdmin
 
 
                 // Ensure roles are properly fetched

@@ -4,6 +4,7 @@ class AppUser {
     String username
     String password
     Boolean isAdmin = false
+    Boolean isSystemAdmin = false
     UserSubscription activeSubscription
     AppUser createdBy
 

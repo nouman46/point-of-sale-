@@ -10,21 +10,34 @@ class DashboardController {
         render(view: "dashboard")
     }
 
+    // Helper function to get the correct "createdBy" reference (Admin for Shopkeepers)
+    private AppUser getAdminUser() {
+        def currentUser = session.user
+        if (!currentUser) return null
+
+        // Fetch `createdBy` relation (if exists) to avoid lazy loading issues
+        currentUser = AppUser.findById(currentUser.id, [fetch: [createdBy: 'join']])
+
+        // If user is a Shopkeeper, get their Admin's ID; otherwise, use their own ID
+        def createdById = currentUser.createdBy?.id ?: currentUser.id
+        return AppUser.get(createdById)
+    }
+
     // API to get total orders, products, and sales (Filtered by Admin)
     def getOrdersData() {
-        def currentAdmin = session.user
-        if (!currentAdmin) {
+        def adminUser = getAdminUser()
+        if (!adminUser) {
             render(status: 403, text: "Unauthorized access!")
             return
         }
 
-        def totalOrders = Order.countByCreatedBy(currentAdmin)
-        def totalProducts = Product.countByCreatedBy(currentAdmin)
+        println "🔍 Fetching Orders Data for Admin ID: ${adminUser.id}"
+
+        def totalOrders = Order.countByCreatedBy(adminUser)
+        def totalProducts = Product.countByCreatedBy(adminUser)
         def totalSales = Order.createCriteria().get {
-            projections {
-                sum('totalAmount')
-            }
-            eq("createdBy", currentAdmin)
+            projections { sum('totalAmount') }
+            eq("createdBy", adminUser)
         } ?: 0.0
 
         render([
@@ -36,18 +49,20 @@ class DashboardController {
 
     // API to get order trends (Filtered by Admin)
     def getOrdersTrend() {
-        def currentAdmin = session.user
-        if (!currentAdmin) {
+        def adminUser = getAdminUser()
+        if (!adminUser) {
             render(status: 403, text: "Unauthorized access!")
             return
         }
+
+        println "📊 Fetching Order Trends for Admin ID: ${adminUser.id}"
 
         def ordersByDate = Order.createCriteria().list {
             projections {
                 groupProperty("dateCreated")
                 count("id")
             }
-            eq("createdBy", currentAdmin)
+            eq("createdBy", adminUser)
             order("dateCreated", "asc")
         }
 
@@ -62,13 +77,15 @@ class DashboardController {
 
     // API to get product quantities (Filtered by Admin)
     def getProductQuantities() {
-        def currentAdmin = session.user
-        if (!currentAdmin) {
+        def adminUser = getAdminUser()
+        if (!adminUser) {
             render(status: 403, text: "Unauthorized access!")
             return
         }
 
-        def products = Product.findAllByCreatedBy(currentAdmin)
+        println "📦 Fetching Product Quantities for Admin ID: ${adminUser.id}"
+
+        def products = Product.findAllByCreatedBy(adminUser)
         def productData = products.collect { product ->
             [name: product.productName, quantity: product.productQuantity]
         }
@@ -90,9 +107,10 @@ class DashboardController {
                 return
             }
 
-            def createdById = session.user.createdBy?.id ?: session.user.id
+            def adminUser = getAdminUser()
             def product = Product.findByProductBarcode(params.barcode?.trim())
-            if (!product || product.createdBy.id != createdById) {
+
+            if (!product || product.createdBy.id != adminUser.id) {
                 render(status: 404, text: "Product not found or unauthorized")
                 return
             }
@@ -104,7 +122,7 @@ class DashboardController {
                 orderItems {
                     eq("product", product)
                 }
-                eq("createdBy", session.user)
+                eq("createdBy", adminUser)
             } ?: 0
 
             def totalQuantitySold = OrderItem.createCriteria().get {

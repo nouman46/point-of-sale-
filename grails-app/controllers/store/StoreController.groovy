@@ -23,7 +23,14 @@ class StoreController {
     def showProduct(Long id) {
         def product = Product.get(id)
         if (product) {
-            render product as JSON
+            // Ensure the current user has permission to view this product (scoped to createdBy)
+            def currentUser = session.user
+            if (currentUser && (product.createdBy == currentUser || AppUser.findAllByCreatedBy(currentUser).contains(product.createdBy))) {
+                render product as JSON
+            } else {
+                response.status = 403
+                render([success: false, message: "Unauthorized access to product"] as JSON)
+            }
         } else {
             response.status = 404
             render([success: false, message: "Product not found"] as JSON)
@@ -44,7 +51,7 @@ class StoreController {
         if (!productInfo.validate()) {
             def errors = productInfo.errors.allErrors.collect { g.message(error: it) }.join("<br>")
             response.status = 400
-            render([success: false, message: errors] as JSON) // Simplified message structure
+            render([success: false, message: errors] as JSON)
             return
         }
 
@@ -55,6 +62,18 @@ class StoreController {
             return
         }
 
+        // Set or verify createdBy
+        if (!product.createdBy) {
+            product.createdBy = currentUser
+        } else if (product.createdBy != currentUser && !AppUser.findAllByCreatedBy(currentUser).contains(product.createdBy)) {
+            response.status = 403
+            render([success: false, message: "Unauthorized to modify this product!"] as JSON)
+            return
+        }
+
+        // Set admin if not already set
+        if (!product.admin) product.admin = currentUser
+
         product.properties = [
                 productName: productInfo.productName,
                 productDescription: productInfo.productDescription,
@@ -64,13 +83,20 @@ class StoreController {
                 productQuantity: productInfo.productQuantity
         ]
 
-        if (!product.createdBy) product.createdBy = currentUser
-        if (!product.admin) product.admin = currentUser
+        println "Attempting to save product: productName=${product.productName}, productSKU=${product.productSKU}, createdBy=${product.createdBy?.id}"
 
         if (product.save(flush: true)) {
             render([success: true, message: "Product ${params.id ? 'updated' : 'created'} successfully", product: product] as JSON)
         } else {
-            def errors = product.errors.allErrors.collect { g.message(error: it) }.join("<br>")
+            def errors = product.errors.allErrors.collect { error ->
+                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
+                if (error.code == "unique" && error.field == "productName") {
+                    return g.message(code: "productName.unique.error")
+                } else if (error.code == "unique" && error.field == "productSKU") {
+                    return g.message(code: "productSKU.unique.error")
+                }
+                g.message(error: error) // Fallback for other errors
+            }.join("<br>")
             response.status = 500
             render([success: false, message: "Failed to save product:<br>${errors}"] as JSON)
         }
@@ -111,6 +137,8 @@ class StoreController {
     }
 }
 
+import grails.validation.Validateable
+
 class ProductInfoCommand implements Validateable {
     String productName
     String productDescription
@@ -122,9 +150,10 @@ class ProductInfoCommand implements Validateable {
     static constraints = {
         productName blank: false, nullable: false, maxSize: 100
         productDescription blank: false, nullable: false, maxSize: 500
-        productSKU blank: false, nullable: false, unique: true, maxSize: 50
-        productBarcode blank: false, nullable: false, unique: true, maxSize: 50
+        productSKU blank: false, nullable: false, maxSize: 50
+        productBarcode blank: false, nullable: false, maxSize: 50
         productPrice nullable: false, min: 0.01 as BigDecimal, scale: 2
         productQuantity nullable: false, min: 0
     }
 }
+

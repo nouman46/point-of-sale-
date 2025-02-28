@@ -3,7 +3,8 @@ package store
 class UrlMappings {
 
     static mappings = {
-        // ✅ Default Landing Page (Now set to Login Page)
+        // ✅ Default Landing Page (Now set to Login Page)'
+        "/webapp/web"(controller: "webapp", action: "web")
         "/"(controller: "auth", action: "login")
 
         // ✅ Authentication
@@ -78,6 +79,7 @@ class UrlMappings {
 
         // ✅ Dashboard
         "/dashboard"(controller: "dashboard", action: "dashboard")
+        "/webapp"(controller: "webapp", action: "index")
         "/dashboard/getOrdersData"(controller: "dashboard", action: "getOrdersData")
         "/dashboard/getOrdersTrend"(controller: "dashboard", action: "getOrdersTrend")
         "/dashboard/getProductQuantities"(controller: "dashboard", action: "getProductQuantities")
@@ -90,6 +92,7 @@ class UrlMappings {
         "/store/showProduct/$id"(controller: "store", action: "showProduct")
         "/store/saveProduct"(controller: "store", action: "saveProduct")
         "/store/deleteProduct/$id"(controller: "store", action: "deleteProduct")
+        "/store/web"(controller: "store", action: "web")
 
         // ✅ Orders & Checkout
         "/order/checkout"(controller: "order", action: "checkout")

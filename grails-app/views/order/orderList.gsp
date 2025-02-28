@@ -89,14 +89,15 @@
     <!-- Date Filter Form -->
     <form action="${createLink(controller: 'order', action: 'listOrders')}" method="get" id="orderFilterForm">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-4 form-group">
                 <label for="startDate" class="form-label">📅 Start Date:</label>
                 <input type="date" id="startDate" name="startDate" class="form-control" value="${params.startDate}"/>
+                <span id="startDateError" class="error-message">Start Date is required</span>
             </div>
             <div class="col-md-4 form-group">
                 <label for="endDate" class="form-label">📅 End Date:</label>
                 <input type="date" id="endDate" name="endDate" class="form-control" value="${params.endDate}"/>
-                <span id="endDateError" class="error-message">End Date cannot be earlier than Start Date.</span>
+                <span id="endDateError" class="error-message">End Date is required</span>
             </div>
             <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary" id="filterBtn">🔍 Filter Orders</button>
@@ -109,10 +110,10 @@
         <table class="table table-striped table-bordered shadow-sm" id="orderTable">
             <thead class="table-dark">
                 <tr>
-                    <th onclick="sortTable(0)">🆔 Order ID &#x2195;</th>
-                    <th onclick="sortTable(1)">👤 Customer Name &#x2195;</th>
-                    <th onclick="sortTable(2)">💰 Total Price &#x2195;</th>
-                    <th onclick="sortTable(3)">📅 Date &#x2195;</th>
+                    <th onclick="sortTable(0)">🆔 Order ID ↕</th>
+                    <th onclick="sortTable(1)">👤 Customer Name ↕</th>
+                    <th onclick="sortTable(2)">💰 Total Price ↕</th>
+                    <th onclick="sortTable(3)">📅 Date ↕</th>
                     <th>🔍 Action</th>
                 </tr>
             </thead>
@@ -163,26 +164,55 @@
 
         const startDateInput = document.getElementById("startDate");
         const endDateInput = document.getElementById("endDate");
-        const errorMessage = document.getElementById("endDateError");
+        const startDateError = document.getElementById("startDateError");
+        const endDateError = document.getElementById("endDateError");
         const filterBtn = document.getElementById("filterBtn");
         const searchBox = document.getElementById("searchBox");
         const totalSalesElement = document.getElementById("totalSales");
+        const form = document.getElementById("orderFilterForm");
 
-        function validateDates() {
-            const startDate = new Date(startDateInput.value);
-            const endDate = new Date(endDateInput.value);
+        // Hide errors initially
+        startDateError.style.display = "none";
+        endDateError.style.display = "none";
 
-            if (endDateInput.value && endDate < startDate) {
-                errorMessage.style.display = "inline";
-                filterBtn.disabled = true;
-            } else {
-                errorMessage.style.display = "none";
-                filterBtn.disabled = false;
+        // Form submission handler
+        form.addEventListener("submit", function(event) {
+            let isValid = true;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            // Reset error messages
+            startDateError.style.display = "none";
+            endDateError.style.display = "none";
+
+            // Check if start date is empty
+            if (!startDate) {
+                startDateError.style.display = "inline";
+                isValid = false;
             }
-        }
 
-        endDateInput.addEventListener("change", validateDates);
-        startDateInput.addEventListener("change", validateDates);
+            // Check if end date is empty
+            if (!endDate) {
+                endDateError.style.display = "inline";
+                isValid = false;
+            }
+
+            // If both dates are present, validate date range
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                if (end < start) {
+                    endDateError.textContent = "End Date cannot be earlier than Start Date";
+                    endDateError.style.display = "inline";
+                    isValid = false;
+                }
+            }
+
+            // Prevent form submission if validation fails
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
 
         function updateTotalSales() {
             let total = 0;
@@ -216,6 +246,11 @@
 
         updateTotalSales();
     });
+
+    // Table sorting function (if you want to keep it)
+    function sortTable(n) {
+        // [Your existing sortTable function can be added here if needed]
+    }
 </script>
 
 </body>

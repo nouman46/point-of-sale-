@@ -1,35 +1,54 @@
 package store
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.mindrot.jbcrypt.BCrypt
 
 class AuthController {
-//    def passwordEncoder = new BCryptPasswordEncoder()
 
     def login() {
         if (request.method == "POST") {
-            def user = AppUser.findByUsername(params.username)
+            def username = params.username
+            def password = params.password
+
+            // Find the user by username, but we need to handle multiple users with the same username
+            def users = AppUser.findAllByUsername(username)
 
             if (user && BCrypt.checkpw(params.password, user.password)) {
                 println "✅ User Found: ${user.username}"
                 session.user = user
                 session.isAdmin = user.isAdmin
                 session.isSystemAdmin = user.isSystemAdmin
+            if (!users) {
+                flash.message = "Invalid username or password"
+                println "❌ Authentication failed for ${username} - User not found"
+                redirect(action: "login")
+                return
+            }
 
+            // Try to authenticate each user with the provided password
+            def authenticatedUser = users.find { user ->
+                BCrypt.checkpw(password, user.password)
+            }
 
-                // Ensure roles are properly fetched
-                session.assignRole = user.assignRole ? user.assignRole*.roleName : []
+            if (authenticatedUser) {
+                println "✅ User Found: ${authenticatedUser.username} (ID: ${authenticatedUser.id}, createdBy: ${authenticatedUser.createdBy?.id})"
+                session.user = authenticatedUser
+                session.isAdmin = authenticatedUser.isAdmin
 
+                // Ensure roles are properly fetched and initialized
+                session.assignRole = authenticatedUser.assignRole ? authenticatedUser.assignRole*.roleName : []
+
+                // Fetch and set permissions based on the user's roles
                 def permissions = [:]
 
-                if (user.isAdmin) {
-                    // ✅ Admin gets access to ALL pages with FULL permissions
-                    def allPages = ["dashboard","inventory", "listOrders", "checkout", "settings", "subscription", "roleManagement"]
-                    allPages.each { page -> permissions[page] = [canView: true, canEdit: true, canDelete: true]
+                if (authenticatedUser.isAdmin) {
+                    // Admin gets access to ALL pages with FULL permissions
+                    def allPages = ["dashboard", "inventory", "listOrders", "checkout", "settings", "subscription", "roleManagement"]
+                    allPages.each { page ->
+                        permissions[page] = [canView: true, canEdit: true, canDelete: true]
                     }
                 } else {
-                    // ✅ Normal users get permissions from assigned roles
-                    user.assignRole?.each { assignRole ->
+                    // Normal users get permissions from their assigned roles
+                    authenticatedUser.assignRole?.each { assignRole ->
                         assignRole.permissions?.each { perm ->
                             if (!permissions.containsKey(perm.pageName)) {
                                 permissions[perm.pageName] = [canView: false, canEdit: false, canDelete: false]
@@ -45,11 +64,13 @@ class AuthController {
 
                 println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRole}, Permissions: ${session.permissions}"
                 flash.message = "Login successful!"
+
+                // Redirect to the user's specific dashboard or screen based on their permissions
                 redirect(controller: "dashboard", action: "dashboard")
                 return
             } else {
                 flash.message = "Invalid username or password"
-                println "❌ Authentication failed for ${params.username}"
+                println "❌ Authentication failed for ${username} - Password mismatch"
                 redirect(action: "login")
                 return
             }

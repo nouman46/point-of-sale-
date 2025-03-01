@@ -1,3 +1,4 @@
+
 package store
 
 class Product {

@@ -6,7 +6,7 @@ import grails.gorm.transactions.Transactional
 class SystemAdminController {
     def listSubscriptionRequests() {
         def pendingRequests = SubscriptionRequest.findAllByStatus("pending")
-        render view: "listSubscriptionRequests", model: [pendingRequests: pendingRequests]
+        render (controller: "systemAdmin" ,view: "listSubscriptionRequests", model: [pendingRequests: pendingRequests])
     }
 
     @Transactional
@@ -24,15 +24,21 @@ class SystemAdminController {
             request.user.activeSubscription.save(flush: true)
         }
 
-        // Create new subscription
+        def startDate = new Date()
+        def cal = Calendar.getInstance()
+        cal.time = startDate
+        cal.add(Calendar.DATE, request.plan.billingCycle * 30) // add the number of days
+        def endDate = cal.time
+
         def subscription = new UserSubscription(
                 user: request.user,
                 plan: request.plan,
-                startDate: new Date(),
-                endDate: new Date() + request.plan.billingCycle * 30, // Approximation in days
+                startDate: startDate,
+                endDate: endDate,
                 isActive: true
         )
         subscription.save(flush: true)
+
 
         // Update AppUser
         request.user.activeSubscription = subscription

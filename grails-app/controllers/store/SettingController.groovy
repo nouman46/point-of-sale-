@@ -9,7 +9,12 @@ class SettingController {
 
     def index(Long id) {
         def storeOwnerUsername = session.user?.id
+
+        println("storeOwnerUsername: ${storeOwnerUsername}")
+
         def storeOwner = StoreOwner.get(storeOwnerUsername)
+
+        println("storeowner: ${storeOwner}")
 
         if (!storeOwner) {
             flash.message = "Store Owner not found"

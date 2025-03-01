@@ -11,7 +11,9 @@ class RegistrationService {
         def appUser = new AppUser(
                 username: cmd.username,
                 password: passwordEncoder.encode(cmd.password),
-                isAdmin: true)
+                isAdmin: true,
+                isSystemAdmin: false
+        )
 
         def storeOwner = new StoreOwner(
                 email: cmd.email,

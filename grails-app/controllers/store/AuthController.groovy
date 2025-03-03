@@ -29,7 +29,7 @@ class AuthController {
 
                 if (authenticatedUser.isSystemAdmin) {
                     // Full access for system admins
-                    def allPages = ["dashboard", "inventory", "listOrders", "checkout", "settings", "subscription", "roleManagement","manageUsers"]
+                    def allPages = ["manageUsers"]
                     allPages.each { page ->
                         permissions[page] = [canView: true, canEdit: true, canDelete: true]
                     }
@@ -64,8 +64,15 @@ class AuthController {
                 }
 
                 session.permissions = permissions
-                redirect(controller: "dashboard", action: "dashboard")
-                return
+
+                if(session.isSystemAdmin) {
+                    redirect(controller: "systemAdmin", action: "listSubscriptionRequests")
+                    return
+                }else {
+                    redirect(controller: "dashboard", action: "dashboard")
+                    return
+                }
+
             } else {
                 flash.message = "Invalid username or password"
                 redirect(action: "login")

@@ -12,7 +12,6 @@ class StoreOwnerController {
             if (cmd.validate()) {
                 def logoFile = request.getFile('logo')
                 def result = registrationService.registerStoreOwner(cmd, logoFile)
-
                 if (result.errors) {
                     render(view: "register", model: [cmd: cmd, subscriptionPlans: SubscriptionPlan.list()])
                     return

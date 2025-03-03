@@ -7,6 +7,12 @@ import java.time.format.DateTimeFormatter
 class DashboardController {
 
     def dashboard() {
+        def currentUser = session.user
+        if (!currentUser) {
+            flash.error = "Unauthorized access!"
+            redirect(controller: "auth", action: "login")
+            return
+        }
         render(view: "dashboard")
     }
 

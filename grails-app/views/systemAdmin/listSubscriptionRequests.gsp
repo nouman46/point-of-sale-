@@ -25,8 +25,8 @@
                     <tr>
                         <td>${request.user.username}</td>
                         <td>${request.plan.name}</td>
-                        <g:formatDate date="${request.requestDate}" format="yyyy-MM-dd" />
-                        <td>
+                        <td><g:formatDate date="${request.requestDate}" format="yyyy-MM-dd" /></td>
+                        <td class="d-flex gap-2">
                             <g:form action="approveSubscriptionRequest" method="POST">
                                 <g:hiddenField name="id" value="${request.id}"/>
                                 <g:submitButton name="approve" value="Approve" class="btn btn-success btn-sm"/>

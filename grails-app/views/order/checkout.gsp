@@ -81,9 +81,9 @@
             <tbody id="itemsBody"></tbody>
         </table>
 
-        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
-            <h4 class="fw-bold">Total:</h4>
-            <h4 id="total" class="text-success">0.00 PKR</h4>
+        <div class="bg-light p-3 rounded">
+            <h4 class="fw-bold d-inline">Total:</h4>
+            <h4 id="total" class="text-success d-inline ms-2">0.00 PKR</h4>
         </div>
 
         <div class="row mt-3">
@@ -99,6 +99,10 @@
         </div>
 
         <button type="button" id="checkoutButton" class="btn btn-success btn-lg w-100 mt-3">✅ Complete Checkout</button>
+        <button type="button" class="btn btn-primary mb-3" onclick="openNewCheckout()">🆕 New Checkout</button>
+
+
+
     </g:form>
 </div>
 
@@ -171,6 +175,8 @@
             calculateRemaining();
         });
 
+
+
         function calculateRemaining() {
             let total = parseFloat($('#totalInput').val()) || 0;
             let received = parseFloat($('#amountReceived').val()) || 0;
@@ -224,7 +230,7 @@
             }
 
             if (amountReceived <= 0) {
-                $("#amountReceivedError").text("❌ Please enter an amount received greater than 0.");
+                $("#amountReceivedError").text("❌ Please enter an amount .");
                 return;
             }
 
@@ -275,7 +281,15 @@
             $('#totalInput').val(subtotal.toFixed(2));
             calculateRemaining();
         }
+
+
     });
 </script>
+<script>
+    function openNewCheckout() {
+        window.open("http://localhost:8080/order/checkout", "_blank");
+    }
+</script>
+
 </body>
 </html>

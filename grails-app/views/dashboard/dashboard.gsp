@@ -21,10 +21,10 @@
             justify-content: center; /* Centers content horizontally */
             gap: 15px;
             background: #1e1e2d;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             color: white;
-            font-size: 22px;
+            font-size: 30px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             text-align: center; /* Ensures text inside is centered */
@@ -34,6 +34,10 @@
         .dashboard-header i {
             font-size: 28px;
         }
+        .dashboard-header h1 {
+                    font-size: 28px;
+                }
+
 
         .stats-container {
             display: flex;
@@ -197,10 +201,37 @@
     </div>
 
     <div class="charts-wrapper">
-        <div class="chart-box orders-trend-chart"> <!-- Added class for targeting -->
-            <div class="chart-title">Orders Trend Over Time</div>
-            <canvas id="ordersChart"></canvas>
-        </div>
+            <div class="chart-box orders-trend-chart">
+                <div class="chart-title">Orders Trend Over Time</div>
+                <div style="margin-bottom: 10px;">
+                    <label for="yearSelect">Year:</label>
+                    <select id="yearSelect" onchange="loadOrdersTrend()">
+                        <option value="">All Years</option>
+                        <!-- Dynamically populate years (e.g., 2020-2028) -->
+                        <g:each in="${(2020..2028).toList()}" var="year">
+                            <option value="${year}">${year}</option>
+                        </g:each>
+                    </select>
+                    <label for="monthSelect" style="margin-left: 10px;">Month:</label>
+                    <select id="monthSelect" onchange="loadOrdersTrend()">
+                        <option value="">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <canvas id="ordersChart"></canvas>
+            </div>
+
         <div class="chart-box product-quantity-chart"> <!-- Added class for targeting -->
             <div class="chart-title">Product Quantity Distribution</div>
             <canvas id="productChart"></canvas>
@@ -209,24 +240,29 @@
             <div class="chart-title">Filtered Product Quantity</div>
             <canvas id="filteredProductChart"></canvas>
         </div>
+        <div class="chart-box filtered-orders-per-month hidden">
+                    <div class="chart-title">Orders Per Month for Filtered Product</div>
+                    <canvas id="ordersPerMonthChart"></canvas>
+                </div>
     </div>
 
     <script>
-      let ordersChartInstance = null;
-      let productChartInstance = null;
-      let filteredProductChartInstance = null;
+     let ordersChartInstance = null;
+             let productChartInstance = null;
+             let filteredProductChartInstance = null;
+             let ordersPerMonthChartInstance = null;
 
-      $(document).ready(function() {
-          loadDashboardData();
-          loadOrdersTrend();
-          loadProductQuantities();
-      });
+             $(document).ready(function() {
+                 loadDashboardData();
+                 loadOrdersTrend();
+                 loadProductQuantities();
+             });
 
-      function destroyChart(chartInstance) {
-          if (chartInstance) {
-              chartInstance.destroy();
-          }
-      }
+             function destroyChart(chartInstance) {
+                 if (chartInstance) {
+                     chartInstance.destroy();
+                 }
+             }
 
       function loadDashboardData() {
           $.ajax({
@@ -245,11 +281,20 @@
       }
 
       function loadOrdersTrend() {
+          let year = $("#yearSelect").val();
+          let month = $("#monthSelect").val();
+
+          console.log("Selected Year:", year);  // Log selected year
+          console.log("Selected Month:", month); // Log selected month
+
           $.ajax({
               url: '/dashboard/getOrdersTrend',
               type: 'GET',
+              data: { year: year, month: month },
               dataType: 'json',
               success: function(data) {
+                  console.log("Response Data:", data); // Log the response from the server
+
                   let labels = data.map(item => item.date);
                   let values = data.map(item => item.count);
 
@@ -283,6 +328,11 @@
                           }
                       }
                   });
+              },
+              error: function(xhr, status, error) {
+                  console.error("Error fetching orders trend:", error);
+                  console.error("Status:", status);
+                  console.error("Response:", xhr.responseText);
               }
           });
       }

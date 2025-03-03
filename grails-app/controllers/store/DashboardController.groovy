@@ -62,15 +62,38 @@ class DashboardController {
         }
 
         println "📊 Fetching Order Trends for Admin ID: ${adminUser.id}"
+        def month = params.int('month')
+        def year = params.int('year')
+        println "Received Year: ${year}, Month: ${month}"
 
-        def ordersByDate = Order.createCriteria().list {
+        def criteria = Order.createCriteria()
+        def ordersByDate = criteria.list {
             projections {
                 groupProperty("dateCreated")
                 count("id")
             }
             eq("createdBy", adminUser)
+            if (year) {
+                // Use java.util.Date for start and end dates
+                def calendar = Calendar.getInstance()
+                calendar.set(year, month ? month - 1 : 0, 1, 0, 0, 0) // Start of month or year
+                def startDate = calendar.time
+
+                if (month) {
+                    calendar.set(year, month, 0, 23, 59, 59) // End of the month
+                } else {
+                    calendar.set(year, 11, 31, 23, 59, 59) // End of the year
+                }
+                def endDate = calendar.time
+
+                println "Filtering from ${startDate} to ${endDate}"
+                ge("dateCreated", startDate)
+                le("dateCreated", endDate)
+            }
             order("dateCreated", "asc")
         }
+
+        println "Raw Orders Data: ${ordersByDate}"
 
         def groupedOrders = ordersByDate.groupBy { row ->
             row[0]?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
@@ -78,6 +101,7 @@ class DashboardController {
             [date: date?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), count: entries.sum { it[1] }]
         }
 
+        println "Grouped Orders: ${groupedOrders}"
         render groupedOrders as JSON
     }
 

@@ -1,8 +1,10 @@
+<!-- grails-app/views/order/_itemRow.gsp -->
 <tr>
     <td>${product.productName}</td>
     <td class="item-price">${product.productPrice}</td>
     <td>
         <input type="number" name="quantity" value="1" min="1" class="quantity-input" required>
+        <span class="error-message item-error"></span> <!-- Error placeholder -->
     </td>
     <td class="item-total">${product.productPrice} PKR</td>
     <td>

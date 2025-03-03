@@ -138,7 +138,9 @@ class UrlMappings {
         "/setting/requestSubscription"(controller: "setting", action: "requestSubscription")
 
 
-        "/systemadmin/listSubscriptionRequests"(controller: "systemadmin", action: "listSubscriptionRequests")
+        "/systemAdmin/listSubscriptionRequests"(controller: "systemAdmin", action: "listSubscriptionRequests")
+        "/systemAdmin/approveSubscriptionRequest"(controller: "systemAdmin", action: "approveSubscriptionRequest")
+        "/systemAdmin/rejectSubscriptionRequest"(controller: "systemAdmin", action: "rejectSubscriptionRequest")
 
         // ✅ Subscription
         "/subscription"(controller: "subscription", action: "subscription")

@@ -25,7 +25,7 @@
                     <tr>
                         <td>${request.user.username}</td>
                         <td>${request.plan.name}</td>
-                        <td>${request.requestDate.format('yyyy-MM-dd')}</td>
+                        <g:formatDate date="${request.requestDate}" format="yyyy-MM-dd" />
                         <td>
                             <g:form action="approveSubscriptionRequest" method="POST">
                                 <g:hiddenField name="id" value="${request.id}"/>

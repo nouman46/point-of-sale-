@@ -37,17 +37,12 @@ class OrderController {
             println "🔍 getProductByBarcode called with barcode: '${params.productBarcode}'"
 
             if (!params.productBarcode) {
-                render(status: 400, text: "Barcode is required")
+                render(status: 400, text: "Please enter a barcode.") // Consistent message with client-side
                 return
             }
 
-            // Fetch the current user from session
             def currentUser = AppUser.findById(session.user.id, [fetch: [createdBy: 'join']])
-
-            // Get the actual creator (Admin) of the Shopkeeper or self if it's an Admin
             def createdById = currentUser.createdBy?.id ?: currentUser.id
-
-            // Fetch the product by barcode and ensure it belongs to the same createdBy hierarchy
             def product = Product.findByProductBarcode(params.productBarcode?.trim())
 
             if (!product || product.createdBy.id != createdById) {
@@ -64,35 +59,38 @@ class OrderController {
 
 
     @Transactional
-    def saveOrder(OrderCommand command) {
+    def saveOrder() {
         if (!session.user) {
             render(status: 403, text: "Unauthorized access")
             return
         }
 
-        if (command.hasErrors()) {
-            def errors = command.errors.allErrors.collectEntries {
-                [(it.field): message(code: it.defaultMessage)]
-            }
-            render([status: "error", message: "Validation failed", errors: errors] as JSON)
+        def jsonData = request.JSON
+        def customerName = jsonData.customerName
+        def productsData = jsonData.products
+        def amountReceived = jsonData.amountReceived as BigDecimal
+
+        if (!customerName || !productsData) {
+            render([status: "error", message: "Missing required fields"] as JSON)
             return
         }
 
-        println "🛒 Processing Order for ${command.customerName}..."
+        println "🛒 Processing Order for ${customerName}..."
 
-        // Fetch the current user
         def currentUser = AppUser.get(session.user.id)
-
-        // Get the correct `createdBy` ID: If the user is a Shopkeeper, use their Admin’s `createdBy`
         def createdByUser = currentUser.createdBy ?: currentUser
 
-        def order = new Order(customerName: command.customerName, totalAmount: 0, createdBy: createdByUser)
+        def order = new Order(
+                customerName: customerName,
+                totalAmount: 0.0G,
+                amountReceived: amountReceived ?: 0.0G,
+                createdBy: createdByUser
+        )
         order.orderItems = []
 
-        command.products.each { productData ->
+        productsData.each { productData ->
             def product = Product.findByProductBarcode(productData.productBarcode)
 
-            // Ensure the product belongs to the same createdBy hierarchy
             if (product && product.createdBy.id == createdByUser.id) {
                 if (product.productQuantity >= productData.quantity) {
                     def orderItem = new OrderItem(
@@ -100,20 +98,21 @@ class OrderController {
                             product: product,
                             quantity: productData.quantity,
                             subtotal: product.productPrice * productData.quantity,
-                            createdBy: createdByUser // Assign the correct createdBy
+                            createdBy: createdByUser
                     )
                     order.addToOrderItems(orderItem)
 
                     product.productQuantity -= productData.quantity
                     product.save(flush: true, failOnError: true)
                 } else {
-                    render([status: "error", message: "Not enough stock for ${product.productName}"] as JSON)
+                    render([status: "error", message: "Not enough stock for ${product.productName}", productBarcode: productData.productBarcode] as JSON)
                     return
                 }
             }
         }
 
-        order.totalAmount = order.orderItems.sum { it.subtotal }
+        order.totalAmount = order.orderItems.sum { it.subtotal } ?: 0.0G
+        order.remainingAmount = order.amountReceived - order.totalAmount
 
         if (order.save(flush: true, failOnError: true)) {
             render([status: "success", message: "Checkout completed!", orderId: order.id] as JSON)
@@ -121,9 +120,6 @@ class OrderController {
             render([status: "error", message: "Error while saving the order"] as JSON)
         }
     }
-
-
-
 
     @Transactional(readOnly = true)
     def orderDetails(Long id) {
@@ -156,7 +152,11 @@ class OrderController {
             ]
         }
 
-        render(view: "orderDetails", model: [order: order, orderItems: orderItems])
+        // Ensure all necessary order properties are available in the model
+        render(view: "orderDetails", model: [
+                order: order,
+                orderItems: orderItems
+        ])
     }
 
 

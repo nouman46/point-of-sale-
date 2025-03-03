@@ -33,9 +33,9 @@
         .checkout-title {
             background-color: #000; /* Black background */
             color: #fff; /* White text */
-            padding: 15px;
+            padding: 25px;
             text-align: center;
-            font-size: 28px;
+            font-size: 30px;
             font-weight: bold;
             border-radius: 8px; /* Rounded corners */
             box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1); /* Light shadow */

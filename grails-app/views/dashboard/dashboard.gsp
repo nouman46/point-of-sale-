@@ -21,10 +21,10 @@
             justify-content: center; /* Centers content horizontally */
             gap: 15px;
             background: #1e1e2d;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             color: white;
-            font-size: 22px;
+            font-size: 30px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             text-align: center; /* Ensures text inside is centered */
@@ -34,6 +34,10 @@
         .dashboard-header i {
             font-size: 28px;
         }
+        .dashboard-header h1 {
+                    font-size: 28px;
+                }
+
 
         .stats-container {
             display: flex;

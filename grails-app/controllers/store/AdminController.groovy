@@ -1,4 +1,3 @@
-
 package store
 
 import grails.gorm.transactions.Transactional
@@ -26,7 +25,6 @@ class AdminController {
             println "Current user: ${currentUser.username}, createdBy: ${currentUser.createdBy?.id}"
         }
 
-        // Determine the creator ID to filter by
         Long creatorId = currentUser.isAdmin ? currentUser.id : currentUser.createdBy?.id
         if (!creatorId) {
             flash.error = "Unable to determine creator ID!"
@@ -69,7 +67,17 @@ class AdminController {
             return
         }
 
+        // Check if a user with the same username and password already exists
         def encryptedPassword = BCrypt.hashpw(userInfo.password, BCrypt.gensalt())
+        def existingUsers = AppUser.findAllByUsername(userInfo.username)
+        def passwordMatch = existingUsers.find { BCrypt.checkpw(userInfo.password, it.password) }
+
+        if (passwordMatch) {
+            flash.error = "A user with this username and password already exists. Please choose a different password."
+            redirect(action: "roleManagement")
+            return
+        }
+
         def user = new AppUser(
                 username: userInfo.username,
                 password: encryptedPassword,
@@ -80,13 +88,12 @@ class AdminController {
         println "Attempting to save user: username=${user.username}, createdBy=${currentAdmin.id}, isAdmin=${user.isAdmin}"
 
         if (!user.save(flush: true)) {
-            // Map domain errors to user-friendly messages and log for debugging
             def errors = user.errors.allErrors.collect { error ->
                 println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
                 if (error.code == "unique" && error.field == "username") {
                     return g.message(code: "username.unique.error")
                 }
-                g.message(error: error) // Fallback for other errors
+                g.message(error: error)
             }.join("<br>")
             flash.error = "Failed to add user:<br>${errors}"
             redirect(action: "roleManagement")
@@ -154,9 +161,8 @@ class AdminController {
         bindData(userInfo, params, [exclude: ['isAdmin']])
 
         if (!userInfo.validate()) {
-            // Instead of redirecting, render the view with errors
             return render(view: "roleManagement", model: [
-                    userInfo: userInfo, // Pass the command object with errors
+                    userInfo: userInfo,
                     users: AppUser.findAllByCreatedBy(AppUser.get(currentAdmin.id)).findAll { it.assignRole?.roleName != 'ADMIN' },
                     roles: AssignRole.findAllByCreatedBy(currentAdmin.id).findAll { it.roleName != 'ADMIN' },
                     permissions: Permission.findAllByCreatedBy(currentAdmin.id),
@@ -168,6 +174,14 @@ class AdminController {
 
         user.username = userInfo.username
         if (userInfo.password?.trim()) {
+            // Check if the new password matches any existing user's password for this username
+            def existingUsers = AppUser.findAllByUsername(userInfo.username) - user // Exclude the current user
+            def passwordMatch = existingUsers.find { BCrypt.checkpw(userInfo.password, it.password) }
+            if (passwordMatch) {
+                flash.error = "This password is already used by another user with this username. Choose a different password."
+                redirect(action: "roleManagement")
+                return
+            }
             user.password = BCrypt.hashpw(userInfo.password, BCrypt.gensalt())
         }
 
@@ -200,7 +214,6 @@ class AdminController {
         flash.message = "User updated successfully!"
         redirect(action: "roleManagement")
     }
-
     @Transactional
     def editRole(RoleInfoCommand roleInfo) {
         def currentAdmin = session.user
@@ -321,9 +334,11 @@ class AdminController {
         redirect(action: "roleManagement")
     }
 
+    // Other methods (saveRole, editRole, assignRole, deleteUser, deleteRole, assignPermission) remain unchanged...
+
     @Transactional
     def assignPermission() {
-        def currentAdmin = session.user  // Get the current admin from the session
+        def currentAdmin = session.user
         if (!currentAdmin) {
             flash.error = "Unauthorized action!"
             redirect(action: "roleManagement")
@@ -337,17 +352,14 @@ class AdminController {
             return
         }
 
-        // Check if any pages were selected
         if (!params.pages) {
             flash.error = "No pages selected!"
             redirect(action: "roleManagement")
             return
         }
 
-        // Remove old permissions before adding new ones
         Permission.findAllByAssignRole(role)*.delete(flush: true)
 
-        // Iterate through each selected page
         params.pages.each { page ->
             def permission = new Permission(
                     assignRole: role,
@@ -355,7 +367,7 @@ class AdminController {
                     canView: params["canView_${page}"] == "on",
                     canEdit: params["canEdit_${page}"] == "on",
                     canDelete: params["canDelete_${page}"] == "on",
-                    createdBy: currentAdmin.id  // Set the current admin's ID
+                    createdBy: currentAdmin.id
             )
 
             if (!permission.save(flush: true, failOnError: true)) {
@@ -369,8 +381,8 @@ class AdminController {
         flash.message = "Permissions assigned successfully!"
         redirect(action: "roleManagement")
     }
-
 }
+
 import grails.validation.Validateable
 
 class UserInfoCommand implements Validateable {
@@ -382,17 +394,16 @@ class UserInfoCommand implements Validateable {
     static constraints = {
         username blank: false, nullable: false, maxSize: 50, matches: /^[a-zA-Z0-9_]+$/
         password nullable: true, blank: true, minSize: 6, maxSize: 100,
-                nullableMessage: 'password.required.error',  // Only for clarity, overridden by validator
-                blankMessage: 'password.blank.error',        // Only for clarity, overridden by validator
+                nullableMessage: 'password.required.error',
+                blankMessage: 'password.blank.error',
                 minSizeMessage: 'password.minSize.error',
                 maxSizeMessage: 'password.maxSize.error',
                 validator: { val, obj ->
                     if (!obj.isEdit && (val == null || val.trim() == "")) {
-                        return ['password.required.error'] // Return the message key as a list
+                        return ['password.required.error']
                     }
                     return true
                 }
-
         isAdmin nullable: false,
                 nullableMessage: 'isAdmin.required.error'
     }
@@ -406,7 +417,7 @@ class RoleInfoCommand implements Validateable {
     static constraints = {
         roleName blank: false, nullable: false, maxSize: 50, validator: { val, obj ->
             if (val?.trim()?.toLowerCase() == 'admin') {
-                return ['roleName.admin.error'] // Return the message key as a list
+                return ['roleName.admin.error']
             }
             return true
         }

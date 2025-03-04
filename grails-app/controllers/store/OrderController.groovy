@@ -161,7 +161,7 @@ class OrderController {
         // Fetch the order with `createdBy` eagerly loaded
         def order = Order.createCriteria().get {
             eq("id", id)
-            createAlias("createdBy", "cb", org.hibernate.criterion.CriteriaSpecification.LEFT_JOIN)
+            createAlias("createdBy", "cb", org.hibernate.criterion.CriteriaSpecification.INNER_JOIN)
         }
 
         if (!order || order.createdBy.id != (currentUser.createdBy?.id ?: currentUser.id)) {

@@ -61,7 +61,7 @@
                 <div id="amountReceivedError" class="error-message"></div>
             </div>
             <div class="mb-3 col-md-6">
-                <label class="form-label fw-bold">Remaining Amount:</label>
+                <label class="form-label fw-bold">Amount to be  returned :</label>
                 <input type="number" step="0.01" readonly name="remainingAmount" id="remainingAmount" class="form-control" value="0.00">
             </div>
         </div>

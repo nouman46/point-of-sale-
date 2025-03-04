@@ -4,6 +4,7 @@ class AppUser {
     String username
     String password
     Boolean isAdmin = false
+    Boolean isSystemAdmin = false
     UserSubscription activeSubscription
     AppUser createdBy
 
@@ -20,6 +21,6 @@ class AppUser {
     static mapping = {
         version false
         createdBy column: 'created_by_id'
-        assignRoles joinTable: [name: "app_user_assign_role", key: "app_user_id", column: "assign_role_id"]
+        assignRole joinTable: [name: "app_user_assign_role", key: "app_user_id", column: "assign_role_id"]
     }
 }

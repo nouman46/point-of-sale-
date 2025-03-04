@@ -589,7 +589,7 @@
           assign retailers, follow up with shoppers, and track revenue to stay on top of
           your retail business.
         </p>
-        <a href="#signup" class="btn btn-success btn-lg px-5 py-3 fw-bold animate__animated animate__pulse animate__infinite">Get Started for Free</a>
+        <a href="http://localhost:8080/storeOwner/register" class="btn btn-success btn-lg px-5 py-3 fw-bold animate__animated animate__pulse animate__infinite">Get Started for Free</a>
       </div>
       <!-- Image (Right on Desktop, Full Width on Mobile) -->
       <div class="col-lg-6 d-flex justify-content-center">
@@ -1013,7 +1013,7 @@
             <li><i class="fas fa-check text-primary me-2"></i> Standard Checkout</li>
             <li><i class="fas fa-times text-muted me-2"></i> Limited Support</li>
           </ul>
-          <a href="#subscribe" class="btn btn-primary btn-lg w-75 mt-4 pricing-btn">Subscribe Now</a>
+          <a href="${createLink(controller: 'storeOwner', action: 'register', params: [planId: 1])}" class="btn btn-primary btn-lg w-75 mt-4 pricing-btn">Subscribe Now</a>
         </div>
       </div>
     </div>
@@ -1036,7 +1036,7 @@
             <li><i class="fas fa-check text-success me-2"></i> Multi-User Access</li>
             <li><i class="fas fa-check text-success me-2"></i> Priority Support</li>
           </ul>
-          <a href="#subscribe" class="btn btn-success btn-lg w-75 mt-4 pricing-btn">Subscribe Now</a>
+          <a href="${createLink(controller: 'storeOwner', action: 'register', params: [planId: 2])}" class="btn btn-success btn-lg w-75 mt-4 pricing-btn">Subscribe Now</a>
         </div>
       </div>
     </div>
@@ -1058,7 +1058,7 @@
             <li><i class="fas fa-check text-warning me-2"></i> AI Data Insights</li>
             <li><i class="fas fa-check text-warning me-2"></i> 24/7 Dedicated Support</li>
           </ul>
-          <a href="#subscribe" class="btn btn-warning btn-lg w-75 mt-4 pricing-btn text-dark">Subscribe Now</a>
+          <a href="${createLink(controller: 'storeOwner', action: 'register', params: [planId: 3])}" class="btn btn-warning btn-lg w-75 mt-4 pricing-btn text-dark">Subscribe Now</a>
         </div>
       </div>
     </div>

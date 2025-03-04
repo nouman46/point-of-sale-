@@ -2,63 +2,30 @@ package store
 
 import grails.gorm.transactions.Transactional
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.mindrot.jbcrypt.BCrypt
 
 class StoreOwnerController {
-    StoreOwnerService storeOwnerService
-//    def passwordEncoder = new BCryptPasswordEncoder()
-
-    def index() { }
+    def registrationService
 
     @Transactional
-    def register() {
+    def register(StoreOwnerRegistrationCommand cmd) {
         if (request.method == 'POST') {
-            def storeOwner = new StoreOwner(params)
-            String hashedPassword = BCrypt.hashpw(params.password,BCrypt.gensalt())
-
-            def appUser = new AppUser(username: params.username, password: hashedPassword, isAdmin: true)
-
-            appUser.save(flash: true)
-            appUser.createdBy = appUser
-            appUser.save(flush: true)
-
-            // Assuming subscriptionPlanId is sent from the form
-            def plan = SubscriptionPlan.get(params.long('subscriptionPlanId'))
-            if (plan) {
-                Calendar calendar = Calendar.getInstance()
-                Date startDate = calendar.getTime()
-
-                // Assuming billingCycle is in months for this example
-                calendar.add(Calendar.MONTH, plan.billingCycle)
-                Date endDate = calendar.getTime()
-                def userSubscription = new UserSubscription(user: appUser, plan: plan, startDate:startDate, endDate: endDate)
-                appUser.activeSubscription = userSubscription
+            def logoFile = request.getFile('logo')
+            if (cmd.validate()) {
+                def result = registrationService.registerStoreOwner(cmd, logoFile)
+                if (!result.success) {
+                    render(view: "register", model: [cmd: cmd, subscriptionPlans: SubscriptionPlan.list(), errors: result.errors])
+                    return
+                }
+                flash.message = "Registration successful"
+                redirect(controller: "auth", action: "login")
+            } else {
+                flash.message = cmd.errors.allErrors.collect { message(error: it) }.join(", ")
+                render(view: "register", model: [cmd: cmd, subscriptionPlans: SubscriptionPlan.list()])
             }
-
-            def adminRole = AssignRole.findByRoleName("ADMIN")
-            appUser.addToAssignRole(adminRole)
-            appUser.save(failOnError: true)
-
-            storeOwner.appUser = appUser
-            storeOwner.save(flush: true)
-
-//            if (!storeOwnerService.saveStoreOwner(storeOwner)) {
-//                storeOwner.errors.allErrors.each {
-//                    flash.message = it.defaultMessage
-//                }
-//                render(view: "register", model:[storeOwner: new StoreOwner(), subscriptionPlans: SubscriptionPlan.list()])
-//                return
-//            }
-
-            flash.message = "Registration successful"
-            redirect(controller: "auth", action: "login")
         } else {
-            def plans = SubscriptionPlan.list()
-            plans.each { plan ->
-                println "Plan ID: ${plan.id}, Name: ${plan.name}"
-            }
-            render(view: "register", model:[storeOwner: new StoreOwner(), subscriptionPlans: SubscriptionPlan.list()])
-            println("Subscription plans: ${SubscriptionPlan.list()}")
+            def planId = params.long('planId') ?: 1L // Default to Basic plan (ID 1)
+            def initialCmd = new StoreOwnerRegistrationCommand(subscriptionPlanId: planId)
+            render(view: "register", model: [cmd: initialCmd, subscriptionPlans: SubscriptionPlan.list()])
         }
     }
 }

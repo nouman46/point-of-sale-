@@ -14,6 +14,7 @@ class RegistrationService {
                 isAdmin: true,
                 isSystemAdmin: false
         )
+        appUser.createdBy = appUser
 
         def storeOwner = new StoreOwner(
                 email: cmd.email,
@@ -43,7 +44,38 @@ class RegistrationService {
         appUser.save(flush: true)
         storeOwner.save(flush: true)
 
+        def plan = SubscriptionPlan.get(cmd.subscriptionPlanId)
+        if (!plan) {
+            appUser.errors.rejectValue('activeSubscription', 'subscription.plan.not.found', 'Invalid subscription plan')
+            return [appUser: appUser, storeOwner: storeOwner, errors: true]
+        }
+
+        def startDate = new Date()
+        def endDate = calculateEndDate(startDate, plan.billingCycle)
+        def userSubscription = new UserSubscription(
+                user: appUser,
+                plan: plan,
+                startDate: startDate,
+                endDate: endDate,
+                isActive: true
+        )
+
+        if (!userSubscription.validate()) {
+            return [appUser: appUser, storeOwner: storeOwner, errors: true]
+        }
+        userSubscription.save(flush: true)
+
+        appUser.activeSubscription = userSubscription
+        appUser.save(flush: true)
+
         return [appUser: appUser, storeOwner: storeOwner, errors: false]
 
+    }
+
+    private Date calculateEndDate(Date startDate, Integer billingCycle) {
+        Calendar cal = Calendar.getInstance()
+        cal.setTime(startDate)
+        cal.add(Calendar.MONTH, billingCycle)
+        return cal.getTime()
     }
 }

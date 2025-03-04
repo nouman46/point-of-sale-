@@ -7,82 +7,81 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 class SettingController {
     def passwordEncoder = new BCryptPasswordEncoder()
 
-    def index(Long id) {
-        def storeOwnerUsername = session.user?.id
-
-        println("storeOwnerUsername: ${storeOwnerUsername}")
-
-        def storeOwner = StoreOwner.get(storeOwnerUsername)
-
-        println("storeowner: ${storeOwner}")
-
-        if (!storeOwner) {
-            flash.message = "Store Owner not found"
+    def index() {
+        def appUser = session.user
+        if (!appUser) {
+            flash.message = "Please log in to access settings"
             redirect(controller: "auth", action: "login")
             return
         }
-        def currentAdmin = session.user // Assuming session stores the logged-in admin
+
+        def storeOwner = StoreOwner.findByAppUser(appUser)
+        println("storeowner: ${storeOwner}")
+        if (!storeOwner) {
+            flash.message = "Store Owner not found for this user"
+            redirect(controller: "auth", action: "login")
+            return
+        }
+
+        def currentAdmin = session.user
         if (!currentAdmin) {
             flash.error = "Unauthorized access!"
             return
         }
 
-        def users = AppUser.findAllByCreatedBy(currentAdmin) // Fetch only users created by this admin
+        def users = AppUser.findAllByCreatedBy(currentAdmin)
         def roles = AssignRole.list()
         def permissions = Permission.list()
         def pages = ['dashboard', 'inventory', 'listOrders', 'checkout', 'settings', 'subscription', 'roleManagement']
 
-        def appUser = storeOwner.appUser
         def currentSubscription = appUser.activeSubscription
         def pendingRequest = SubscriptionRequest.findByUserAndStatus(appUser, "pending")
         def allPlans = SubscriptionPlan.list()
 
-        render (view: "editStoreOwner", model: [storeOwner         : storeOwner,
+        render(view: "editStoreOwner", model: [storeOwner         : storeOwner,
                                                currentSubscription: currentSubscription,
                                                pendingRequest     : pendingRequest,
                                                allPlans           : allPlans,
                                                users              : users,
                                                roles              : roles,
                                                permissions        : permissions,
-                                               pages              : pages])
+                                               pages              : pages]
+        )
     }
 
     @Transactional
     def updateStoreOwner(Long id) {
-        def storeOwnerID = session.user?.id
-        if (!storeOwnerID) {
+        def appUser = session.user
+        if (!appUser) {
             flash.message = "Please log in to update your settings"
             redirect(controller: "auth", action: "login")
             return
         }
 
-        def storeOwner = StoreOwner.get(storeOwnerID)
+        def storeOwner = StoreOwner.findByAppUser(appUser)
         if (!storeOwner) {
             flash.message = "Store Owner not found"
             redirect(action: "index")
             return
         }
 
-        def appUser = storeOwner.appUser
-        if (!appUser) {
-            flash.message = "Associated user not found"
-            redirect(action: "index")
-            return
-        }
+        println("storeowner before update: ${storeOwner}")
+
+        def attachedAppUser = storeOwner.appUser
 
         bindData(storeOwner, params, [exclude: ['appUser', 'username', 'password']])
 
-        if (params.username && params.username != appUser.username) {
+        if (params.username && params.username != attachedAppUser.username) {
             if (AppUser.findByUsername(params.username)) {
                 storeOwner.errors.rejectValue('appUser', 'appUser.username.unique', "Username '${params.username}' is already taken")
                 render(view: "editStoreOwner", model: [storeOwner: storeOwner])
                 return
             }
-            appUser.username = params.username
+            attachedAppUser.username = params.username
         }
 
         if (params.password) {
-            appUser.password = passwordEncoder.encode(params.password)
+            attachedAppUser.password = passwordEncoder.encode(params.password)
         }
 
         if (!storeOwner.validate() || !appUser.validate()) {
@@ -91,17 +90,22 @@ class SettingController {
         }
 
         storeOwner.save(flush: true)
-        appUser.save(flush: true)
+        attachedAppUser.save(flush: true)
 
         flash.message = "Store Owner updated successfully"
-        redirect(action: "index", id: storeOwner.id)
+        redirect(action: "index")
     }
 
     @Transactional
     def updateLogo() {
-        def storeOwnerID = session.user?.id
-        def storeOwner = StoreOwner.get(storeOwnerID)
+        def appUser = session.user
+        if (!appUser) {
+            flash.message = "Please log in to update your settings"
+            redirect(controller: "auth", action: "login")
+            return
+        }
 
+        def storeOwner = StoreOwner.findByAppUser(appUser)
         if (!storeOwner) {
             flash.message = "Store Owner not found"
             redirect(action: "index")
@@ -147,15 +151,21 @@ class SettingController {
 
     @Transactional
     def requestSubscription() {
-        def storeOwnerID = session.user?.id
-        def storeOwner = StoreOwner.get(storeOwnerID)
+        def appUser = session.user
+        if (!appUser) {
+            flash.message = "Please log in to update your settings"
+            redirect(controller: "auth", action: "login")
+            return
+        }
+
+        def storeOwner = StoreOwner.findByAppUser(appUser)
         if (!storeOwner) {
             flash.message = "Store Owner not found"
             redirect(action: "index")
             return
         }
 
-        def appUser = storeOwner.appUser
+        appUser = storeOwner.appUser
         def planId = params.planId
         def plan = SubscriptionPlan.get(planId)
         if (!plan) {
@@ -183,23 +193,20 @@ class SettingController {
     }
 
     def displayLogo() {
-        def storeOwnerID = params.id
-        def storeOwner = StoreOwner.get(storeOwnerID)
-
+        def appUser = session.user
+        if (!appUser) {
+            response.sendError(403)
+            return
+        }
+        def storeOwner = StoreOwner.findByAppUser(appUser)
         if (!storeOwner || !storeOwner.logo) {
             response.sendError(404)
             return
         }
-
-        // Set content type
         response.contentType = storeOwner.logoContentType ?: 'image/png'
-
-        // Write bytes directly to output stream
         response.outputStream << storeOwner.logo
         response.outputStream.flush()
         response.outputStream.close()
-
-        // Prevent view rendering
         return false
     }
 
@@ -216,7 +223,7 @@ class SettingController {
             flash.error = "User already exists!"
         } else {
             // Encrypt the password before saving
-            def encryptedPassword = BCrypt.hashpw(params.password, BCrypt.gensalt())
+            def encryptedPassword = passwordEncoder.encode(params.password)
 
             def user = new AppUser(
                     username: params.username,
@@ -341,32 +348,26 @@ class SettingController {
                 return
             }
 
-            // Check if the new username already exists for another user
             if (params.username && AppUser.findByUsername(params.username) && params.username != user.username) {
                 flash.error = "Username '${params.username}' is already taken!"
                 redirect(action: "index")
                 return
             }
 
-            // Update username if provided
             if (params.username) {
                 user.username = params.username
             }
 
-            // Encrypt the password if provided
             if (params.password) {
-                user.password = BCrypt.hashpw(params.password, BCrypt.gensalt()) // Encrypt the password
+                user.password = passwordEncoder.encode(params.password)
             }
 
-            // Ensure roles are fetched to avoid lazy loading issues
             user.assignRole = user.assignRole ?: []
 
-            // Explicitly remove each role association
             user.assignRole.toList().each { role ->
                 user.removeFromAssignRole(role)
             }
 
-            // Add new roles from the form
             if (params.roles) {
                 def roleIds = params.list("roles")
                 roleIds.each { roleId ->
@@ -377,7 +378,6 @@ class SettingController {
                 }
             }
 
-            // Final save to store new role assignments and updated password
             user.save(flush: true, failOnError: true)
             flash.message = "User updated successfully!"
             redirect(action: "index")

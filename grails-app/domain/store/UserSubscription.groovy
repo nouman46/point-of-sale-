@@ -9,7 +9,16 @@ class UserSubscription {
 
 
     static constraints = {
-        user(unique: 'isActive') // Only one active subscription per user
+        user validator: { val, obj ->
+            if (obj.isActive) {
+                // Check if another active subscription exists for this user
+                def existingActive = UserSubscription.findByUserAndIsActive(val, true)
+                if (existingActive && existingActive.id != obj.id) {
+                    return ['userSubscription.user.isActive.unique'] // Error code for validation failure
+                }
+            }
+            true // Return true if validation passes
+        }
         plan(nullable: false)
         startDate(nullable: false)
         endDate(nullable: false)

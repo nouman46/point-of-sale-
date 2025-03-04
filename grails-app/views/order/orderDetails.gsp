@@ -79,7 +79,7 @@
             <p><strong>📅 Order Date:</strong> ${order.dateCreated?.toLocalDateTime()?.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</p>
             <p class="text-success fw-bold"><strong>💰 Total Price:</strong> ${order.totalAmount} PKR</p>
             <p class="text-primary fw-bold"><strong>💵 Amount Received:</strong> ${order.amountReceived} PKR</p>
-            <p class="text-danger fw-bold"><strong>➖ Remaining Amount:</strong> ${order.remainingAmount} PKR</p>
+            <p class="text-danger fw-bold"><strong>➖ Amount Returned:</strong> ${order.remainingAmount} PKR</p>
         </div>
     </div>
 

@@ -10,12 +10,13 @@ class OrderController {
 
     def checkout() {
         if (!session.user) {
-            render(status: 403, text: "Unauthorized access")
+            redirect(controller: "auth", action: "login")
             return
         }
         println "CheckoutController: index action called"
         render(view: "/order/checkout")
     }
+
     def getAllProducts() {
         try {
             def products = Product.list()
@@ -30,7 +31,7 @@ class OrderController {
     def getProductByBarcode() {
         try {
             if (!session.user) {
-                render(status: 403, text: "Unauthorized access")
+                redirect(controller: "auth", action: "login")
                 return
             }
 
@@ -124,7 +125,7 @@ class OrderController {
     @Transactional(readOnly = true)
     def orderDetails(Long id) {
         if (!session.user) {
-            render(status: 403, text: "Unauthorized access")
+            redirect(controller: "auth", action: "login")
             return
         }
 
@@ -163,7 +164,7 @@ class OrderController {
     def listOrders() {
         def currentUser = session.user
         if (!currentUser) {
-            render(status: 403, text: "Unauthorized access")
+            redirect(controller: "auth", action: "login")
             return
         }
 

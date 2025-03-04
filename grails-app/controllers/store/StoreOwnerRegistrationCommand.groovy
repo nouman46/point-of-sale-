@@ -9,7 +9,7 @@ class StoreOwnerRegistrationCommand implements  Validateable{
     String storeName
     byte[] logo
     String logoContentType
-    String subscriptionPlanId
+    Long subscriptionPlanId
 
     static constraints = {
         username nullable: false, blank: false
@@ -22,6 +22,6 @@ class StoreOwnerRegistrationCommand implements  Validateable{
         storeName nullable: false, blank: false
         logo nullable: true, maxSize: 1024 * 1024 * 5 // Max 5MB
         logoContentType nullable: true
-        subscriptionPlanId blank: false
+        subscriptionPlanId nullable: false
     }
 }

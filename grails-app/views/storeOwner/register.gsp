@@ -17,6 +17,11 @@
                             <g:if test="${flash.message}">
                                 <div class="alert alert-info" role="alert">${flash.message}</div>
                             </g:if>
+                            <g:if test="${errors}">
+                                <div class="alert alert-danger">
+                                    ${errors.allErrors.collect { message(error: it) }.join('<br>')}
+                                </div>
+                            </g:if>
                             <g:uploadForm controller="storeOwner" action="register" method="POST">
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Username</label>
@@ -50,13 +55,20 @@
                                     <label for="logo" class="form-label">Store Logo (max 5MB)</label>
                                     <input type="file" name="logo" class="form-control" />
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-3" style="display: none;">
                                     <label for="subscriptionPlanId" class="form-label">Select Subscription Plan</label>
+                                    <$--
                                     <select name="subscriptionPlanId" class="form-control">
                                       <g:each in="${subscriptionPlans}" var="plan">
                                         <option value="${plan.id}" ${cmd?.subscriptionPlanId?.toString() == plan.id.toString() ? 'selected' : ''}>${plan.name}</option>
                                       </g:each>
                                     </select>
+                                    --$>
+                                    <g:select name="subscriptionPlanId" from="${subscriptionPlans}" optionKey="id" optionValue="name" value="${cmd?.subscriptionPlanId}" class="form-control"/>
+                                </div>
+                                <div class="mb-3" style="/* display: none; */">
+                                    <label for="subscriptionPlanId" class="form-label">Select Subscription Plan</label>
+                                    <g:select name="subscriptionPlanId" from="${subscriptionPlans}" optionKey="id" optionValue="name" value="${cmd?.subscriptionPlanId}" class="form-control"/>
                                 </div>
                                 <div class="d-grid gap-2">
                                     <g:submitButton name="register" class="btn btn-primary btn-lg" value="Register" />

@@ -6,7 +6,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 class RegistrationService {
     def passwordEncoder = new BCryptPasswordEncoder()
 
-    @Transactional
+    @Transactional(rollbackFor=Exception.class)
     def registerStoreOwner(StoreOwnerRegistrationCommand cmd, logoFile) {
         def appUser = new AppUser(
                 username: cmd.username,
@@ -14,7 +14,15 @@ class RegistrationService {
                 isAdmin: true,
                 isSystemAdmin: false
         )
-        appUser.createdBy = appUser
+
+        if (AppUser.findByUsername(cmd.username)) {
+            appUser.errors.rejectValue('username', 'appUser.username.unique', 'Username already exists')
+            return [success: false, errors: appUser.errors]
+        }
+
+        if (!appUser.validate()) {
+            return [success: false, errors: appUser.errors]
+        }
 
         def storeOwner = new StoreOwner(
                 email: cmd.email,
@@ -22,14 +30,9 @@ class RegistrationService {
                 appUser: appUser
         )
 
-        if (AppUser.findByUsername(cmd.username)) {
-            appUser.errors.rejectValue('username', 'appUser.username.unique', 'Username already exists')
-            return [appUser: appUser, storeOwner: storeOwner, errors: true]
-        }
-
         if (StoreOwner.findByEmail(cmd.email)) {
             storeOwner.errors.rejectValue('email', 'storeOwner.email.unique', 'Email already exists')
-            return [appUser: appUser, storeOwner: storeOwner, errors: true]
+            return [success: false, errors: storeOwner.errors]
         }
 
         if (logoFile && !logoFile.isEmpty()) {
@@ -37,17 +40,20 @@ class RegistrationService {
             storeOwner.logoContentType = logoFile.contentType
         }
 
-        if (!appUser.validate() || !storeOwner.validate()) {
-            return [appUser: appUser, storeOwner: storeOwner, errors: true]
+        if (!storeOwner.validate()) {
+            return [success: false, errors: storeOwner.errors]
         }
 
         appUser.save(flush: true)
+        appUser.createdBy = appUser // Now safe since appUser has an ID
+        appUser.save(flush: true)
+
         storeOwner.save(flush: true)
 
         def plan = SubscriptionPlan.get(cmd.subscriptionPlanId)
         if (!plan) {
             appUser.errors.rejectValue('activeSubscription', 'subscription.plan.not.found', 'Invalid subscription plan')
-            return [appUser: appUser, storeOwner: storeOwner, errors: true]
+            return [success: false, errors: appUser.errors]
         }
 
         def startDate = new Date()
@@ -61,21 +67,25 @@ class RegistrationService {
         )
 
         if (!userSubscription.validate()) {
-            return [appUser: appUser, storeOwner: storeOwner, errors: true]
+            return [success: false, errors: userSubscription.errors]
         }
         userSubscription.save(flush: true)
 
         appUser.activeSubscription = userSubscription
         appUser.save(flush: true)
 
-        return [appUser: appUser, storeOwner: storeOwner, errors: false]
+        def adminRole = AssignRole.findByRoleName('ADMIN') ?: new AssignRole(roleName: 'ADMIN', createdBy: appUser.id).save(flush: true)
+        appUser.addToAssignRole(adminRole)
+        appUser.save(flush: true)
+
+        return [success: true, appUser: appUser, storeOwner: storeOwner]
 
     }
 
     private Date calculateEndDate(Date startDate, Integer billingCycle) {
         Calendar cal = Calendar.getInstance()
         cal.setTime(startDate)
-        cal.add(Calendar.MONTH, billingCycle)
+        cal.add(Calendar.MONTH, billingCycle ?: 1)
         return cal.getTime()
     }
 }

@@ -96,6 +96,7 @@ class SettingController {
         redirect(action: "index")
     }
 
+
     @Transactional
     def updateLogo() {
         def appUser = session.user

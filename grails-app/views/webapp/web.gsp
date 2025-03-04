@@ -434,6 +434,119 @@
     color: #0d6efd;
     text-decoration: none;
   }
+
+  /* Demo Section Styles */
+  #demo {
+    background: linear-gradient(135deg, #f5f7fa, #ffffff);
+    border-radius: 20px;
+    padding: 60px 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+    margin-top: 80px;
+    min-height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Updated Demo Section Styles */
+  #Demo {
+    background: linear-gradient(135deg, #f5f7fa, #ffffff);
+    border-radius: 20px;
+    padding: 60px 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+    margin-top: 80px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #Demo h2 {
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #0d6efd;
+  }
+
+  #Demo p {
+    margin-bottom: 40px;
+    font-size: 1.25rem;
+    color: #6c757d;
+    text-align: center;
+    max-width: 800px;
+  }
+
+  #Demo .demo-container {
+    border: 2px solid #0d6efd;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #fff;
+    width: 90%;
+    max-width: 1200px;
+    height: 80vh;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  #Demo .demo-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none; /* Initially hidden */
+  }
+
+  #Demo .demo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+  }
+
+  #Demo .demo-overlay button {
+    background: #0d6efd;
+    border: none;
+    border-radius: 30px;
+    padding: 15px 40px;
+    font-size: 1.25rem;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  #Demo .demo-overlay button:hover {
+    background: #0056b3;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+  }
+
+  #Demo .demo-overlay button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    #Demo .demo-container {
+      height: 60vh;
+      width: 95%;
+    }
+    #Demo h2 {
+      font-size: 2rem;
+    }
+    #Demo p {
+      font-size: 1rem;
+    }
+    #Demo .demo-overlay button {
+      padding: 12px 30px;
+      font-size: 1rem;
+    }
+  }
   </style>
 </head>
 <body>
@@ -454,7 +567,7 @@
         <li class="nav-item"><a class="nav-link text-dark" href="#features">Features</a></li>
         <li class="nav-item"><a class="nav-link text-dark" href="#pricing">Pricing</a></li>
         <li class="nav-item"><a class="nav-link text-dark" href="#Blog">Blog</a></li>
-        <li class="nav-item"><a class="nav-link text-dark" href="#Demo">Demo</a></li>
+
       </ul>
       <div class="d-flex">
         <a href="http://localhost:8080/auth/login" class="btn btn-outline-primary me-3 animate__animated animate__pulse animate__infinite">Sign In</a>
@@ -951,6 +1064,7 @@
     </div>
   </div>
 </div>
+
 <!-- Footer Section -->
 <footer class="bg-dark text-white py-5 mt-5">
   <div class="container">
@@ -1000,18 +1114,15 @@
   </div>
 </footer>
 <script>
-  // Smooth scroll with offset for fixed header
+  // Smooth scroll with offset for fixed header (existing code unchanged)
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault();
       const targetId = this.getAttribute('href').substring(1);
       const targetElement = document.getElementById(targetId);
       if (targetElement) {
-        // Get the height of the fixed header
         const headerHeight = document.querySelector('#header').offsetHeight;
-        // Calculate the target position, offset by header height
         const targetPosition = targetElement.offsetTop - headerHeight;
-
         window.scrollTo({
           top: targetPosition,
           behavior: 'smooth'
@@ -1020,7 +1131,7 @@
     });
   });
 
-  // Animation on scroll logic
+  // Animation on scroll logic (existing code unchanged)
   const animateOnScroll = (entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {

@@ -7,12 +7,14 @@ class OrderItem {
     BigDecimal subtotal
     AppUser createdBy  // NEW FIELD to track the creator
 
+
     static belongsTo = [order: Order, product: Product, createdBy: AppUser]  // Combine all associations into one
 
     static constraints = {
         quantity nullable: false, min: 1
         subtotal nullable: false, min: 0.0G
         createdBy nullable: false  // Ensure creator is always recorded
+
     }
 
     static mapping = {

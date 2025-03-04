@@ -7,7 +7,6 @@ import java.nio.file.Paths
 class BootStrap {
 
     def init = { servletContext ->
-
         SubscriptionPlan.withTransaction { status ->
             try {
                 // Subscription Plans
@@ -37,10 +36,14 @@ class BootStrap {
 
                 // Admin User and StoreOwner Setup
                 def passwordEncoder = new BCryptPasswordEncoder()
+
+                // Main Admin User Setup
                 def adminUser = AppUser.findByUsername("admin")
                 if (!adminUser) {
                     String hashedPassword = passwordEncoder.encode("password")
-                    adminUser = new AppUser(username: "admin", password: hashedPassword, isAdmin: true, createdBy: adminUser).save(failOnError: true)
+                    adminUser = new AppUser(username: "admin", password: hashedPassword, isAdmin: true, createdBy: null).save(failOnError: true)
+                    adminUser.createdBy = adminUser // Self-reference after saving
+                    adminUser.save(failOnError: true)
 
                     // Create or fetch the 'Basic' plan
                     def basicPlan = SubscriptionPlan.findByName("Basic")
@@ -59,24 +62,20 @@ class BootStrap {
                     }
 
                     // Assign role to admin
-                    def adminRole = AssignRole.findByRoleName("ADMIN")
-                    if (!adminRole) {
-                        adminRole = new AssignRole(roleName: "ADMIN").save(failOnError: true)
-                    }
+                    def adminRole = AssignRole.findByRoleName("ADMIN") ?: new AssignRole(roleName: "ADMIN").save(failOnError: true)
                     adminUser.addToAssignRole(adminRole)
                     adminUser.save(failOnError: true)
 
                     // Create and link a StoreOwner for the admin user
                     def storeOwner = StoreOwner.findByUsername("admin_store")
                     if (!storeOwner) {
-                        // Load the logo file from grails-app/assets/images
                         def logoPath = "grails-app/assets/images/pos-logo.png"
                         def logoFile = new File(logoPath)
                         byte[] logoBytes = null
                         String logoContentType = null
                         if (logoFile.exists()) {
                             logoBytes = Files.readAllBytes(logoFile.toPath())
-                            logoContentType = "image/png" // Corrected for .jpg file
+                            logoContentType = "image/png"
                             println "Logo file found and loaded from ${logoPath}"
                         } else {
                             println "Logo file not found at ${logoPath}"
@@ -85,21 +84,37 @@ class BootStrap {
                         println("🔐 BootStrap.init logoBytes: ${logoBytes}")
 
                         storeOwner = new StoreOwner(username: "admin_store",
-                                password: passwordEncoder.encode("storepassword"), // Use a secure password
+                                password: passwordEncoder.encode("storepassword"),
                                 email: "admin@store.com",
                                 storeName: "Admin's Store",
-                                appUser: adminUser, // Link to the admin AppUser
+                                appUser: adminUser,
                                 logo: logoBytes,
                                 logoContentType: logoContentType).save(failOnError: true)
                     }
                     println("Store owner created for admin user")
                 }
 
-                println "Admin user and subscription plans initialized"
+                // Dummy Demo Admin User Setup
+                def demoAdmin = AppUser.findByUsername("demo_admin")
+                if (!demoAdmin) {
+                    String demoHashedPassword = passwordEncoder.encode("demo123")
+                    demoAdmin = new AppUser(username: "demo_admin", password: demoHashedPassword, isAdmin: true, createdBy: null).save(failOnError: true)
+                    demoAdmin.createdBy = demoAdmin // Self-reference after saving
+                    demoAdmin.save(failOnError: true)
+
+                    // Assign ADMIN role to demo admin
+                    def demoAdminRole = AssignRole.findByRoleName("ADMIN") ?: new AssignRole(roleName: "ADMIN").save(failOnError: true)
+                    demoAdmin.addToAssignRole(demoAdminRole)
+                    demoAdmin.save(failOnError: true)
+
+                    println "✅ Dummy Demo Admin 'demo_admin' created with ID: ${demoAdmin.id}"
+                }
+
+                println "Admin user, demo admin, and subscription plans initialized"
 
             } catch (Exception e) {
                 status.setRollbackOnly()
-                println "An error occurred while initializing subscription plans and admin: ${e.message}"
+                println "An error occurred while initializing subscription plans, admin, or demo admin: ${e.message}"
             }
         }
     }

@@ -12,130 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Animate.css for animations -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <style>
-    body {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        font-family: 'Poppins', sans-serif;
-        min-height: 100vh;
-    }
-    .header {
-        background: linear-gradient(45deg, #343a40, #495057);
-        color: white;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        animation: fadeInDown 1s ease-in;
-    }
-    .btn-custom {
-        transition: all 0.3s ease-in-out;
-        padding: 10px 20px;
-        border-radius: 8px;
-    }
-    .btn-custom:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        animation: pulse 0.5s ease-in-out;
-    }
-    .search-container {
-        position: relative;
-        width: 300px;
-    }
-    #searchInput {
-        padding-left: 40px;
-        border-radius: 8px;
-        border: 2px solid #ced4da;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-    #searchInput:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
-        outline: none;
-    }
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-    }
-    table {
-        border-radius: 15px;
-        overflow: hidden;
-        background-color: white;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        animation: fadeInUp 1s ease-in;
-    }
-    th, td {
-        text-align: center;
-        vertical-align: middle;
-        padding: 12px;
-    }
-    tr:hover {
-        background-color: #f1f3f5;
-        transition: background-color 0.3s ease;
-    }
-    .modal-content {
-        border-radius: 15px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-        animation: zoomIn 0.5s ease-in;
-    }
-    th.sortable {
-        cursor: pointer;
-        position: relative;
-        background-color: #e9ecef;
-    }
-    th.sortable::after {
-        content: '\25B4\25BE';
-        font-size: 10px;
-        margin-left: 5px;
-        opacity: 0.5;
-        color: #495057;
-    }
-    th.sortable.asc::after {
-        content: '\25B4';
-        opacity: 1;
-        color: #0d6efd;
-    }
-    th.sortable.desc::after {
-        content: '\25BE';
-        opacity: 1;
-        color: #0d6efd;
-    }
-    .pagination {
-        animation: fadeIn 1s ease-in;
-    }
-    .pagination .page-item .page-link {
-        border-radius: 8px;
-        transition: all 0.3s ease-in-out;
-    }
-    .pagination .page-item:hover .page-link {
-        background-color: #0d6efd;
-        color: white;
-        transform: scale(1.05);
-    }
-    /* Animations */
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes zoomIn {
-        from { opacity: 0; transform: scale(0.8); }
-        to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-    </style>
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
     <script>
         $(document).ready(function() {
             var csrfToken = $('meta[name="_csrf"]').attr('content');
@@ -322,7 +199,7 @@
         });
     </script>
 </head>
-<body>
+<body class="${session.themeName ?: 'theme-default'}">
 <div class="container mt-5">
     <div class="header text-center animate__animated animate__fadeInDown">
         <h2 class="fw-bold"><i class="fas fa-box-open"></i> Inventory Management</h2>
@@ -336,11 +213,11 @@
         </div>
     </div>
     <div class="d-flex justify-content-end mt-4">
-<g:if test="${session.permissions?.inventory?.canEdit}">
-        <button class="btn btn-success btn-custom open-modal animate__animated animate__fadeInRight" data-action="add">
-            <i class="fas fa-box-plus"></i> Add Product
-        </button>
-</g:if>
+        <g:if test="${session.permissions?.inventory?.canEdit}">
+            <button class="btn btn-success btn-custom open-modal animate__animated animate__fadeInRight" data-action="add">
+                <i class="fas fa-box-plus"></i> Add Product
+            </button>
+        </g:if>
     </div>
 
     <table class="table table-bordered mt-3 animate__animated animate__fadeInUp" id="productTable">
@@ -364,19 +241,19 @@
                 <td>${product.productBarcode}</td>
                 <td>${product.productPrice}</td>
                 <td>${product.productQuantity}</td>
-            <g:if test="${session.permissions?.inventory?.canEdit}">
-                <td>
+                <g:if test="${session.permissions?.inventory?.canEdit}">
+                    <td>
 
-                        <button class="btn btn-warning btn-sm open-modal" data-action="edit" data-id="${product.id}">
-                            <i class="bi bi-pencil"></i> Edit
+                            <button class="btn btn-warning btn-sm open-modal" data-action="edit" data-id="${product.id}">
+                    <i class="bi bi-pencil"></i> Edit
                         </button>
-                    </g:if>
-                    <g:if test="${session.permissions?.inventory?.canDelete}">
-                        <button class="btn btn-danger btn-sm delete-product" data-id="${product.id}">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
+                </g:if>
+                <g:if test="${session.permissions?.inventory?.canDelete}">
+                    <button class="btn btn-danger btn-sm delete-product" data-id="${product.id}">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
 
-                </td>
+                    </td>
                 </g:if>
             </tr>
         </g:each>

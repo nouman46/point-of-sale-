@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="layout" content="main" />
     <title>Role Management</title>
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<style>
+/* Optional: Add a class to hide or adjust sidebar on mobile if needed */
+.sidebar-hidden .main-content {
+    margin-left: 0;
+    width: 100%;
+}
+</style>
 </head>
-<body>
+<body class="${session.themeName ?: 'theme-default'}">
 <div class="container mt-4">
     <h2 class="text-center mb-4">Role Management</h2>
 <!-- Flash messages -->
@@ -49,30 +57,30 @@
                 </div>
             </form>
 
-            <h4>Assign Role to User</h4>
-            <form action="${createLink(controller: 'admin', action: 'assignRole')}" method="post">
-                <div class="row">
-                    <div class="col-md-5">
-                        <select name="userId" class="form-select" required>
-                            <option value="">Select User</option>
-                            <g:each var="user" in="${users}">
-                                <option value="${user.id}">${user.username}</option>
-                            </g:each>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <select name="roleId" class="form-select" required>
-                            <option value="">Select Role</option>
-                            <g:each in="${roles}" var="role">
-                                <option value="${role.id}">${role.roleName}</option>
-                            </g:each>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary">Assign</button>
-                    </div>
+        <h4>Assign Role to User</h4>
+        <form action="${createLink(controller: 'admin', action: 'assignRole')}" method="post">
+            <div class="row">
+                <div class="col-md-5">
+                    <select name="userId" class="form-select" required>
+                        <option value="">Select User</option>
+                        <g:each var="user" in="${users.findAll { !it.assignRole?.any { role -> role.roleName == 'ADMIN' } }}">
+                            <option value="${user.id}">${user.username}</option>
+                        </g:each>
+                    </select>
                 </div>
-            </form>
+                <div class="col-md-5">
+                    <select name="roleId" class="form-select" required>
+                        <option value="">Select Role</option>
+                        <g:each in="${roles}" var="role">
+                            <option value="${role.id}">${role.roleName}</option>
+                        </g:each>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </div>
+        </form>
 
         <h4 class="mt-4">User List</h4>
         <table class="table table-bordered">

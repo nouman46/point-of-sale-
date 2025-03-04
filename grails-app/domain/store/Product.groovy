@@ -11,6 +11,7 @@ class Product {
     Date lastUpdated
     AppUser createdBy      // Linking product to the admin who created it
 
+
     static belongsTo = [createdBy: AppUser, admin: AppUser]
 
     static constraints = {
@@ -21,6 +22,7 @@ class Product {
         productPrice nullable: false, scale: 2, min: 0.01
         productQuantity nullable: false, min: 0
         createdBy nullable: false  // Ensure creator is always recorded
+
     }
 
     static mapping = {

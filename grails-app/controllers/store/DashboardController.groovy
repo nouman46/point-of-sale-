@@ -7,6 +7,12 @@ import java.time.format.DateTimeFormatter
 class DashboardController {
 
     def dashboard() {
+        def currentUser = session.user
+        if (!currentUser) {
+            flash.error = "Unauthorized access!"
+            redirect(controller: "auth", action: "login")
+            return
+        }
         render(view: "dashboard")
     }
 
@@ -56,15 +62,38 @@ class DashboardController {
         }
 
         println "📊 Fetching Order Trends for Admin ID: ${adminUser.id}"
+        def month = params.int('month')
+        def year = params.int('year')
+        println "Received Year: ${year}, Month: ${month}"
 
-        def ordersByDate = Order.createCriteria().list {
+        def criteria = Order.createCriteria()
+        def ordersByDate = criteria.list {
             projections {
                 groupProperty("dateCreated")
                 count("id")
             }
             eq("createdBy", adminUser)
+            if (year) {
+                // Use java.util.Date for start and end dates
+                def calendar = Calendar.getInstance()
+                calendar.set(year, month ? month - 1 : 0, 1, 0, 0, 0) // Start of month or year
+                def startDate = calendar.time
+
+                if (month) {
+                    calendar.set(year, month, 0, 23, 59, 59) // End of the month
+                } else {
+                    calendar.set(year, 11, 31, 23, 59, 59) // End of the year
+                }
+                def endDate = calendar.time
+
+                println "Filtering from ${startDate} to ${endDate}"
+                ge("dateCreated", startDate)
+                le("dateCreated", endDate)
+            }
             order("dateCreated", "asc")
         }
+
+        println "Raw Orders Data: ${ordersByDate}"
 
         def groupedOrders = ordersByDate.groupBy { row ->
             row[0]?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
@@ -72,6 +101,7 @@ class DashboardController {
             [date: date?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), count: entries.sum { it[1] }]
         }
 
+        println "Grouped Orders: ${groupedOrders}"
         render groupedOrders as JSON
     }
 
@@ -142,5 +172,50 @@ class DashboardController {
             e.printStackTrace()
             render(status: 500, text: "Internal Server Error")
         }
+    }
+    def getAIPredictions() {
+        def adminUser = getAdminUser()
+        if (!adminUser) {
+            render(status: 403, text: "Unauthorized access!")
+            return
+        }
+
+        println "🤖 Fetching AI Predictions for Admin ID: ${adminUser.id}"
+
+        def products = Product.findAllByCreatedBy(adminUser)
+        if (!products) {
+            render([] as JSON)
+            return
+        }
+
+        def predictions = []
+        products.each { product ->
+            def calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, -60)
+            def twoMonthsAgo = calendar.time
+
+            def totalQuantitySold = OrderItem.createCriteria().get {
+                projections { sum('quantity') }
+                eq("product", product)
+                order {
+                    ge("dateCreated", twoMonthsAgo)
+                    eq("createdBy", adminUser)
+                }
+            } ?: 0
+
+            def avgMonthlySales = totalQuantitySold / 2.0
+            def predictedSales = avgMonthlySales.round(2)
+            def currentStock = product.productQuantity ?: 0
+            def shouldBuy = predictedSales > currentStock
+
+            predictions << [
+                    productName: product.productName ?: "Unknown Product",
+                    predictedSales: predictedSales,
+                    shouldBuy: shouldBuy,
+                    currentStock: currentStock
+            ]
+        }
+
+        render(predictions as JSON)
     }
 }

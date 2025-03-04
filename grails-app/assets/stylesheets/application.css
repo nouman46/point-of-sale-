@@ -13,3 +13,6 @@
 *= require mobile
 *= require_self
 */
+
+*= require themes
+*= require_self

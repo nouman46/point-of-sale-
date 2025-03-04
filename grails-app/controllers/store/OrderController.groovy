@@ -71,15 +71,20 @@ class OrderController {
         def productsData = jsonData.products
         def amountReceived = jsonData.amountReceived as BigDecimal
 
-        if (!customerName || !productsData) {
-            render([status: "error", message: "Missing required fields"] as JSON)
+        def currentUser = AppUser.get(session.user.id)
+        def createdByUser = currentUser.createdBy ?: currentUser
+
+        // 1. Validate customer name
+        if (!customerName?.trim()) {
+            render([status: "error", field: "customerName", message: "Customer name is required."] as JSON)
             return
         }
 
-        println "🛒 Processing Order for ${customerName}..."
-
-        def currentUser = AppUser.get(session.user.id)
-        def createdByUser = currentUser.createdBy ?: currentUser
+        // 2. Validate products presence
+        if (!productsData || productsData.isEmpty()) {
+            render([status: "error", field: "products", message: "At least one product must be added."] as JSON)
+            return
+        }
 
         def order = new Order(
                 customerName: customerName,
@@ -89,36 +94,57 @@ class OrderController {
         )
         order.orderItems = []
 
+        // 3. Check stock quantity first
+        def stockErrors = []
         productsData.each { productData ->
             def product = Product.findByProductBarcode(productData.productBarcode)
-
-            if (product && product.createdBy.id == createdByUser.id) {
-                if (product.productQuantity >= productData.quantity) {
-                    def orderItem = new OrderItem(
-                            order: order,
-                            product: product,
-                            quantity: productData.quantity,
-                            subtotal: product.productPrice * productData.quantity,
-                            createdBy: createdByUser
-                    )
-                    order.addToOrderItems(orderItem)
-
-                    product.productQuantity -= productData.quantity
-                    product.save(flush: true, failOnError: true)
-                } else {
-                    render([status: "error", message: "Not enough stock for ${product.productName}", productBarcode: productData.productBarcode] as JSON)
-                    return
-                }
+            if (!product || product.createdBy.id != createdByUser.id) {
+                stockErrors << [barcode: productData.productBarcode, message: "Product '${productData.productBarcode}' not found or unauthorized."]
+            } else if (product.productQuantity < productData.quantity) {
+                stockErrors << [barcode: productData.productBarcode, message: "Not enough stock for '${product.productName}' (Available: ${product.productQuantity}, Requested: ${productData.quantity})."]
+            } else {
+                def orderItem = new OrderItem(
+                        order: order,
+                        product: product,
+                        quantity: productData.quantity,
+                        subtotal: product.productPrice * productData.quantity,
+                        createdBy: createdByUser
+                )
+                order.addToOrderItems(orderItem)
             }
         }
 
+        if (!stockErrors.isEmpty()) {
+            def error = stockErrors[0]
+            render([status: "error", field: "stock", productBarcode: error.barcode, message: error.message] as JSON)
+            return
+        }
+
+        // 4. Calculate total amount
         order.totalAmount = order.orderItems.sum { it.subtotal } ?: 0.0G
+
+        // 5. Check amount received
+        if (amountReceived == null || amountReceived <= 0) {
+            render([status: "error", field: "amountReceived", message: "Please enter a valid amount received."] as JSON)
+            return
+        }
+        if (amountReceived < order.totalAmount) {
+            render([status: "error", field: "amountReceived", message: "Amount received (${amountReceived} PKR) is less than total amount (${order.totalAmount} PKR)."] as JSON)
+            return
+        }
+
+        // 6. Update stock and save order
+        order.orderItems.each { orderItem ->
+            def product = orderItem.product
+            product.productQuantity -= orderItem.quantity
+            product.save(flush: true, failOnError: true)
+        }
         order.remainingAmount = order.amountReceived - order.totalAmount
 
         if (order.save(flush: true, failOnError: true)) {
             render([status: "success", message: "Checkout completed!", orderId: order.id] as JSON)
         } else {
-            render([status: "error", message: "Error while saving the order"] as JSON)
+            render([status: "error", field: "general", message: "Error while saving the order."] as JSON)
         }
     }
 

@@ -9,6 +9,7 @@ class StoreOwnerController {
     @Transactional
     def register(StoreOwnerRegistrationCommand cmd) {
         if (request.method == 'POST') {
+            print('okh g' )
             if (cmd.validate()) {
                 def logoFile = request.getFile('logo')
                 def result = registrationService.registerStoreOwner(cmd, logoFile)

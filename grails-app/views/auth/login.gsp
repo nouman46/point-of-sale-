@@ -170,7 +170,7 @@
                     <div class="mb-4 form-check">
                         <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
                         <label class="form-check-label" for="rememberMe">Remember me</label>
-                        <a href="${createLink(controller: 'auth', action: 'forgotPassword')}" class="forgot-password float-end">Forgot your password?</a>
+                        
                     </div>
                     <button type="submit" class="btn btn-primary">SIGN IN</button>
                 </form>

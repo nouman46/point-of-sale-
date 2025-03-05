@@ -288,6 +288,22 @@
     color: #ffffff;
     font-size: 0.9rem;
   }
+  #Blog .card-img-top {
+    height: 200px; /* Fixed height for uniformity */
+    object-fit: cover; /* Ensures images scale nicely */
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+  }
+  #Blog .card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  #Blog .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  }
+  #Blog .card-body {
+    padding: 15px; /* Reduced padding for a compact look */
+  }
 
   footer h5 {
     color: #ffffff;
@@ -566,7 +582,7 @@
         <li class="nav-item"><a class="nav-link text-dark" href="#modules">Modules</a></li>
         <li class="nav-item"><a class="nav-link text-dark" href="#features">Features</a></li>
         <li class="nav-item"><a class="nav-link text-dark" href="#pricing">Pricing</a></li>
-        <li class="nav-item"><a class="nav-link text-dark" href="#Blog">Blog</a></li>
+
 
       </ul>
       <div class="d-flex">
@@ -993,6 +1009,11 @@
     </div>
   </div>
 </div>
+
+
+
+
+
 <!-- Pricing Section -->
 <div class="container mt-5 py-5" id="pricing">
   <h2 class="text-center mb-5 fw-bold animate__animated animate__fadeIn">Choose Your Perfect Plan</h2>

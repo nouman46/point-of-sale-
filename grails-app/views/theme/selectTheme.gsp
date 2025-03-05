@@ -17,109 +17,112 @@
         overflow-x: hidden;
     }
 
-    /* Main Content Container - Centered, with better padding and shadow */
+    /* Main Content Container - Centered, with tighter padding and shadow */
     .main-content {
-        max-width: 1200px; /* Increased width for a more spacious layout */
-        margin: 60px auto; /* Reduced top margin for better balance */
-        padding: 50px; /* Increased padding for a cleaner look */
+        max-width: 900px; /* Reduced width for a more compact layout */
+        margin: 40px auto; /* Reduced top margin for a tighter look */
+        padding: 30px; /* Reduced padding for a cleaner, professional appearance */
         background: var(--box-bg);
         color: var(--box-text);
-        border-left: 8px solid var(--box-border);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Softer shadow for professionalism */
-        border-radius: 15px; /* Slightly larger border radius for modern look */
+        border-left: 6px solid var(--box-border); /* Thinner border for subtlety */
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Softer, more subtle shadow */
+        border-radius: 10px; /* Slightly smaller radius for a sharper look */
         transition: all 0.3s ease;
     }
 
+    /* Title - More compact and professional */
     h1 {
         color: var(--text-color);
         text-align: center;
-        margin-bottom: 50px; /* Increased spacing below title */
-        font-weight: 700; /* Bolder font weight for emphasis */
-        font-size: 2.8rem; /* Slightly larger title for impact */
+        margin-bottom: 30px; /* Reduced spacing below title */
+        font-weight: 600; /* Slightly lighter for a cleaner look */
+        font-size: 2.2rem; /* Reduced font size for compactness */
         transition: color 0.3s ease;
-        letter-spacing: -0.5px; /* Subtle letter spacing for readability */
+        letter-spacing: -0.2px; /* Less letter spacing for tighter text */
     }
 
     /* Theme Grid - Improved spacing and responsiveness */
     .theme-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Larger minimum card size for better visibility */
-        gap: 40px; /* Increased gap for breathing room */
-        padding: 0; /* Removed unnecessary padding */
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Smaller minimum card size for compactness */
+        gap: 25px; /* Reduced gap for tighter spacing */
+        padding: 0;
         transition: all 0.3s ease;
     }
 
-    /* Theme Cards - Enhanced styling for professionalism */
+    /* Theme Cards - Enhanced styling for professionalism and compactness */
     .theme-card {
-        padding: 40px; /* Increased padding for a roomier feel */
-        border-radius: 12px; /* Slightly smaller radius for consistency */
+        padding: 25px; /* Reduced padding for a more compact feel */
+        border-radius: 8px; /* Smaller radius for a sharper, modern look */
         cursor: pointer;
         background: var(--box-bg);
         color: var(--box-text);
         border: 2px solid transparent;
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05); /* Subtle shadow for a clean look */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04); /* Subtler shadow for a clean look */
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        height: 200px; /* Fixed height for uniformity */
+        height: 150px; /* Reduced height for uniformity and compactness */
     }
 
     .theme-card:hover {
-        transform: translateY(-8px); /* Slightly larger hover lift for emphasis */
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1); /* Softer hover shadow */
+        transform: translateY(-5px); /* Reduced hover lift for subtlety */
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* Softer hover shadow */
         border-color: var(--primary-color);
     }
 
     .theme-card.active {
         border: 2px solid var(--primary-color);
-        box-shadow: 0 0 25px rgba(var(--primary-color-rgb), 0.2); /* Softer glow for active state */
-        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.15); /* Softer glow for active state */
+        transform: scale(1.02); /* Reduced scale for subtlety */
     }
 
+    /* Theme Title - More compact and professional */
     .theme-title {
         margin: 0;
         color: var(--text-color);
-        font-weight: 600; /* Slightly bolder for clarity */
-        font-size: 1.5rem; /* Larger font size for better readability */
+        font-weight: 500; /* Lighter weight for a cleaner look */
+        font-size: 1.2rem; /* Reduced font size for compactness */
         transition: color 0.3s ease;
-        line-height: 1.4; /* Improved line height for readability */
+        line-height: 1.2; /* Tighter line height for readability */
     }
 
-    /* Active Theme Banner - Positioned and styled for elegance */
+    /* Active Theme Banner - Positioned and styled for elegance and compactness */
     .active-theme-banner {
         position: fixed;
-        top: 20px;
+        top: 15px; /* Reduced top position for compactness */
         left: 50%;
         transform: translateX(-50%);
         background: var(--primary-color);
         color: var(--sidebar-text);
-        padding: 12px 25px; /* Increased padding for a more polished look */
-        border-radius: 25px; /* Larger radius for a softer appearance */
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
-        font-weight: 600; /* Bolder text for emphasis */
+        padding: 8px 20px; /* Reduced padding for a tighter look */
+        border-radius: 20px; /* Slightly smaller radius for sharpness */
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08); /* Softer shadow */
+        font-weight: 500; /* Lighter weight for a cleaner look */
         animation: slideIn 0.5s ease;
         z-index: 1000;
         transition: all 0.3s ease;
+        font-size: 0.9rem; /* Reduced font size for compactness */
     }
 
     @keyframes slideIn {
         from { top: -50px; opacity: 0; }
-        to { top: 20px; opacity: 1; }
+        to { top: 15px; opacity: 1; }
     }
 
-    /* Modal Styling - Enhanced for professionalism */
+    /* Modal Styling - Enhanced for professionalism and compactness */
     .modal-content {
         background: var(--box-bg);
         color: var(--box-text);
-        border-radius: 15px; /* Larger radius for modern look */
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow */
+        border-radius: 10px; /* Smaller radius for a sharper look */
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
         animation: fadeIn 0.3s ease;
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.9); }
+        from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
     }
 
@@ -127,23 +130,23 @@
         background: var(--sidebar-bg);
         color: var(--sidebar-text);
         border-bottom: none;
-        border-radius: 15px 15px 0 0;
+        border-radius: 10px 10px 0 0;
     }
 
     .btn-confirm {
         background: var(--primary-color);
         border: none;
-        padding: 10px 25px; /* Larger padding for a bolder button */
+        padding: 8px 20px; /* Reduced padding for a tighter button */
         transition: background 0.3s ease, transform 0.3s ease;
     }
 
     .btn-confirm:hover {
-        background: color-mix(in srgb, var(--primary-color) 80%, #000000 20%);
-        transform: translateY(-3px); /* Slightly larger hover lift */
+        background: color-mix(in srgb, var(--primary-color) 85%, #000000 15%);
+        transform: translateY(-2px); /* Reduced hover lift for subtlety */
     }
 
     .btn-secondary {
-        padding: 10px 25px; /* Consistent padding with confirm button */
+        padding: 8px 20px; /* Consistent padding with confirm button, reduced for compactness */
     }
     </style>
 </head>

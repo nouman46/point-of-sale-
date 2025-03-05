@@ -313,6 +313,27 @@
             </div>
         </div>
     </div>
+    <!-- Delete User Modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">Confirm Delete User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this user?
+                </div>
+                <div class="modal-footer">
+                    <g:form controller="admin" action="deleteUser">
+                        <input type="hidden" name="id" id="deleteUserId">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </g:form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Delete Role Modal -->
     <div class="modal fade" id="deleteRoleModal" tabindex="-1" aria-labelledby="deleteRoleModalLabel" aria-hidden="true">
@@ -339,68 +360,57 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var deleteUserUrl = "${createLink(controller: 'admin', action: 'deleteUser')}";
-            var deleteRoleUrl = "${createLink(controller: 'admin', action: 'deleteRole')}";
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var deleteUserUrl = "${createLink(controller: 'admin', action: 'deleteUser')}";
+        var deleteRoleUrl = "${createLink(controller: 'admin', action: 'deleteRole')}";
 
-            document.querySelectorAll(".delete-user-btn").forEach(button => {
-                button.addEventListener("click", function () {
-                    let userId = this.dataset.id;
-                    if (confirm("Are you sure you want to delete this user?")) {
-                        fetch(deleteUserUrl + "?id=" + userId, {
-                            method: "POST",
-                            headers: {
-                                "X-HTTP-Method-Override": "DELETE"
-                            }
-                        })
-                            .then(response => response.text())
-                            .then(data => {
-                                alert(data);
-                                location.reload();
-                            })
-                            .catch(error => alert("Error deleting user: " + error));
-                    }
-                });
+        // Delete user button click handler
+        document.querySelectorAll(".delete-user-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let userId = this.dataset.id;
+                document.getElementById("deleteUserId").value = userId;
+                new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
             });
 
-            document.querySelectorAll(".delete-role-btn").forEach(button => {
-                button.addEventListener("click", function () {
-                    let roleId = this.dataset.roleId;
-                    document.getElementById("deleteRoleId").value = roleId;
-                    new bootstrap.Modal(document.getElementById('deleteRoleModal')).show();
-                });
-            });
-
-            document.querySelectorAll(".edit-role-btn").forEach(button => {
-                button.addEventListener("click", function () {
-                    let roleId = this.dataset.roleId;
-                    let roleName = this.dataset.roleName;
-                    document.getElementById("editRoleId").value = roleId;
-                    document.getElementById("editRoleName").value = roleName;
-                    new bootstrap.Modal(document.getElementById('editRoleModal')).show();
-                });
-            });
-
-            document.querySelectorAll(".edit-user-btn").forEach(button => {
-                button.addEventListener("click", function () {
-                    let userId = this.dataset.id;
-                    let username = this.dataset.username;
-                    let rolesData = this.dataset.roles || "";
-                    let assignedRoles = rolesData.split(',');
-
-                    document.getElementById("editUserId").value = userId;
-                    document.getElementById("editUsername").value = username;
-
-                    document.querySelectorAll(".role-checkbox").forEach(checkbox => {
-                        checkbox.checked = assignedRoles.includes(checkbox.value);
-                    });
-
-                    new bootstrap.Modal(document.getElementById('editUserModal')).show();
-                });
+    });
+        document.querySelectorAll(".delete-role-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let roleId = this.dataset.roleId;
+                document.getElementById("deleteRoleId").value = roleId;
+                new bootstrap.Modal(document.getElementById('deleteRoleModal')).show();
             });
         });
-    </script>
+
+        document.querySelectorAll(".edit-role-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let roleId = this.dataset.roleId;
+                let roleName = this.dataset.roleName;
+                document.getElementById("editRoleId").value = roleId;
+                document.getElementById("editRoleName").value = roleName;
+                new bootstrap.Modal(document.getElementById('editRoleModal')).show();
+            });
+        });
+
+        document.querySelectorAll(".edit-user-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let userId = this.dataset.id;
+                let username = this.dataset.username;
+                let rolesData = this.dataset.roles || "";
+                let assignedRoles = rolesData.split(',');
+
+                document.getElementById("editUserId").value = userId;
+                document.getElementById("editUsername").value = username;
+
+                document.querySelectorAll(".role-checkbox").forEach(checkbox => {
+                    checkbox.checked = assignedRoles.includes(checkbox.value);
+                });
+
+                new bootstrap.Modal(document.getElementById('editUserModal')).show();
+            });
+        });
+    });
+</script>
 
 </body>
 </html>

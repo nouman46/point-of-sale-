@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="layout" content="main" />
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
     <title>Edit Store Owner</title>
     <!-- Updated to Bootstrap 5.3 CSS -->
     <link
@@ -9,7 +10,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     />
   </head>
-  <body>
+<body class="${session.themeName ?: 'theme-default'}">
     <div class="container mt-4">
       <!-- Edit Store Owner Section (Card layout removed) -->
       <div class="row">

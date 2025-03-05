@@ -13,7 +13,6 @@ class AdminController {
             return
         }
 
-        // Re-fetch and initialize createdBy within an explicit session
         AppUser.withSession { session ->
             currentUser = AppUser.findById(currentUser.id)
             if (!currentUser) {
@@ -21,7 +20,7 @@ class AdminController {
                 redirect(action: "index")
                 return
             }
-            currentUser.createdBy?.id  // Initialize the association
+            currentUser.createdBy?.id
             println "Current user: ${currentUser.username}, createdBy: ${currentUser.createdBy?.id}"
         }
 
@@ -35,10 +34,8 @@ class AdminController {
         def users = AppUser.findAllByCreatedBy(AppUser.get(creatorId)).findAll {
             it.assignRole?.roleName != 'ADMIN'
         }
-
         def roles = AssignRole.findAllByCreatedBy(creatorId).findAll { it.roleName != 'ADMIN' }
         def permissions = Permission.findAllByCreatedBy(creatorId)
-
         def pages = ['dashboard', 'inventory', 'listOrders', 'checkout', 'settings', 'subscription', 'roleManagement']
 
         render(view: "roleManagement", model: [
@@ -61,23 +58,13 @@ class AdminController {
         bindData(userInfo, params)
 
         if (!userInfo.validate()) {
-            def errors = userInfo.errors.allErrors.collect { g.message(error: it) }.join("<br>")
-            flash.error = "Validation failed:<br>${errors}"
+            def errors = userInfo.errors.allErrors.collect { g.message(error: it) }.join(". ")
+            flash.error = "Validation failed: ${errors}"
             redirect(action: "roleManagement")
             return
         }
 
-        // Check if a user with the same username and password already exists
         def encryptedPassword = BCrypt.hashpw(userInfo.password, BCrypt.gensalt())
-        def existingUsers = AppUser.findAllByUsername(userInfo.username)
-        def passwordMatch = existingUsers.find { BCrypt.checkpw(userInfo.password, it.password) }
-
-        if (passwordMatch) {
-            flash.error = "A user with this username and password already exists. Please choose a different password."
-            redirect(action: "roleManagement")
-            return
-        }
-
         def user = new AppUser(
                 username: userInfo.username,
                 password: encryptedPassword,
@@ -89,13 +76,13 @@ class AdminController {
 
         if (!user.save(flush: true)) {
             def errors = user.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
+                println "Error detail: code=${error.code}, field=${error.field}"
                 if (error.code == "unique" && error.field == "username") {
-                    return g.message(code: "username.unique.error")
+                    return "A user with the username '${user.username}' already exists!"
                 }
-                g.message(error: error)
-            }.join("<br>")
-            flash.error = "Failed to add user:<br>${errors}"
+                g.message(error: error) ?: "An error occurred: ${error.code}"
+            }.join(". ")
+            flash.error = "Failed to add user: ${errors}"
             redirect(action: "roleManagement")
             return
         }
@@ -116,8 +103,8 @@ class AdminController {
         bindData(roleInfo, params)
 
         if (!roleInfo.validate()) {
-            def errors = roleInfo.errors.allErrors.collect { g.message(error: it) }.join("<br>")
-            flash.error = "Validation failed:<br>${errors}"
+            def errors = roleInfo.errors.allErrors.collect { g.message(error: it) }.join(". ")
+            flash.error = "Validation failed: ${errors}"
             redirect(action: "roleManagement")
             return
         }
@@ -133,10 +120,10 @@ class AdminController {
             flash.message = "Role added successfully!"
         } else {
             def errors = role.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
+                println "Error detail: code=${error.code}, field=${error.field}"
                 g.message(error: error)
-            }.join("<br>")
-            flash.error = "Failed to add role:<br>${errors}"
+            }.join(". ")
+            flash.error = "Failed to add role: ${errors}"
         }
         redirect(action: "roleManagement")
     }
@@ -174,14 +161,6 @@ class AdminController {
 
         user.username = userInfo.username
         if (userInfo.password?.trim()) {
-            // Check if the new password matches any existing user's password for this username
-            def existingUsers = AppUser.findAllByUsername(userInfo.username) - user // Exclude the current user
-            def passwordMatch = existingUsers.find { BCrypt.checkpw(userInfo.password, it.password) }
-            if (passwordMatch) {
-                flash.error = "This password is already used by another user with this username. Choose a different password."
-                redirect(action: "roleManagement")
-                return
-            }
             user.password = BCrypt.hashpw(userInfo.password, BCrypt.gensalt())
         }
 
@@ -200,13 +179,13 @@ class AdminController {
 
         if (!user.save(flush: true)) {
             def errors = user.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
+                println "Error detail: code=${error.code}, field=${error.field}"
                 if (error.code == "unique" && error.field == "username") {
-                    return g.message(code: "username.unique.error")
+                    return "A user with the username '${user.username}' already exists!"
                 }
-                return g.message(error: error)
-            }.join("<br>")
-            flash.error = "Failed to update user:<br>${errors}"
+                g.message(error: error) ?: "An error occurred: ${error.code}"
+            }.join(". ")
+            flash.error = "Failed to update user: ${errors}"
             redirect(action: "roleManagement")
             return
         }
@@ -214,6 +193,7 @@ class AdminController {
         flash.message = "User updated successfully!"
         redirect(action: "roleManagement")
     }
+
     @Transactional
     def editRole(RoleInfoCommand roleInfo) {
         def currentAdmin = session.user
@@ -233,8 +213,8 @@ class AdminController {
         bindData(roleInfo, params)
 
         if (!roleInfo.validate()) {
-            def errors = roleInfo.errors.allErrors.collect { g.message(error: it) }.join("<br>")
-            flash.error = "Validation failed:<br>${errors}"
+            def errors = roleInfo.errors.allErrors.collect { g.message(error: it) }.join(". ")
+            flash.error = "Validation failed: ${errors}"
             redirect(action: "roleManagement")
             return
         }
@@ -247,10 +227,10 @@ class AdminController {
             flash.message = "Role updated successfully!"
         } else {
             def errors = role.errors.allErrors.collect { error ->
-                println "Error detail: code=${error.code}, field=${error.field}, object=${error.object}"
+                println "Error detail: code=${error.code}, field=${error.field}"
                 g.message(error: error)
-            }.join("<br>")
-            flash.error = "Failed to update role:<br>${errors}"
+            }.join(". ")
+            flash.error = "Failed to update role: ${errors}"
         }
         redirect(action: "roleManagement")
     }
@@ -261,51 +241,46 @@ class AdminController {
         def role = AssignRole.get(params.roleId)
 
         if (user && role) {
-            if (!user.assignRole.contains(role)) { // Prevent duplicate roles
+            if (!user.assignRole.contains(role)) {
                 user.addToAssignRole(role)
-                role.addToUsers(user)  // Ensure bidirectional save
+                role.addToUsers(user)
                 user.save(flush: true, failOnError: true)
-                role.save(flush: true, failOnError: true)  // Save role as well
+                role.save(flush: true, failOnError: true)
                 flash.message = "Role assigned successfully"
             } else {
-                flash.error = "User already has this role!"
+                flash.error = "User already has the role '${role.roleName}'!"
             }
         } else {
-            flash.error = "Invalid user or role!"
+            flash.error = "Invalid user or role selected!"
         }
         redirect(action: "roleManagement")
     }
 
-    // Delete a user
     @Transactional
     def deleteUser() {
         def user = AppUser.get(params.id)
 
         if (!user) {
-            render(status: 404, text: "User not found!")
+            flash.error = "User not found!"
+            redirect(action: "roleManagement") // Assuming there's a user management page
             return
         }
 
         try {
-            // Clear associations with roles
+            // Remove user from all assigned roles
             user.assignRole.each { role ->
-                role.users.remove(user)  // Remove the user from the role's users collection
-                role.save(flush: true)   // Save the role after removing the user
+                role.users.remove(user)
+                role.save(flush: true)
             }
-
-            // Now delete the user
-            user.delete(flush: true)
-
+            user.delete(flash: true)
             flash.message = "User deleted successfully!"
-            render(status: 200, text: "User deleted successfully!")
+            redirect(action: "roleManagement") // Redirect to user management page
         } catch (Exception e) {
-            log.error("Error deleting user: ${e.message}")
-            flash.error = "Error deleting user: ${e.message}"
-            render(status: 500, text: "Error deleting user!")
+            flash.error = "Failed to delete user: ${e.message}"
+            redirect(action: "roleManagement")
         }
     }
 
-    // Delete a role
     @Transactional
     def deleteRole() {
         def role = AssignRole.get(params.id)
@@ -315,26 +290,18 @@ class AdminController {
         }
 
         try {
-            // Clear all permissions associated with the role
             Permission.findAllByAssignRole(role)*.delete(flush: true)
-
-            // Clear all users associated with the role
             role.users.each { user ->
                 user.assignRole.remove(role)
                 user.save(flush: true)
             }
-
-            // Now delete the role
             role.delete(flush: true)
-
             flash.message = "Role deleted successfully!"
         } catch (Exception e) {
-            flash.error = "Error: Unable to delete role! Ensure there are no dependencies."
+            flash.error = "Failed to delete role: Ensure there are no dependencies"
         }
         redirect(action: "roleManagement")
     }
-
-    // Other methods (saveRole, editRole, assignRole, deleteUser, deleteRole, assignPermission) remain unchanged...
 
     @Transactional
     def assignPermission() {
@@ -345,15 +312,22 @@ class AdminController {
             return
         }
 
+        Long creatorId = currentAdmin.isAdmin ? currentAdmin.id : currentAdmin.createdBy?.id
+        if (!creatorId) {
+            flash.error = "Unable to determine creator ID!"
+            redirect(action: "roleManagement")
+            return
+        }
+
         def role = AssignRole.get(params.roleId)
-        if (!role) {
-            flash.error = "Invalid Role!"
+        if (!role || role.createdBy != creatorId) {
+            flash.error = "Invalid role selected!"
             redirect(action: "roleManagement")
             return
         }
 
         if (!params.pages) {
-            flash.error = "No pages selected!"
+            flash.error = "No pages selected for permissions!"
             redirect(action: "roleManagement")
             return
         }
@@ -372,10 +346,11 @@ class AdminController {
 
             if (!permission.save(flush: true, failOnError: true)) {
                 println "Error saving permission for ${page}: " + permission.errors
-                flash.error = "Failed to save permission for ${page}"
-            } else {
-                println "Saved permission: " + permission
+                flash.error = "Failed to save permission for page '${page}'"
+                redirect(action: "roleManagement")
+                return
             }
+            println "Saved permission: " + permission
         }
 
         flash.message = "Permissions assigned successfully!"
@@ -394,18 +369,13 @@ class UserInfoCommand implements Validateable {
     static constraints = {
         username blank: false, nullable: false, maxSize: 50, matches: /^[a-zA-Z0-9_]+$/
         password nullable: true, blank: true, minSize: 6, maxSize: 100,
-                nullableMessage: 'password.required.error',
-                blankMessage: 'password.blank.error',
-                minSizeMessage: 'password.minSize.error',
-                maxSizeMessage: 'password.maxSize.error',
                 validator: { val, obj ->
                     if (!obj.isEdit && (val == null || val.trim() == "")) {
                         return ['password.required.error']
                     }
                     return true
                 }
-        isAdmin nullable: false,
-                nullableMessage: 'isAdmin.required.error'
+        isAdmin nullable: false
     }
 }
 

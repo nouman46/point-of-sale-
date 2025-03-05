@@ -137,13 +137,21 @@ class DashboardController {
                 return
             }
 
-            def adminUser = getAdminUser()
-            def product = Product.findByProductBarcode(params.barcode?.trim())
+            def barcode = params.barcode.trim()
+            println "Searching barcode: '${barcode}'"
 
-            if (!product || product.createdBy.id != adminUser.id) {
-                render(status: 404, text: "Product not found or unauthorized")
+            def adminUser = getAdminUser()
+            println "Admin User ID: ${adminUser.id}"
+
+            // Modified to match both barcode and createdBy
+            def product = Product.findByProductBarcodeAndCreatedBy(barcode, adminUser)
+            if (!product) {
+                println "No product found for barcode '${barcode}' and creator ${adminUser.id}"
+                render(status: 404, text: "Product not found ")
                 return
             }
+
+            println "Found product ID: ${product.id}, Created by: ${product.createdBy.id}"
 
             def totalOrders = Order.createCriteria().get {
                 projections {

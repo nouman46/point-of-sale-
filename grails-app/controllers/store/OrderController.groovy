@@ -38,26 +38,31 @@ class OrderController {
             println "🔍 getProductByBarcode called with barcode: '${params.productBarcode}'"
 
             if (!params.productBarcode) {
-                render(status: 400, text: "Please enter a barcode.") // Consistent message with client-side
+                render(status: 400, text: "Please enter a barcode.")
                 return
             }
+
+            def barcode = params.productBarcode.trim()
+            println "Searching barcode: '${barcode}'"
 
             def currentUser = AppUser.findById(session.user.id, [fetch: [createdBy: 'join']])
             def createdById = currentUser.createdBy?.id ?: currentUser.id
-            def product = Product.findByProductBarcode(params.productBarcode?.trim())
+            println "User ID: ${currentUser.id}, CreatedBy ID: ${createdById}"
 
-            if (!product || product.createdBy.id != createdById) {
-                render(status: 404, text: "Product not found or unauthorized")
+            def product = Product.findByProductBarcodeAndCreatedBy(barcode, AppUser.get(createdById))
+            if (!product) {
+                println "No product found for barcode '${barcode}' and creator ${createdById}"
+                render(status: 404, text: "Product not found ")
                 return
             }
 
+            println "Found product ID: ${product.id}, Created by: ${product.createdBy.id}"
             render(template: "/order/itemRow", model: [product: product])
         } catch (Exception e) {
             e.printStackTrace()
             render(status: 500, text: "Internal Server Error")
         }
     }
-
 
     @Transactional
     def saveOrder() {

@@ -8,7 +8,7 @@ class SettingController {
     def passwordEncoder = new BCryptPasswordEncoder()
 
     def index() {
-        def appUser = session.user
+        def appUser = AppUser.get(session.user?.id)
         if (!appUser) {
             flash.message = "Please log in to access settings"
             redirect(controller: "auth", action: "login")
@@ -35,7 +35,15 @@ class SettingController {
         def pages = ['dashboard', 'inventory', 'listOrders', 'checkout', 'settings', 'subscription', 'roleManagement']
 
         def currentSubscription = appUser.activeSubscription
+        if (currentSubscription) {
+            currentSubscription.plan.name
+        }
+
         def pendingRequest = SubscriptionRequest.findByUserAndStatus(appUser, "pending")
+        if (pendingRequest) {
+            pendingRequest.plan.name
+        }
+
         def allPlans = SubscriptionPlan.list()
 
         render(view: "editStoreOwner", model: [storeOwner         : storeOwner,

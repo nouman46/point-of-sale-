@@ -12,8 +12,12 @@
 <body class="${session.themeName ?: 'theme-default'}">
 
 <g:if test="${session.user}">
+
     <div class="sidebar">
         <div class="main-nav">
+            <div class="ms-5 pb-3">
+                <img src="${createLink(controller: 'setting', action: 'displayLogo')}"  style="width: 60px; height: 60px;" alt="Logo" class="logo"/>
+            </div>
             <g:if test="${session.isAdmin || session.permissions['dashboard']?.canView}">
                 <a href="${createLink(controller: 'dashboard', action: 'dashboard')}"><i class="fas fa-home"></i> Dashboard</a>
             </g:if>
@@ -40,8 +44,11 @@
                     </div>
                 </div>
             </g:if>
+            <g:if test="${session.isSystemAdmin || session.permissions?.get(manageUsers)?.canView}">
+                <a href="${createLink(controller: 'systemAdmin', action: 'listSubscriptionRequests')}"><i class="fas fa-users"></i> Users</a>
+            </g:if>
         </div>
-        <a href="${createLink(controller: 'auth', action: 'logout')}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a href="${createLink(controller: 'auth', action: 'logout')}" class="logout-btn no-permission-check"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </g:if>
 
@@ -54,69 +61,23 @@
     var isAdmin = ${session.isAdmin ?: false};
     var pagePermissions = ${raw(session.permissions as grails.converters.JSON)};
 
-    // Function to check access for a page
     function checkAccess(page) {
         if (isAdmin) return true; // Admin has full access
         var permission = pagePermissions[page];
         return permission && permission.canView;
     }
 
-    // Handle sidebar link clicks for permission checking
-    document.querySelectorAll('.sidebar a').forEach(link => {
+    document.querySelectorAll('.sidebar a:not(.no-permission-check)').forEach(link => {
         link.addEventListener('click', function(e) {
             const href = this.getAttribute('href');
-            if (!href || href === '#') return; // Skip dummy links like Settings (dropdown triggers)
-            const page = href.split('/')[2]; // Extract controller name
+            if (!href || href === '#') return;
+            const page = href.split('/')[2];
             if (!checkAccess(page)) {
                 e.preventDefault();
                 alert("You do not have access to this page.");
             }
         });
     });
-
-    // Handle dropdown toggle (for Settings dropdown)
-    document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
-        dropdown.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent default anchor behavior
-            const dropdownMenu = this.nextElementSibling; // Get the dropdown menu
-            const isExpanded = this.getAttribute('aria-expanded') === 'true';
-
-            // Toggle dropdown visibility
-            dropdownMenu.classList.toggle('show');
-            this.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
-
-            // Close other dropdowns if open (optional for single open dropdown behavior)
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                if (menu !== dropdownMenu) {
-                    menu.classList.remove('show');
-                    menu.previousElementSibling.setAttribute('aria-expanded', 'false');
-                }
-            });
-        });
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        document.querySelectorAll('.dropdown').forEach(dropdown => {
-            const toggle = dropdown.querySelector('.dropdown-toggle');
-            const menu = dropdown.querySelector('.dropdown-menu');
-            if (menu.classList.contains('show') && !dropdown.contains(e.target)) {
-                menu.classList.remove('show');
-                toggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-    });
-
-    // Optional: Close dropdown when navigating away (e.g., clicking another sidebar link)
-    document.querySelectorAll('.sidebar a:not(.dropdown-toggle)').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                menu.classList.remove('show');
-                menu.previousElementSibling.setAttribute('aria-expanded', 'false');
-            });
-        });
-    });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

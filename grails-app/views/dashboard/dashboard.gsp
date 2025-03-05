@@ -537,7 +537,7 @@
                     filteredAIPredictionChartInstance = new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: ['Error'],
+                            labels: ['Not enough Data to show prediction'],
                             datasets: [{
                                 label: 'Predicted Sales',
                                 data: [0],

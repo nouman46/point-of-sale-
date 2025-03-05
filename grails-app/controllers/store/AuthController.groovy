@@ -57,15 +57,15 @@ class AuthController {
 
                 session.permissions = permissions
 
-                println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRole}, Permissions: ${session.permissions}"
-                flash.message = "Login successful!"
-
-                // Redirect to the user's specific dashboard or screen based on their permissions
-                redirect(controller: "dashboard", action: "dashboard")
+                if (authenticatedUser.isSystemAdmin) {
+                    redirect(controller: "systemAdmin", action: "listSubscriptionRequests")
+                } else {
+                    redirect(controller: "dashboard", action: "dashboard")
+                }
                 return
+
             } else {
                 flash.message = "Invalid username or password"
-                println "❌ Authentication failed for ${username} - Password mismatch"
                 redirect(action: "login")
                 return
             }

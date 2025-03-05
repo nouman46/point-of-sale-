@@ -12,8 +12,12 @@
 <body class="${session.themeName ?: 'theme-default'}">
 
 <g:if test="${session.user}">
+
     <div class="sidebar">
         <div class="main-nav">
+            <div class="ms-5 pb-3">
+                <img src="${createLink(controller: 'setting', action: 'displayLogo')}"  style="width: 60px; height: 60px;" alt="Logo" class="logo"/>
+            </div>
             <g:if test="${session.isAdmin || session.permissions['dashboard']?.canView}">
                 <a href="${createLink(controller: 'dashboard', action: 'dashboard')}"><i class="fas fa-home"></i> Dashboard</a>
             </g:if>
@@ -40,8 +44,11 @@
                     </div>
                 </div>
             </g:if>
+            <g:if test="${session.isSystemAdmin || session.permissions?.get(manageUsers)?.canView}">
+                <a href="${createLink(controller: 'systemAdmin', action: 'listSubscriptionRequests')}"><i class="fas fa-users"></i> Users</a>
+            </g:if>
         </div>
-        <a href="${createLink(controller: 'auth', action: 'logout')}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a href="${createLink(controller: 'auth', action: 'logout')}" class="logout-btn no-permission-check"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </g:if>
 
@@ -60,11 +67,11 @@
         return permission && permission.canView;
     }
 
-    document.querySelectorAll('.sidebar a').forEach(link => {
+    document.querySelectorAll('.sidebar a:not(.no-permission-check)').forEach(link => {
         link.addEventListener('click', function(e) {
             const href = this.getAttribute('href');
-            if (!href || href === '#') return; // Skip dummy links like Settings
-            const page = href.split('/')[2]; // Extract controller name
+            if (!href || href === '#') return;
+            const page = href.split('/')[2];
             if (!checkAccess(page)) {
                 e.preventDefault();
                 alert("You do not have access to this page.");

@@ -2,26 +2,54 @@
 <html>
 <head>
     <meta name="layout" content="main" />
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
     <title>Checkout</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
+
 
     <style>
 
 
-    /* Specific overrides or additions */
+    / Specific overrides or additions /
     .quantity-input { width: 70px; display: inline-block; }
+    .error-message {
+                color: red;
+                font-size: 14px;
+                margin-left: 10px;
+                display: block !important;
+            }
     .checkout-container { display: none; }
-    /* Optional: Add a class to hide or adjust sidebar on mobile if needed */
+    / Optional: Add a class to hide or adjust sidebar on mobile if needed /
     .sidebar-hidden .main-content {
         margin-left: 0;
         width: 100%;
     }
+    .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0; /* Align to the left */
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 10px; /* Adjust spacing */
+        font-size: 20px;
+        color: #555;
+    }
+
+    #barcodeInput {
+        padding-left: 40px; /* Push input text to the right to make space for the icon */
+        width: 100%;
+    }
+
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-<body>
+<body class="${session.themeName ?: 'theme-default'}">
 <div class="container mt-4 checkout-container fade-row">
     <div class="header">
         <h1 class="checkout-title">🛒 Checkout</h1>
@@ -181,22 +209,25 @@
                         $("#total").text("0.00 PKR");
                         $("#remainingAmount").val("0.00");
                     } else {
-                        if (response.field === "customerName") {
-                            $("#customerNameError").text("❌ " + response.message);
-                        } else if (response.field === "products") {
-                            $("#barcodeError").text("❌ " + response.message);
-                        } else if (response.field === "stock" && response.productBarcode) {
-                            let row = $("#itemsBody tr").filter(function() {
-                                return $(this).find(".product-barcode").text().trim() === response.productBarcode;
-                            });
-                            row.find(".item-error").text("❌ " + response.message);
-                        } else if (response.field === "amountReceived") {
-                            $("#amountReceivedError").text("❌ " + response.message);
-                        } else {
-                            $("#barcodeError").text("❌ " + response.message);
-                        }
-                    }
-                },
+                              if (response.field === "customerName") {
+                                  $("#customerNameError").text("❌ " + response.message);
+                              } else if (response.field === "products" && response.productBarcode) {
+                                  let row = $("#itemsBody tr").filter(function() {
+                                      return $(this).find(".product-barcode").text().trim() === response.productBarcode;
+                                  });
+                                  row.find(".item-error").text("❌ " + response.message);
+                              } else if (response.field === "stock" && response.productBarcode) {
+                                  let row = $("#itemsBody tr").filter(function() {
+                                      return $(this).find(".product-barcode").text().trim() === response.productBarcode;
+                                  });
+                                  row.find(".item-error").text("❌ " + response.message);
+                              } else if (response.field === "amountReceived") {
+                                  $("#amountReceivedError").text("❌ " + response.message);
+                              } else {
+                                  $("#barcodeError").text("❌ " + response.message);
+                              }
+                          }
+                      },
                 error: function (xhr) {
                     $("#barcodeError").text("❌ " + (xhr.responseText || "Server error occurred."));
                 }

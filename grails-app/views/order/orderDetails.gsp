@@ -7,9 +7,62 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
-    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
+    <!-- Custom CSS for Smooth Animations -->
+    <style>
+        /* Smooth Fade-in Animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hover effect on rows */
+        .table tbody tr {
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Smooth Button Hover Effect */
+        .btn {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Hide sidebar, URL bar, and buttons when printing */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .printable-content, .printable-content * {
+                visibility: visible;
+            }
+            .printable-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                margin: 0;
+            }
+        }
+    </style>
 </head>
-<body class="${session.themeName ?: 'theme-default'}">
+<body>
 
 <div class="container mt-5 fade-in printable-content">
     <!-- Order Header -->
@@ -25,6 +78,8 @@
             <p><strong>👤 Customer Name:</strong> ${order.customerName}</p>
             <p><strong>📅 Order Date:</strong> ${order.dateCreated?.toLocalDateTime()?.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</p>
             <p class="text-success fw-bold"><strong>💰 Total Price:</strong> ${order.totalAmount} PKR</p>
+            <p class="text-primary fw-bold"><strong>💵 Amount Received:</strong> ${order.amountReceived} PKR</p>
+            <p class="text-danger fw-bold"><strong>➖ Amount Returned:</strong> ${order.remainingAmount} PKR</p>
         </div>
     </div>
 
@@ -52,12 +107,7 @@
         </table>
     </div>
 
-    <!-- Back Button -->
-    <div class="text-end mt-4 fade-in no-print">
-        <a href="${createLink(controller: 'order', action: 'listOrders')}" class="btn btn-secondary btn-lg">
-            ⬅️ Back to Orders
-        </a>
-    </div>
+
 </div>
 
 <!-- JavaScript for triggering animations dynamically and print function -->

@@ -173,6 +173,8 @@ class DashboardController {
             render(status: 500, text: "Internal Server Error")
         }
     }
+
+
     def getAIPredictions() {
         def adminUser = getAdminUser()
         if (!adminUser) {

@@ -86,6 +86,14 @@ class OrderController {
             return
         }
 
+        // 3. Validate product quantities
+        def invalidProducts = productsData.findAll { it.quantity == 0 }
+        if (!invalidProducts.isEmpty()) {
+            def error = invalidProducts[0] // Take the first invalid product
+            render([status: "error", field: "products", productBarcode: error.productBarcode, message: "Product quantity cannot be zero."] as JSON)
+            return
+        }
+
         def order = new Order(
                 customerName: customerName,
                 totalAmount: 0.0G,
@@ -94,7 +102,7 @@ class OrderController {
         )
         order.orderItems = []
 
-        // 3. Check stock quantity first
+        // 4. Check stock quantity
         def stockErrors = []
         productsData.each { productData ->
             def product = Product.findByProductBarcode(productData.productBarcode)
@@ -120,10 +128,10 @@ class OrderController {
             return
         }
 
-        // 4. Calculate total amount
+        // 5. Calculate total amount
         order.totalAmount = order.orderItems.sum { it.subtotal } ?: 0.0G
 
-        // 5. Check amount received
+        // 6. Check amount received
         if (amountReceived == null || amountReceived <= 0) {
             render([status: "error", field: "amountReceived", message: "Please enter a valid amount received."] as JSON)
             return
@@ -133,7 +141,7 @@ class OrderController {
             return
         }
 
-        // 6. Update stock and save order
+        // 7. Update stock and save order
         order.orderItems.each { orderItem ->
             def product = orderItem.product
             product.productQuantity -= orderItem.quantity

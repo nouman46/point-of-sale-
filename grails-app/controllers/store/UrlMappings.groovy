@@ -3,17 +3,19 @@ package store
 class UrlMappings {
 
     static mappings = {
-        // Default mapping to handle all controller/action routes
+
+        // ✅ Default Catch-All Mapping (Handles all controller/action routes dynamically)
         "/$controller/$action?/$id?(.$format)?" {
             constraints {
                 // Add constraints if needed
             }
         }
 
-        // ✅ Default Landing Page (single root mapping)
-        "/"(controller: "webapp", action: "web")
+        // ✅ Default Landing Page
+        "/"(controller: "auth", action: "login")
 
         // ✅ Authentication
+        "/auth/login"(controller: "auth", action: "login")
         "/auth/logout"(controller: "auth", action: "logout")
 
         // ✅ Admin Role Management
@@ -31,7 +33,7 @@ class UrlMappings {
         "/admin/deleteRole"(controller: "admin", action: "deleteRole")
 
         // ✅ Dashboard
-        "/dashboard"(controller: "dashboard", action: "dashboard") // Assuming 'dashboard' is the main action
+        "/dashboard"(controller: "dashboard", action: "dashboard")
         "/dashboard/getOrdersData"(controller: "dashboard", action: "getOrdersData")
         "/dashboard/getOrdersTrend"(controller: "dashboard", action: "getOrdersTrend")
         "/dashboard/getProductQuantities"(controller: "dashboard", action: "getProductQuantities")
@@ -57,33 +59,26 @@ class UrlMappings {
         // ✅ Sales
         "/sales"(controller: "sales", action: "sales")
 
-        // ✅ Settings
-
-        "/setting/updateStoreOwner"(controller: "setting", action: "updateStoreOwner")
-        "/setting/updateLogo"(controller: "setting", action: "updateLogo")
-        "/setting/testLogo"(controller: "setting", action: "testLogo")
-
-        // ✅ Store Owner
-        // ✅ Settings
+        // ✅ Settings Management
         "/settings"(controller: "setting", action: "index")
         "/settings/index"(controller: "setting", action: "index")
         "/setting/update"(controller: "setting", action: "index")
-        "/storeOwner/register"(controller: "storeOwner", action: "register")
-        "/storeOwner/$id"(controller: "storeOwner", action: "show")
-        "/storeOwner/$id/edit"(controller: "storeOwner", action: "edit")
-        "/storeOwner/update/$id"(controller: "setting", action: "updateStoreOwner", method: "PUT")
-
-        // ✅ Subscription
-        "/subscription"(controller: "subscription", action: "index")
-        "/subscription/subscribe"(controller: "subscription", action: "subscribe")
-
-        "/settings/index"(controller: "setting", action: "index")
         "/setting/updateStoreOwner"(controller: "setting", action: "updateStoreOwner")
         "/setting/updateLogo"(controller: "setting", action: "updateLogo")
         "/setting/testLogo"(controller: "setting", action: "testLogo")
         "/setting/requestSubscription"(controller: "setting", action: "requestSubscription")
 
-        // ✅ Webapp
+        // ✅ Store Owner Management
+        "/storeOwner/register"(controller: "storeOwner", action: "register")
+        "/storeOwner/$id"(controller: "storeOwner", action: "show")
+        "/storeOwner/$id/edit"(controller: "storeOwner", action: "edit")
+        "/storeOwner/update/$id"(controller: "setting", action: "updateStoreOwner", method: "PUT")
+
+        // ✅ Subscription Management
+        "/subscription"(controller: "subscription", action: "index")
+        "/subscription/subscribe"(controller: "subscription", action: "subscribe")
+
+        // ✅ Webapp Routes
         "/webapp"(controller: "webapp", action: "index")
         "/webapp/web"(controller: "webapp", action: "web")
 

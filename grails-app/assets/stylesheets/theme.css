@@ -535,7 +535,6 @@ tr:hover {
     color: var(--text-color);
     margin-bottom: 5px;
 }
-
 /* Dropdown Styles */
 .dropdown {
     position: relative;
@@ -546,32 +545,50 @@ tr:hover {
     position: absolute;
     left: 0; /* Aligns with Settings */
     top: 100%; /* Positions below Settings */
-    background: var(--sidebar-bg);
+    background: var(--sidebar-bg); /* Consistent background */
     border: none;
     box-shadow: 2px 0 5px var(--box-shadow);
     width: 100%; /* Matches sidebar width */
     z-index: 1001; /* Above other content */
+    color: var(--sidebar-text); /* Ensure text is always readable */
 }
 
-.dropdown:hover .dropdown-menu {
-    display: block; /* Show on hover */
+/* Show dropdown when parent is hovered or active */
+.dropdown:hover .dropdown-menu,
+.dropdown.active .dropdown-menu {
+    display: block; /* Show on hover or when active */
 }
 
+/* Dropdown menu links */
 .dropdown-menu a {
     display: flex;
     align-items: center;
     padding: 15px 20px;
-    color: var(--sidebar-text);
+    color: var(--sidebar-text); /* Consistent text color */
     text-decoration: none;
     font-size: 16px;
     transition: background 0.3s, padding-left 0.3s;
 }
 
-.dropdown-menu a:hover {
-    background: var(--sidebar-hover);
+/* Hover and active states for dropdown links */
+.dropdown-menu a:hover,
+.dropdown-menu a.active {
+    background: var(--sidebar-hover); /* Hover background */
     padding-left: 25px;
+    color: var(--sidebar-text); /* Ensure text remains visible */
 }
-
+.dropdown-menu {
+    all: unset; /* Reset all inherited styles */
+    /* Then reapply your custom styles */
+    background: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+    /* ... other styles ... */
+}
+/* Ensure no override to white background */
+.dropdown-menu.show {
+    background: var(--sidebar-bg) !important; /* Force background */
+    color: var(--sidebar-text) !important; /* Force text color */
+}
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

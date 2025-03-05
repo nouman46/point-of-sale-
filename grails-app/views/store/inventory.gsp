@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="layout" content="main" />
+    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
     <title>Inventory</title>
     <meta name="_csrf" content="${session['csrfToken']}" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
+
     <script>
         $(document).ready(function() {
             var csrfToken = $('meta[name="_csrf"]').attr('content');
@@ -206,13 +206,12 @@
 <body class="${session.themeName ?: 'theme-default'}">
 <div class="container mt-5">
     <div class="header">
-        <h2 class="fw-bold"><i class="fas fa-box-open"></i> Inventory Management</h2>
+        <h1 class=""><i class="fas fa-box-open"></i> Inventory Management</h1>
     </div>
     <br>
     <div id="success-message" class="alert alert-success" style="display: none;"></div>
     <div class="d-flex mb-3">
         <div class="search-container animate__animated animate__fadeInLeft">
-            <i class="fas fa-search search-icon"></i>
             <input type="text" id="searchInput" class="form-control" placeholder="Search products" style="width: 300px;"/>
         </div>
     </div>

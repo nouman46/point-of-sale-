@@ -37,6 +37,7 @@ class UrlMappings {
         "/dashboard/getProductQuantities"(controller: "dashboard", action: "getProductQuantities")
         "/dashboard/getOrdersOverTime"(controller: "dashboard", action: "getOrdersOverTime")
         "/dashboard/getProductDataByBarcode"(controller: "dashboard", action: "getProductDataByBarcode")
+        "/dashboard/getAIPredictions"(controller: "dashboard", action: "getAIPredictions")
 
         // ✅ Store & Inventory
         "/store/inventory"(controller: "store", action: "inventory")
@@ -82,7 +83,7 @@ class UrlMappings {
         "/setting/testLogo"(controller: "setting", action: "testLogo")
         "/setting/requestSubscription"(controller: "setting", action: "requestSubscription")
 
-                // ✅ Webapp
+        // ✅ Webapp
         "/webapp"(controller: "webapp", action: "index")
         "/webapp/web"(controller: "webapp", action: "web")
 

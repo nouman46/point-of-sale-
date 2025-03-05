@@ -6,25 +6,24 @@
     <title>Role Management</title>
     <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-<style>
-/* Optional: Add a class to hide or adjust sidebar on mobile if needed */
-.sidebar-hidden .main-content {
-    margin-left: 0;
-    width: 100%;
-}
-</style>
 </head>
 <body class="${session.themeName ?: 'theme-default'}">
-<div class="container mt-4">
-    <h2 class="text-center mb-4">Role Management</h2>
+<div class="role-management-container">
+    <h2>Role Management</h2>
+
 <!-- Flash messages -->
     <g:if test="${flash.message}">
-        <div class="alert alert-success">${flash.message}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            ${flash.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     </g:if>
     <g:if test="${flash.error}">
-        <div class="alert alert-danger">${flash.error}</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            ${flash.error}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     </g:if>
-
 
 <!-- Tabs Navigation -->
     <ul class="nav nav-tabs" id="roleTabs">
@@ -39,100 +38,97 @@
         </li>
     </ul>
 
-    <div class="tab-content mt-3">
+    <div class="tab-content">
         <!-- Users Section -->
         <div class="tab-pane fade show active" id="users">
             <h4>Add User</h4>
             <form id="addUserForm" action="${createLink(controller: 'admin', action: 'saveUser')}" method="POST" class="mb-4">
-                <div class="row">
-                    <div class="col-md-4">
+                <div class="row align-items-end">
+                    <div class="col-md-4 mb-3">
                         <input type="text" id="addUsername" name="username" class="form-control" placeholder="Username" required>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <input type="password" id="addPassword" name="password" class="form-control" placeholder="Password" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 mb-3">
                         <button type="submit" class="btn btn-success">Add User</button>
                     </div>
                 </div>
             </form>
 
-        <h4>Assign Role to User</h4>
-        <form action="${createLink(controller: 'admin', action: 'assignRole')}" method="post">
-            <div class="row">
-                <div class="col-md-5">
-                    <select name="userId" class="form-select" required>
-                        <option value="">Select User</option>
-                        <g:each var="user" in="${users.findAll { !it.assignRole?.any { role -> role.roleName == 'ADMIN' } }}">
-                            <option value="${user.id}">${user.username}</option>
-                        </g:each>
-                    </select>
+            <h4>Assign Role to User</h4>
+            <form action="${createLink(controller: 'admin', action: 'assignRole')}" method="post">
+                <div class="row align-items-end">
+                    <div class="col-md-5 mb-3">
+                        <select name="userId" class="form-select" required>
+                            <option value="">Select User</option>
+                            <g:each var="user" in="${users.findAll { !it.assignRole?.any { role -> role.roleName == 'ADMIN' } }}">
+                                <option value="${user.id}">${user.username}</option>
+                            </g:each>
+                        </select>
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <select name="roleId" class="form-select" required>
+                            <option value="">Select Role</option>
+                            <g:each in="${roles}" var="role">
+                                <option value="${role.id}">${role.roleName}</option>
+                            </g:each>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
                 </div>
-                <div class="col-md-5">
-                    <select name="roleId" class="form-select" required>
-                        <option value="">Select Role</option>
-                        <g:each in="${roles}" var="role">
-                            <option value="${role.id}">${role.roleName}</option>
-                        </g:each>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </div>
-            </div>
-        </form>
+            </form>
 
-        <h4 class="mt-4">User List</h4>
-        <table class="table table-bordered">
-            <thead>
-            <tr>
-                <th>Username</th>
-                <th>Role(s)</th>
-                <th>Edit</th>
-                <th>Delete</th>
-            </tr>
-            </thead>
-            <tbody>
-            <g:each var="user" in="${users}">
+            <h4 class="mt-4">User List</h4>
+            <table class="table table-bordered">
+                <thead>
                 <tr>
-                    <td>${user.username}</td>
-                    <td>
-                        <g:each var="role" in="${user.assignRole}">
-                            <span class="badge bg-info">${role.roleName}</span>
-                        </g:each>
-                    </td>
-                    <td>
-                    <!-- Conditionally display Edit button if user is not assigned 'ADMIN' role -->
-                        <g:if test="${!user.assignRole*.roleName.contains('ADMIN') && session.permissions?.roleManagement?.canEdit}">
-                            <button class="btn btn-warning btn-sm edit-user-btn" data-id="${user.id}" data-username="${user.username}" data-roles="${user.assignRole*.id.join(',')}">
-                                ✏️ Edit
-                            </button>
-                        </g:if>
-                    </td>
-                    <td>
-                    <!-- Conditionally display Delete button if user is not assigned 'ADMIN' role -->
-                        <g:if test="${!user.assignRole*.roleName.contains('ADMIN') && session.permissions?.roleManagement?.canDelete}">
-                            <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}">
-                                ❌ Delete
-                            </button>
-                        </g:if>
-                    </td>
+                    <th>Username</th>
+                    <th>Role(s)</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
                 </tr>
-            </g:each>
-            </tbody>
-        </table>
-
-    </div>
+                </thead>
+                <tbody>
+                <g:each var="user" in="${users}">
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>
+                            <g:each var="role" in="${user.assignRole}">
+                                <span class="badge">${role.roleName}</span>
+                            </g:each>
+                        </td>
+                        <td>
+                            <g:if test="${!user.assignRole*.roleName.contains('ADMIN') && session.permissions?.roleManagement?.canEdit}">
+                                <button class="btn btn-warning btn-sm edit-user-btn" data-id="${user.id}" data-username="${user.username}" data-roles="${user.assignRole*.id.join(',')}">
+                                    ✏️ Edit
+                                </button>
+                            </g:if>
+                        </td>
+                        <td>
+                            <g:if test="${!user.assignRole*.roleName.contains('ADMIN') && session.permissions?.roleManagement?.canDelete}">
+                                <button class="btn btn-danger btn-sm delete-user-btn" data-id="${user.id}">
+                                    ❌ Delete
+                                </button>
+                            </g:if>
+                        </td>
+                    </tr>
+                </g:each>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Roles Section -->
         <div class="tab-pane fade" id="roles">
             <h4>Add Role</h4>
             <form id="addRoleForm" action="${createLink(controller: 'admin', action: 'saveRole')}" method="POST" class="mb-4">
-                <div class="row">
-                    <div class="col-md-8">
+                <div class="row align-items-end">
+                    <div class="col-md-8 mb-3">
                         <input type="text" id="addRoleName" name="roleName" class="form-control" placeholder="Role Name" required>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <button type="submit" class="btn btn-success">Add Role</button>
                     </div>
                 </div>
@@ -152,15 +148,15 @@
                         <td>${role.roleName}</td>
                         <td>
                             <g:if test="${session.permissions?.roleManagement?.canEdit}">
-                            <button class="btn btn-warning btn-sm edit-role-btn" data-role-id="${role.id}" data-role-name="${role.roleName}">
-                                ✏️ Edit
-                            </button>
+                                <button class="btn btn-warning btn-sm edit-role-btn" data-role-id="${role.id}" data-role-name="${role.roleName}">
+                                    ✏️ Edit
+                                </button>
                             </g:if>
-                    <g:if test="${session.permissions?.roleManagement?.canDelete}">
-                            <button class="btn btn-danger btn-sm delete-role-btn" data-role-id="${role.id}">
-                                ❌ Delete
-                            </button>
-                    </g:if>
+                            <g:if test="${session.permissions?.roleManagement?.canDelete}">
+                                <button class="btn btn-danger btn-sm delete-role-btn" data-role-id="${role.id}">
+                                    ❌ Delete
+                                </button>
+                            </g:if>
                         </td>
                     </tr>
                 </g:each>
@@ -172,19 +168,19 @@
         <div class="tab-pane fade" id="permissions">
             <h4>Assign Permissions to Role</h4>
             <form action="${createLink(controller: 'admin', action: 'assignPermission')}" method="post">
-                <div class="row">
-                    <div class="col-md-6">
-                        <select name="roleId" id="roleDropdown" class="form-control">
+                <div class="row align-items-end">
+                    <div class="col-md-6 mb-3">
+                        <select name="roleId" id="roleDropdown" class="form-select">
                             <option value="">-- Select Role --</option>
                             <g:each in="${roles}" var="role">
                                 <option value="${role.id}">${role.roleName}</option>
                             </g:each>
                         </select>
                     </div>
-                    <div class="col-md-6">
-<g:if test="${session.permissions?.roleManagement?.canEdit}">
-                        <button type="submit" class="btn btn-primary">Save Permissions</button>
-</g:if>
+                    <div class="col-md-6 mb-3 text-end">
+                        <g:if test="${session.permissions?.roleManagement?.canEdit}">
+                            <button type="submit" class="btn btn-primary">Save Permissions</button>
+                        </g:if>
                     </div>
                 </div>
 
@@ -203,9 +199,9 @@
                             <td>
                                 <input type="hidden" name="pages" value="${page}"/> ${page}
                             </td>
-                            <td><input type="checkbox" name="canView_${page}"></td>
-                            <td><input type="checkbox" name="canEdit_${page}"></td>
-                            <td><input type="checkbox" name="canDelete_${page}"></td>
+                            <td><input type="checkbox" name="canView_${page}" class="form-check-input"></td>
+                            <td><input type="checkbox" name="canEdit_${page}" class="form-check-input"></td>
+                            <td><input type="checkbox" name="canDelete_${page}" class="form-check-input"></td>
                         </tr>
                     </g:each>
                     </tbody>
@@ -214,14 +210,14 @@
 
             <g:set var="groupedPermissions" value="${permissions.groupBy { it.assignRole.roleName }}" />
 
-            <div class="accordion" id="permissionsAccordion">
+            <div class="accordion mt-4" id="permissionsAccordion">
                 <g:each var="entry" in="${groupedPermissions}" status="index">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading${index}">
                             <button class="accordion-button ${index == 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse"
                                     data-bs-target="#collapse${index}" aria-expanded="${index == 0 ? 'true' : 'false'}"
                                     aria-controls="collapse${index}">
-                                ${entry.key} <!-- Role Name -->
+                                ${entry.key}
                             </button>
                         </h2>
                         <div id="collapse${index}" class="accordion-collapse collapse ${index == 0 ? 'show' : ''}"
@@ -288,7 +284,7 @@
                             <input type="password" class="form-control" id="editPassword" name="password">
                             <div class="form-text">Leave blank to keep the current password</div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -310,7 +306,7 @@
                             <label for="editRoleName" class="form-label">Role Name</label>
                             <input type="text" class="form-control" id="editRoleName" name="roleName">
                         </div>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -329,13 +325,16 @@
                     <form action="${createLink(controller: 'admin', action: 'deleteRole')}" method="post">
                         <input type="hidden" name="id" id="deleteRoleId">
                         <p>Are you sure you want to delete this role?</p>
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>

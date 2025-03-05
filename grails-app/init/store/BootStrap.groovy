@@ -50,7 +50,7 @@ class BootStrap {
                                 user: adminUser,
                                 plan: basicPlan,
                                 startDate: new Date(),
-                                endDate: calculateEndDate(new Date(), 365)
+                                endDate: calculateEndDate(new Date(), 30)
                         )
                         adminSubscription.save(failOnError: true)
                         adminUser.activeSubscription = adminSubscription

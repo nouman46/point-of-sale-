@@ -17,6 +17,7 @@ class Permission {
     static mapping = {
         version false
         assignRole column: "assign_role_id"  // Ensure correct FK mapping
+
         createdBy column: 'created_by_id'    // Map to a specific column
     }
 }

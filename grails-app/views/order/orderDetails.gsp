@@ -75,6 +75,10 @@
     <div class="card shadow-sm mb-4 fade-in">
         <div class="card-body">
             <h5 class="card-title text-secondary fw-bold">Customer Information</h5>
+             <div class="ms-5 pb-3">
+                <img src="${createLink(controller: 'setting', action: 'displayLogo')}"  style="width: 60px; height: 60px;" alt="Logo" class="logo"/>
+            </div>
+
             <p><strong>👤 Customer Name:</strong> ${order.customerName}</p>
             <p><strong>📅 Order Date:</strong> ${order.dateCreated?.toLocalDateTime()?.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}</p>
             <p class="text-success fw-bold"><strong>💰 Total Price:</strong> ${order.totalAmount} PKR</p>

@@ -66,7 +66,7 @@
                                     --$>
                                     <g:select name="subscriptionPlanId" from="${subscriptionPlans}" optionKey="id" optionValue="name" value="${cmd?.subscriptionPlanId}" class="form-control"/>
                                 </div>
-                                <div class="mb-3" style="/* display: none; */">
+                                <div class="mb-3" style="display: none;">
                                     <label for="subscriptionPlanId" class="form-label">Select Subscription Plan</label>
                                     <g:select name="subscriptionPlanId" from="${subscriptionPlans}" optionKey="id" optionValue="name" value="${cmd?.subscriptionPlanId}" class="form-control"/>
                                 </div>

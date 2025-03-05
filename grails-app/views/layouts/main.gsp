@@ -31,7 +31,7 @@
                     <a href="#"><i class="fas fa-cog"></i> Settings</a>
                     <div class="dropdown-menu">
                         <g:if test="${session.isAdmin || session.permissions['subscription']?.canView}">
-                            <a href="${createLink(controller: 'subscription', action: 'subscription')}"><i class="fas fa-credit-card"></i> Subscription</a>
+                            <a href="${createLink(controller: 'setting', action: 'index')}"><i class="fas fa-credit-card"></i> Profile</a>
                         </g:if>
                         <g:if test="${session.isAdmin || session.permissions['roleManagement']?.canView}">
                             <a href="${createLink(controller: 'admin', action: 'roleManagement')}"><i class="fas fa-users"></i> Role Management</a>

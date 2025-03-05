@@ -11,7 +11,7 @@ class UrlMappings {
         }
 
         // ✅ Default Landing Page (single root mapping)
-        "/"(controller: "auth", action: "login") // Chose login as default; adjust if home/index is preferred
+        "/"(controller: "webapp", action: "web")
 
         // ✅ Authentication
         "/auth/logout"(controller: "auth", action: "logout")

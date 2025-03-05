@@ -4,91 +4,84 @@
     <meta name="layout" content="main" />
     <title>Checkout</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="${resource(dir: 'css', file: 'theme.css')}"/>
-
     <style>
+        .checkout-container { display: none; }
+        .fade-in { animation: fadeInAnimation 0.5s ease-in-out; }
+        @keyframes fadeInAnimation { from { opacity: 0; } to { opacity: 1; } }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-left: 10px;
+            display: block !important;
+        }
 
-
-    /* Specific overrides or additions */
-    .quantity-input { width: 70px; display: inline-block; }
-    .checkout-container { display: none; }
-    /* Optional: Add a class to hide or adjust sidebar on mobile if needed */
-    .sidebar-hidden .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
+        .checkout-title { background-color: #000; color: #fff; padding: 25px; text-align: center; font-size: 30px; font-weight: bold; border-radius: 8px; box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
+        .quantity-input { width: 70px; display: inline-block; }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
-<div class="container mt-4 checkout-container fade-row">
-    <div class="header">
-        <h1 class="checkout-title">🛒 Checkout</h1>
-    </div>
+<div class="container mt-4 checkout-container fade-in">
+    <h1 class="text-center mb-4 checkout-title">🛒 Checkout</h1>
 
     <g:form id="checkoutForm">
         <div class="row">
-            <div class="mb-3 col-md-6">
-                <label class="form-label">Customer Name:</label>
+            <div class="mb-3 w-50">
+                <label class="form-label fw-bold">Customer Name:</label>
                 <g:textField name="customerName" class="form-control" />
                 <div id="customerNameError" class="error-message"></div>
             </div>
-            <div class="mb-3 col-md-6">
-                <label class="form-label">Scan Barcode:</label>
-                <div class="search-container">
-                    <i class="search-icon fas fa-barcode"></i>
-                    <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." autofocus>
-                </div>
-                <button type="button" id="scanButton" class="btn btn-custom mt-2">➕ Add Product</button>
+            <div class="mb-3 w-50">
+                <label class="form-label fw-bold">Scan Barcode:</label>
+                <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." autofocus>
+                <button type="button" id="scanButton" class="btn btn-primary mt-2">➕ Add Product</button>
                 <div id="barcodeError" class="error-message"></div>
             </div>
         </div>
 
         <input type="hidden" id="totalInput" name="total" value="0.00">
 
-        <div class="table-responsive">
-            <table class="table" id="itemsTable">
-                <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody id="itemsBody"></tbody>
-            </table>
-        </div>
+        <table class="table table-striped table-hover mt-4" id="itemsTable">
+            <thead class="table-dark">
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+        </table>
 
-        <div class="card p-3">
-            <h4 class="d-inline">Total:</h4>
+        <div class="bg-light p-3 rounded">
+            <h4 class="fw-bold d-inline">Total:</h4>
             <h4 id="total" class="text-success d-inline ms-2">0.00 PKR</h4>
         </div>
 
         <div class="row mt-3">
             <div class="mb-3 col-md-6">
-                <label class="form-label">Amount Received:</label>
+                <label class="form-label fw-bold">Amount Received:</label>
                 <input type="number" step="0.01" min="0" name="amountReceived" id="amountReceived" class="form-control" value="">
                 <div id="amountReceivedError" class="error-message"></div>
             </div>
             <div class="mb-3 col-md-6">
-                <label class="form-label">Amount to be Returned:</label>
+                <label class="form-label fw-bold">Amount to be  returned :</label>
                 <input type="number" step="0.01" readonly name="remainingAmount" id="remainingAmount" class="form-control" value="0.00">
             </div>
         </div>
 
         <button type="button" id="checkoutButton" class="btn btn-success btn-lg w-100 mt-3">✅ Complete Checkout</button>
-        <br><br>
-        <button type="button" class="btn btn-primary mb-3" onclick="openNewCheckout()">🆕 New Checkout</button>
+        <button type="button" class="btn btn-primary  mb-3" onclick="openNewCheckout()">🆕 New Checkout</button>
     </g:form>
+
 </div>
 
 <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">✅ Checkout Completed!</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -104,7 +97,7 @@
 
 <script>
     $(document).ready(function () {
-        $(".checkout-container").fadeIn(400).addClass("visible");
+        $(".checkout-container").fadeIn(400);
 
         $('#scanButton').click(function () {
             const barcode = $('#barcodeInput').val().trim();
@@ -114,7 +107,7 @@
                 success: function (data) {
                     let newRow = $(data).hide();
                     $('#itemsBody').append(newRow);
-                    newRow.fadeIn(400).addClass("fade-row visible");
+                    newRow.fadeIn(400);
                     updateTotals();
                     $('#barcodeInput').val('').focus();
                 },
@@ -158,7 +151,11 @@
                 }
             });
 
-            $("#customerNameError, #barcodeError, #amountReceivedError, #itemsBody .item-error").text("");
+            // Clear previous error messages
+            $("#customerNameError").text("");
+            $("#barcodeError").text("");
+            $("#amountReceivedError").text("");
+            $("#itemsBody .item-error").text("");
 
             $.ajax({
                 type: "POST",
@@ -181,6 +178,7 @@
                         $("#total").text("0.00 PKR");
                         $("#remainingAmount").val("0.00");
                     } else {
+                        // Display error based on the field
                         if (response.field === "customerName") {
                             $("#customerNameError").text("❌ " + response.message);
                         } else if (response.field === "products") {
@@ -189,11 +187,15 @@
                             let row = $("#itemsBody tr").filter(function() {
                                 return $(this).find(".product-barcode").text().trim() === response.productBarcode;
                             });
-                            row.find(".item-error").text("❌ " + response.message);
+                            if (row.length) {
+                                row.find(".item-error").text("❌ " + response.message);
+                            } else {
+                                $("#barcodeError").text("❌ " + response.message);
+                            }
                         } else if (response.field === "amountReceived") {
                             $("#amountReceivedError").text("❌ " + response.message);
                         } else {
-                            $("#barcodeError").text("❌ " + response.message);
+                            $("#barcodeError").text("❌ " + response.message); // Fallback
                         }
                     }
                 },

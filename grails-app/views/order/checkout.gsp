@@ -209,22 +209,25 @@
                         $("#total").text("0.00 PKR");
                         $("#remainingAmount").val("0.00");
                     } else {
-                        if (response.field === "customerName") {
-                            $("#customerNameError").text("❌ " + response.message);
-                        } else if (response.field === "products") {
-                            $("#barcodeError").text("❌ " + response.message);
-                        } else if (response.field === "stock" && response.productBarcode) {
-                            let row = $("#itemsBody tr").filter(function() {
-                                return $(this).find(".product-barcode").text().trim() === response.productBarcode;
-                            });
-                            row.find(".item-error").text("❌ " + response.message);
-                        } else if (response.field === "amountReceived") {
-                            $("#amountReceivedError").text("❌ " + response.message);
-                        } else {
-                            $("#barcodeError").text("❌ " + response.message);
-                        }
-                    }
-                },
+                              if (response.field === "customerName") {
+                                  $("#customerNameError").text("❌ " + response.message);
+                              } else if (response.field === "products" && response.productBarcode) {
+                                  let row = $("#itemsBody tr").filter(function() {
+                                      return $(this).find(".product-barcode").text().trim() === response.productBarcode;
+                                  });
+                                  row.find(".item-error").text("❌ " + response.message);
+                              } else if (response.field === "stock" && response.productBarcode) {
+                                  let row = $("#itemsBody tr").filter(function() {
+                                      return $(this).find(".product-barcode").text().trim() === response.productBarcode;
+                                  });
+                                  row.find(".item-error").text("❌ " + response.message);
+                              } else if (response.field === "amountReceived") {
+                                  $("#amountReceivedError").text("❌ " + response.message);
+                              } else {
+                                  $("#barcodeError").text("❌ " + response.message);
+                              }
+                          }
+                      },
                 error: function (xhr) {
                     $("#barcodeError").text("❌ " + (xhr.responseText || "Server error occurred."));
                 }

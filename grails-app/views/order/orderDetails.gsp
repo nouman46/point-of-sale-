@@ -107,12 +107,7 @@
         </table>
     </div>
 
-    <!-- Back Button -->
-    <div class="text-end mt-4 fade-in no-print">
-        <a href="${createLink(controller: 'order', action: 'listOrders')}" class="btn btn-secondary btn-lg">
-            ⬅️ Back to Orders
-        </a>
-    </div>
+
 </div>
 
 <!-- JavaScript for triggering animations dynamically and print function -->

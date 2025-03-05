@@ -9,72 +9,63 @@ class AuthController {
             def username = params.username
             def password = params.password
 
+            // Find the user by username, but we need to handle multiple users with the same username
             def users = AppUser.findAllByUsername(username)
+
             if (!users) {
                 flash.message = "Invalid username or password"
+                println "❌ Authentication failed for ${username} - User not found"
                 redirect(action: "login")
                 return
             }
 
-            session.permissions = session.permissions ?: [:]
+            // Try to authenticate each user with the provided password
+            def authenticatedUser = users.find { user ->
+                BCrypt.checkpw(password, user.password)
+            }
 
-
-            def authenticatedUser = users.find { user -> BCrypt.checkpw(password, user.password) }
             if (authenticatedUser) {
+                println "✅ User Found: ${authenticatedUser.username} (ID: ${authenticatedUser.id}, createdBy: ${authenticatedUser.createdBy?.id})"
                 session.user = authenticatedUser
                 session.isAdmin = authenticatedUser.isAdmin
-                session.isSystemAdmin = authenticatedUser.isSystemAdmin
 
+                // Ensure roles are properly fetched and initialized
+                session.assignRole = authenticatedUser.assignRole ? authenticatedUser.assignRole*.roleName : []
+
+                // Fetch and set permissions based on the user's roles
                 def permissions = [:]
 
-                if (authenticatedUser.isSystemAdmin) {
-                    // Full access for system admins
-                    def allPages = ["manageUsers"]
+                if (authenticatedUser.isAdmin) {
+                    // Admin gets access to ALL pages with FULL permissions
+                    def allPages = ["dashboard", "inventory", "listOrders", "checkout", "settings", "subscription", "roleManagement"]
                     allPages.each { page ->
                         permissions[page] = [canView: true, canEdit: true, canDelete: true]
                     }
                 } else {
-                    // Handle store owners and employees (see Store Owner section below)
-                    def subscriptionPlan = getStoreSubscriptionPlan(authenticatedUser)
-                    if (subscriptionPlan) {
-                        def availablePages = subscriptionPlan.features
-                        if (authenticatedUser.activeSubscription) {
-                            // Store owner: full access to subscription features
-                            availablePages.each { page ->
-                                permissions[page] = [canView: true, canEdit: true, canDelete: true]
+                    // Normal users get permissions from their assigned roles
+                    authenticatedUser.assignRole?.each { assignRole ->
+                        assignRole.permissions?.each { perm ->
+                            if (!permissions.containsKey(perm.pageName)) {
+                                permissions[perm.pageName] = [canView: false, canEdit: false, canDelete: false]
                             }
-                        } else {
-                            // Employee: role-based access within subscription features
-                            authenticatedUser.assignRole?.each { assignRole ->
-                                assignRole.permissions?.each { perm ->
-                                    if (availablePages.contains(perm.pageName)) {
-                                        permissions[perm.pageName] = permissions[perm.pageName] ?: [canView: false, canEdit: false, canDelete: false]
-                                        permissions[perm.pageName].canView |= perm.canView
-                                        permissions[perm.pageName].canEdit |= perm.canEdit
-                                        permissions[perm.pageName].canDelete |= perm.canDelete
-                                    }
-                                }
-                            }
+                            permissions[perm.pageName].canView |= perm.canView
+                            permissions[perm.pageName].canEdit |= perm.canEdit
+                            permissions[perm.pageName].canDelete |= perm.canDelete
                         }
-                    } else {
-                        flash.message = "No active subscription found."
-                        redirect(action: "login")
-                        return
                     }
                 }
 
                 session.permissions = permissions
 
-                if(session.isSystemAdmin) {
-                    redirect(controller: "systemAdmin", action: "listSubscriptionRequests")
-                    return
-                }else {
-                    redirect(controller: "dashboard", action: "dashboard")
-                    return
-                }
+                println "✅ Session Set: ${session.user.username}, Roles: ${session.assignRole}, Permissions: ${session.permissions}"
+                flash.message = "Login successful!"
 
+                // Redirect to the user's specific dashboard or screen based on their permissions
+                redirect(controller: "dashboard", action: "dashboard")
+                return
             } else {
                 flash.message = "Invalid username or password"
+                println "❌ Authentication failed for ${username} - Password mismatch"
                 redirect(action: "login")
                 return
             }
@@ -86,13 +77,6 @@ class AuthController {
         }
 
         render(view: "login")
-    }
-
-    private SubscriptionPlan getStoreSubscriptionPlan(AppUser user) {
-        while (user && !user.activeSubscription) {
-            user = user.createdBy
-        }
-        return user?.activeSubscription?.plan
     }
 
     def logout() {

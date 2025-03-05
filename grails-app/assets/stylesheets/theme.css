@@ -518,13 +518,7 @@ tr:hover {
     margin-top: 5px;
 }
 
-/* Miscellaneous */
-.total-sales {
-    margin-top: 15px;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-color);
-}
+
 
 .text-success {
     color: var(--primary-color);
@@ -996,17 +990,7 @@ select {
     background: color-mix(in srgb, var(--primary-color) 80%, #000000 20%);
 }
 
-/* Total Sales Styling */
-.total-sales {
-    background: var(--background-color);
-    padding: 15px;
-    border-radius: 8px;
-    font-weight: 600;
-    color: var(--text-color);
-    margin-top: 20px;
-    text-align: right;
-    box-shadow: 0 2px 5px var(--box-shadow);
-}
+
 
 .text-success {
     color: var(--primary-color);

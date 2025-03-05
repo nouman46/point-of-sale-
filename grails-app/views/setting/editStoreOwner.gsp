@@ -173,7 +173,6 @@
               </p>
             </div>
           </g:if>
-
           <g:if test="${pendingRequest}">
             <div class="alert alert-warning" role="alert">
               You have a pending subscription request for plan:

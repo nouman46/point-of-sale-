@@ -534,55 +534,91 @@ tr:hover {
     position: relative;
 }
 
+/* Ensure dropdown menu is hidden by default */
 .dropdown-menu {
     display: none; /* Hidden by default */
     position: absolute;
     left: 0; /* Aligns with Settings */
     top: 100%; /* Positions below Settings */
-    background: var(--sidebar-bg); /* Consistent background */
+    background: var(--sidebar-bg) !important; /* Force sidebar background */
     border: none;
     box-shadow: 2px 0 5px var(--box-shadow);
-    width: 100%; /* Matches sidebar width */
+    width: 250px; /* Matches sidebar width exactly */
     z-index: 1001; /* Above other content */
-    color: var(--sidebar-text); /* Ensure text is always readable */
+    color: var(--sidebar-text) !important; /* Force text color */
+    padding: 0; /* Remove default padding if any */
+    list-style: none; /* Remove default list styling */
+    margin: 0; /* Remove default margin */
 }
 
-/* Show dropdown when parent is hovered or active */
-.dropdown:hover .dropdown-menu,
-.dropdown.active .dropdown-menu {
-    display: block; /* Show on hover or when active */
+/* Show dropdown when parent is hovered, clicked, or active */
+.sidebar .dropdown:hover .dropdown-menu,
+.sidebar .dropdown.active .dropdown-menu,
+.sidebar .dropdown.show .dropdown-menu {
+    display: block; /* Show on hover, active, or show class */
 }
 
 /* Dropdown menu links */
-.dropdown-menu a {
+.sidebar .dropdown-menu a {
     display: flex;
     align-items: center;
     padding: 15px 20px;
-    color: var(--sidebar-text); /* Consistent text color */
+    color: var(--sidebar-text) !important; /* Ensure text is always readable */
     text-decoration: none;
     font-size: 16px;
     transition: background 0.3s, padding-left 0.3s;
 }
 
 /* Hover and active states for dropdown links */
-.dropdown-menu a:hover,
-.dropdown-menu a.active {
-    background: var(--sidebar-hover); /* Hover background */
+.sidebar .dropdown-menu a:hover,
+.sidebar .dropdown-menu a.active {
+    background: var(--sidebar-hover) !important; /* Hover background */
     padding-left: 25px;
-    color: var(--sidebar-text); /* Ensure text remains visible */
+    color: var(--sidebar-text) !important; /* Ensure text remains visible */
 }
-.dropdown-menu {
-    all: unset; /* Reset all inherited styles */
-    /* Then reapply your custom styles */
-    background: var(--sidebar-bg) !important;
-    color: var(--sidebar-text) !important;
-    /* ... other styles ... */
-}
-/* Ensure no override to white background */
-.dropdown-menu.show {
+
+/* Ensure no override to white background or transparency */
+.sidebar .dropdown-menu.show {
     background: var(--sidebar-bg) !important; /* Force background */
     color: var(--sidebar-text) !important; /* Force text color */
+    opacity: 1 !important; /* Ensure no transparency */
 }
+
+/* Override Bootstrap or other framework defaults if applicable */
+.dropdown-menu {
+    --bs-dropdown-bg: var(--sidebar-bg) !important;
+    --bs-dropdown-link-color: var(--sidebar-text) !important;
+    --bs-dropdown-link-hover-bg: var(--sidebar-hover) !important;
+    --bs-dropdown-link-hover-color: var(--sidebar-text) !important;
+    all: unset; /* Reset all inherited styles */
+    /* Reapply custom styles */
+    background: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+}
+
+/* Ensure dropdown closes properly on click outside or navigation */
+.dropdown-menu[aria-expanded="true"] {
+    display: block !important;
+}
+
+.dropdown-menu[aria-expanded="false"] {
+    display: none !important;
+}
+
+/* Fix for stuck dropdowns (ensure proper z-index and positioning) */
+.sidebar .dropdown {
+    z-index: 1002; /* Higher than dropdown-menu to handle stacking */
+}
+
+/* Responsive Design for Dropdown */
+@media (max-width: 768px) {
+    .sidebar .dropdown-menu {
+        width: 100%; /* Full width on mobile */
+        position: relative; /* Adjust positioning for mobile */
+        box-shadow: none; /* Remove shadow on mobile if needed */
+    }
+}
+
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -929,9 +965,87 @@ select {
     transition: border-color 0.3s ease;
 }
 
+/* Style the placeholder text */
+#searchBox::placeholder {
+    color: var(--text-color);
+    opacity: 0.7; /* Adjust opacity for better visibility, if needed */
+    transition: color 0.3s ease; /* Ensure smooth transition with theme changes */
+}
+
+/* Ensure placeholder text updates on focus (optional, for consistency) */
 #searchBox:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.3);
+    outline: none; /* Remove default focus outline if needed */
+}
+
+/* Handle vendor prefixes for broader browser support (optional) */
+#searchBox::-webkit-input-placeholder { /* Chrome, Safari */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#searchBox::-moz-placeholder { /* Firefox 19+ */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#searchBox:-ms-input-placeholder { /* IE 10+ */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#searchBox:-moz-placeholder { /* Firefox 18- */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+/* Search Styling */
+#searchInput {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+    padding: 8px 8px 8px 30px;
+    border: 1px solid var(--text-color);
+    border-radius: 5px;
+    background: var(--background-color);
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+}
+
+/* Style the placeholder text */
+#searchInput::placeholder {
+    color: var(--text-color);
+    opacity: 0.7; /* Adjust opacity for better visibility, if needed */
+    transition: color 0.3s ease; /* Ensure smooth transition with theme changes */
+}
+
+/* Ensure placeholder text updates on focus (optional, for consistency) */
+#searchInput:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.3);
+    outline: none; /* Remove default focus outline if needed */
+}
+
+/* Handle vendor prefixes for broader browser support (optional) */
+#searchInput::-webkit-input-placeholder { /* Chrome, Safari */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#searchInput::-moz-placeholder { /* Firefox 19+ */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#searchInput:-ms-input-placeholder { /* IE 10+ */
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#searchInput:-moz-placeholder { /* Firefox 18- */
+    color: var(--text-color);
+    opacity: 0.7;
 }
 
 /* Table Styling */
@@ -1401,151 +1515,6 @@ h4 {
     }
 }
 
-/* Theme Variables */
-body.theme-default {
-    --background-color: #f4f4f4;
-    --text-color: #000000;
-    --sidebar-bg: #6f42c1; /* Purple from the image */
-    --sidebar-text: #ffffff;
-    --sidebar-hover: #5a2d91;
-    --primary-color: #007bff; /* Blue for buttons */
-    --logout-bg: #ff4d4d;
-    --logout-hover: #ff6666;
-    --box-bg: #ffffff;
-    --box-text: #333;
-    --box-border: #007bff;
-    --box-shadow: rgba(0, 0, 0, 0.1);
-    --chart-bg: #ffffff;
-}
-
-body.theme-dark {
-    --background-color: #1e1e2d;
-    --text-color: #ffffff;
-    --sidebar-bg: #2c2c3a;
-    --sidebar-text: #ffffff;
-    --sidebar-hover: #3a3a4d;
-    --primary-color: #28a745;
-    --logout-bg: #ff4d4d;
-    --logout-hover: #ff6666;
-    --box-bg: #2c2c3a;
-    --box-text: #ffffff;
-    --box-border: #28a745;
-    --box-shadow: rgba(0, 0, 0, 0.2);
-    --chart-bg: #2c2c3a;
-}
-
-body.theme-blue-ocean {
-    --background-color: #e6f3ff;
-    --text-color: #003087;
-    --sidebar-bg: #003087;
-    --sidebar-text: #ffffff;
-    --sidebar-hover: #0041b8;
-    --primary-color: #ff5722;
-    --logout-bg: #ff5722;
-    --logout-hover: #ff8a50;
-    --box-bg: #ffffff;
-    --box-text: #003087;
-    --box-border: #ff5722;
-    --box-shadow: rgba(0, 0, 0, 0.1);
-    --chart-bg: #ffffff;
-}
-
-body.theme-warm-sunset {
-    --background-color: #fff5e6;
-    --text-color: #5c4033;
-    --sidebar-bg: #5c4033;
-    --sidebar-text: #ffffff;
-    --sidebar-hover: #7a5644;
-    --primary-color: #d32f2f;
-    --logout-bg: #d32f2f;
-    --logout-hover: #e57373;
-    --box-bg: #ffffff;
-    --box-text: #5c4033;
-    --box-border: #d32f2f;
-    --box-shadow: rgba(0, 0, 0, 0.1);
-    --chart-bg: #ffffff;
-}
-
-/* Base Styles */
-body {
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-    background: var(--background-color);
-    color: var(--text-color);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-/* Sidebar */
-.sidebar {
-    width: 250px;
-    height: 100vh;
-    background: var(--sidebar-bg);
-    position: fixed;
-    left: 0;
-    top: 0;
-    padding-top: 20px;
-    transition: transform 0.3s ease;
-    box-shadow: 2px 0 5px var(--box-shadow);
-    z-index: 1000;
-}
-
-.sidebar a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: var(--sidebar-text);
-    text-decoration: none;
-    font-size: 16px;
-    transition: background 0.3s, padding-left 0.3s;
-}
-
-.sidebar a:hover, .sidebar a.active {
-    background: var(--sidebar-hover);
-    padding-left: 25px;
-}
-
-.sidebar a.active {
-    font-weight: bold;
-}
-
-/* Navbar */
-.navbar {
-    background: var(--sidebar-bg);
-    color: var(--sidebar-text);
-    box-shadow: 0 2px 10px var(--box-shadow);
-    padding: 1rem;
-}
-
-.navbar-brand, .navbar-nav .nav-link {
-    color: var(--sidebar-text) !important;
-}
-
-.navbar-brand {
-    font-weight: bold;
-    font-size: 1.5rem;
-}
-
-.navbar-nav .nav-link {
-    transition: background 0.3s, padding-left 0.3s;
-}
-
-.navbar-nav .nav-link:hover {
-    background: var(--sidebar-hover);
-    padding-left: 1.5rem;
-}
-
-.navbar .btn-logout {
-    background: var(--logout-bg);
-    color: var(--sidebar-text);
-    border: none;
-    transition: background 0.3s;
-}
-
-.navbar .btn-logout:hover {
-    background: var(--logout-hover);
-}
-
 /* Main Content */
 .main-content {
     margin-left: 250px;
@@ -1798,3 +1767,4 @@ body {
         padding: 10px;
     }
 }
+

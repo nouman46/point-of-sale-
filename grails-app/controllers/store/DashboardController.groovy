@@ -220,4 +220,61 @@ class DashboardController {
 
         render(predictions as JSON)
     }
+    def getAIPredictionByBarcode() {
+        try {
+            if (!session.user) {
+                render(status: 403, text: "Unauthorized access")
+                return
+            }
+
+            println "🤖 getAIPredictionByBarcode called with barcode: '${params.barcode}'"
+
+            if (!params.barcode) {
+                render(status: 400, text: "Barcode is required")
+                return
+            }
+
+            def adminUser = getAdminUser()
+            def product = Product.findByProductBarcode(params.barcode?.trim())
+
+            if (!product || product.createdBy.id != adminUser.id) {
+                render(status: 404, text: "Product not found or unauthorized")
+                return
+            }
+
+            // Calculate sales data for the last 60 days
+            def calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, -60)
+            def twoMonthsAgo = calendar.time
+
+            def totalQuantitySold = OrderItem.createCriteria().get {
+                projections { sum('quantity') }
+                eq("product", product)
+                order {
+                    ge("dateCreated", twoMonthsAgo)
+                    eq("createdBy", adminUser)
+                }
+            } ?: 0
+
+            // Calculate prediction
+            def avgMonthlySales = totalQuantitySold / 2.0
+            def predictedSales = avgMonthlySales.round(2)
+            def currentStock = product.productQuantity ?: 0
+            def shouldBuy = predictedSales > currentStock
+
+            // Prepare response
+            def prediction = [
+                    productName: product.productName ?: "Unknown Product",
+                    predictedSales: predictedSales,
+                    shouldBuy: shouldBuy,
+                    currentStock: currentStock,
+                    barcode: product.productBarcode
+            ]
+
+            render(prediction as JSON)
+        } catch (Exception e) {
+            e.printStackTrace()
+            render(status: 500, text: "Internal Server Error")
+        }
+    }
 }

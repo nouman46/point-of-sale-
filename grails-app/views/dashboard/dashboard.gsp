@@ -53,6 +53,7 @@
             <h3>Sales of Product</h3>
             <div class="count" id="filteredSales">RS 0.00</div>
         </div>
+
     </div>
 
     <div class="charts-wrapper">
@@ -101,6 +102,10 @@
             <div class="chart-title">Orders Per Month for Filtered Product</div>
             <canvas id="ordersPerMonthChart"></canvas>
         </div>
+        <div class="chart-box filtered-ai-prediction-chart hidden">
+                        <div class="chart-title">AI Prediction for Filtered Product</div>
+                        <canvas id="filteredAIPredictionChart"></canvas>
+                    </div>
     </div>
 </div>
 
@@ -110,6 +115,7 @@
     let filteredProductChartInstance = null;
     let ordersPerMonthChartInstance = null;
     let aiPredictionChartInstance = null;
+    let filteredAIPredictionChartInstance = null;
 
     $(document).ready(function() {
         loadDashboardData();
@@ -320,7 +326,7 @@
             data: { barcode: barcode },
             dataType: 'json',
             success: function(data) {
-                // After passing validation, hide the default charts before showing filtered results
+                // Hide default charts
                 $(".total-orders").addClass("hidden");
                 $(".total-products").addClass("hidden");
                 $(".total-sales").addClass("hidden");
@@ -328,6 +334,7 @@
                 $(".product-quantity-chart").addClass("hidden");
                 $(".ai-prediction-chart").addClass("hidden");
 
+                // Show filtered data
                 if (data.totalOrders || data.totalSales || data.quantity) {
                     $(".filtered-orders").removeClass("hidden");
                     $(".filtered-sales").removeClass("hidden");
@@ -336,10 +343,12 @@
                     $("#filteredOrders").text(data.totalOrders || 0);
                     $("#filteredSales").text("RS " + (data.totalSales || 0).toFixed(2));
                     loadFilteredProductQuantity(barcode);
+                    loadFilteredAIPrediction(barcode); // Load the AI prediction chart
                 } else {
                     $(".filtered-orders").addClass("hidden");
                     $(".filtered-sales").addClass("hidden");
                     $(".filtered-product-chart").addClass("hidden");
+                    $(".filtered-ai-prediction-chart").addClass("hidden");
                 }
             },
             error: function(xhr) {
@@ -352,9 +361,11 @@
                 } else {
                     $("#barcodeError").text("An unexpected error occurred. Please try again.").removeClass("hidden");
                 }
+                $(".filtered-ai-prediction-chart").addClass("hidden");
             }
         });
     }
+
     function loadAIPredictions() {
         console.log("Attempting to fetch AI predictions...");
         $.ajax({
@@ -401,16 +412,7 @@
                                 borderColor: 'rgba(75, 192, 192, 1)',
                                 borderWidth: 1
                             },
-                            {
-                                label: 'Recommended to Buy (1=Yes, 0=No)',
-                                data: recommendation,
-                                type: 'line',
-                                borderColor: '#FF6384',
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                fill: false,
-                                stepped: true,
-                                yAxisID: 'y2'
-                            }
+
                         ]
                     },
                     options: {
@@ -455,6 +457,112 @@
         });
     }
 
+        function loadFilteredAIPrediction(barcode) {
+            destroyChart(filteredAIPredictionChartInstance);
+            let ctx = document.getElementById("filteredAIPredictionChart").getContext("2d");
+
+            $.ajax({
+                url: '/dashboard/getAIPredictionByBarcode',
+                type: 'GET',
+                data: { barcode: barcode },
+                dataType: 'json',
+                success: function(data) {
+                    console.log("Filtered AI Prediction Data:", data);
+
+                    let productName = data.productName || 'Unknown Product';
+                    let predictedSales = data.predictedSales || 0;
+                    let currentStock = data.currentStock || 0;
+
+                    destroyChart(filteredAIPredictionChartInstance);
+                    filteredAIPredictionChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: [productName],
+                            datasets: [
+                                {
+                                    label: 'Predicted Sales (Units)',
+                                    data: [predictedSales],
+                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Current Stock',
+                                    data: [currentStock],
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { display: true },
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Units' },
+                                    suggestedMax: Math.max(predictedSales, currentStock) * 1.2
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        title: function(tooltipItems) {
+                                            return productName;
+                                        },
+                                        label: function(tooltipItem) {
+                                            return ''; // No extra labels
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    console.log("Chart Datasets After Creation:", filteredAIPredictionChartInstance.data.datasets);
+
+                    // Show the chart
+                    $(".filtered-ai-prediction-chart").removeClass("hidden");
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching filtered AI prediction:", error);
+                    destroyChart(filteredAIPredictionChartInstance);
+                    filteredAIPredictionChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Error'],
+                            datasets: [{
+                                label: 'Predicted Sales',
+                                data: [0],
+                                backgroundColor: '#FF4444'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        title: function() {
+                                            return 'Error';
+                                        },
+                                        label: function() {
+                                            return '';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    $(".filtered-ai-prediction-chart").removeClass("hidden");
+                }
+            });
+        }
+
     function resetDashboard() {
         $("#barcodeInput").val("");
         $(".total-orders").removeClass("hidden");
@@ -464,12 +572,14 @@
         $(".product-quantity-chart").removeClass("hidden");
         $(".ai-prediction-chart").removeClass("hidden");
         $(".filtered-orders").addClass("hidden");
+        $(".filtered-ai-prediction-chart").addClass("hidden");
         $(".filtered-sales").addClass("hidden");
         $(".filtered-product-chart").addClass("hidden");
         $("#filteredOrders").text("0");
         $("#filteredSales").text("RS 0.00");
         loadDashboardData();
         destroyChart(filteredProductChartInstance);
+        destroyChart(filteredAIPredictionChartInstance);
         loadAIPredictions();
     }
 
